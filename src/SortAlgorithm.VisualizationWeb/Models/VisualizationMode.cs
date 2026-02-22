@@ -15,5 +15,8 @@ public enum VisualizationMode
     Spiral,
     
     /// <summary>ドットプロット表示（将来実装）</summary>
-    DotPlot
+    DotPlot,
+
+    /// <summary>画像行表示（アップロード画像を行ごとに分割してソート）</summary>
+    PictureRow
 }
