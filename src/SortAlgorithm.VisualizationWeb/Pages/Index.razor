@@ -127,6 +127,7 @@
                         <option value="@VisualizationMode.Spiral">🌀 Spiral</option>
                         <option value="@VisualizationMode.DotPlot">🔵 Dot Plot</option>
                         <option value="@VisualizationMode.PictureRow">🖼️ Picture Row</option>
+                        <option value="@VisualizationMode.PictureColumn">🖼️ Picture Column</option>
                     </select>
                 </div>
 
@@ -201,6 +202,12 @@
                 @* PictureRow モード: ソート前でも画像アップロード UI を表示 *@
                 <PictureRowRenderer State="Playback.State"
                                     OnClick="OnVisualizationClick" />
+            }
+            else if (!_isComparisonMode && Playback.State.Mode == VisualizationMode.PictureColumn)
+            {
+                @* PictureColumn モード: ソート前でも画像アップロード UI を表示 *@
+                <PictureColumnRenderer State="Playback.State"
+                                       OnClick="OnVisualizationClick" />
             }
             else if (Playback.State.MainArray.Length > 0)
             {

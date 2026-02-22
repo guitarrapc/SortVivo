@@ -18,5 +18,8 @@ public enum VisualizationMode
     DotPlot,
 
     /// <summary>画像行表示（アップロード画像を行ごとに分割してソート）</summary>
-    PictureRow
+    PictureRow,
+
+    /// <summary>画像列表示（アップロード画像を列ごとに分割してソート）</summary>
+    PictureColumn
 }
