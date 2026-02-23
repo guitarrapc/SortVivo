@@ -4,6 +4,7 @@
 @inject IJSRuntime JS
 @inject DebugSettings DebugSettings
 @inject RenderSettings RenderSettings
+@inject PictureImageService _imageService
 @implements IAsyncDisposable
 
 <div id="@_dropZoneId"
@@ -15,18 +16,21 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     {
         <canvas @key="_canvasId" id="@_canvasId" style="width: 100%; height: 100%; display: block;"></canvas>
 
-        @* 画像変更ボタン（右上に表示） *@
-        <label style="position: absolute; top: 8px; right: 8px; z-index: 10;
-                      background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #555;
-                      border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer;
-                      user-select: none;"
-               @onclick:stopPropagation="true"
-               title="Upload image to visualize">
-            📷 @(_imageLoaded ? "Change Image" : "Upload Image")
-            <InputFile OnChange="HandleFileUpload"
-                       accept="image/*"
-                       style="display: none;" />
-        </label>
+        @* 履歴 + 画像変更ボタン（右上に表示） *@
+        <div style="position: absolute; top: 8px; right: 8px; z-index: 10;
+                    display: flex; gap: 6px; align-items: center;"
+             @onclick:stopPropagation="true">
+            <PictureImageHistory ThumbnailWidth="36" ThumbnailHeight="27" />
+            <label style="background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #555;
+                          border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer;
+                          user-select: none; white-space: nowrap;"
+                   title="Upload image to visualize">
+                📷 @(_imageService.Current != null ? "Change Image" : "Upload Image")
+                <InputFile OnChange="HandleFileUpload"
+                           accept="image/*"
+                           style="display: none;" />
+            </label>
+        </div>
 
         @* ドラッグオーバー時のオーバーレイ *@
         @if (_isDragOver)
@@ -57,14 +61,15 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
                 <p style="margin: 0; font-size: 0.85rem; color: #666;">
                     Upload or drag &amp; drop an image to sort its rows
                 </p>
+<PictureImageHistory ThumbnailWidth="48" ThumbnailHeight="36" />
                 <label style="background: #3B82F6; color: #fff; border: none; border-radius: 6px;
                               padding: 8px 20px; font-size: 0.9rem; cursor: pointer; user-select: none;">
-                    📷 @(_imageLoaded ? "Change Image" : "Upload Image")
+                    📷 @(_imageService.Current != null ? "Change Image" : "Upload Image")
                     <InputFile OnChange="HandleFileUpload"
                                accept="image/*"
                                style="display: none;" />
                 </label>
-                @if (_imageLoaded)
+                @if (_imageService.Current != null)
                 {
                     <p style="margin: 0; font-size: 0.85rem; color: #10B981;">✅ Image loaded</p>
                 }
@@ -91,10 +96,8 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     private bool _previousHasData = false;
     private int _lastSortVersion = -1;
 
-    // 画像データ
-    private bool _imageLoaded = false;
-    private string? _imageDataUrl = null;
-    private bool _previousImageLoaded = false;
+    // 画像サービスのバージョン追跡（ShouldRender 用）
+    private int _previousServiceVersion = -1;
 
     // ドラッグ状態
     private bool _isDragOver = false;
@@ -106,7 +109,23 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     protected override void OnInitialized()
     {
         RenderSettings.OnChanged += OnRenderSettingsChanged;
+        _imageService.OnChanged += OnImageServiceChanged;
         _dotNetRef = DotNetObjectReference.Create(this);
+    }
+
+    private void OnImageServiceChanged()
+    {
+        InvokeAsync(async () =>
+        {
+            if (_isInitialized && State?.MainArray.Length > 0)
+            {
+                var current = _imageService.Current;
+                if (current != null)
+                    await JS.InvokeVoidAsync("pictureRowCanvasRenderer.setImage",
+                        _canvasId, current.DataUrl, State.MainArray.Length);
+            }
+            StateHasChanged();
+        });
     }
 
     private void OnRenderSettingsChanged()
@@ -135,13 +154,14 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     protected override bool ShouldRender()
     {
         var hasData = State?.MainArray.Length > 0;
-        var shouldRender = _previousHasData != hasData
-                        || (hasData && !_isInitialized)  // キャンバスが DOM に存在する場合のみ再描画トリガー
-                        || _previousImageLoaded != _imageLoaded
-                        || _previousIsDragOver  != _isDragOver;
-        _previousHasData    = hasData;
-        _previousImageLoaded = _imageLoaded;
-        _previousIsDragOver  = _isDragOver;
+        var serviceVersion = _imageService.Version;
+        var shouldRender = _previousHasData       != hasData
+                        || (hasData && !_isInitialized)
+                        || _previousServiceVersion != serviceVersion
+                        || _previousIsDragOver     != _isDragOver;
+        _previousHasData        = hasData;
+        _previousServiceVersion = serviceVersion;
+        _previousIsDragOver     = _isDragOver;
         return shouldRender;
     }
 
@@ -197,12 +217,11 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
             if (_lastSortVersion != State.SortVersion)
             {
                 _lastSortVersion = State.SortVersion;
-                // 行数が変わる可能性があるため、ソートバージョン変化時に画像を再設定する
-                if (_imageLoaded && _imageDataUrl != null)
-                {
+                // ソートバージョン変化時に画像を再設定する
+                var currentImage = _imageService.Current;
+                if (currentImage != null)
                     await JS.InvokeVoidAsync("pictureRowCanvasRenderer.setImage",
-                        _canvasId, _imageDataUrl, State.MainArray.Length);
-                }
+                        _canvasId, currentImage.DataUrl, State.MainArray.Length);
                 await JS.InvokeVoidAsync("pictureRowCanvasRenderer.setArray",
                     _canvasId,
                     State.MainArray,
@@ -259,10 +278,10 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
 
     /// <summary>ドロップされたファイルの dataURL を JS から受け取る</summary>
     [JSInvokable]
-    public async Task OnFileDropped(string dataUrl, string fileName, long fileSize)
+    public void OnFileDropped(string dataUrl, string fileName, long fileSize)
     {
         DebugSettings.Log($"[PictureRowRenderer] File dropped: {fileName} ({fileSize} bytes)");
-        await LoadImageFromDataUrl(dataUrl);
+        LoadImageFromDataUrl(dataUrl, fileName);
     }
 
     /// <summary>ドロップエラーを JS から受け取る</summary>
@@ -293,7 +312,7 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
             var dataUrl = $"data:{file.ContentType};base64,{base64}";
 
             DebugSettings.Log($"[PictureRowRenderer] Image selected: {file.Name} ({bytes.Length} bytes)");
-            await LoadImageFromDataUrl(dataUrl);
+            LoadImageFromDataUrl(dataUrl, file.Name);
         }
         catch (Exception ex)
         {
@@ -302,18 +321,10 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     }
 
     /// <summary>dataURL を受け取って共通処理（ファイル選択 / ドロップ 両対応）</summary>
-    private async Task LoadImageFromDataUrl(string dataUrl)
+    private void LoadImageFromDataUrl(string dataUrl, string fileName)
     {
-        _imageDataUrl = dataUrl;
-        _imageLoaded = true;
-
-        if (_isInitialized && State?.MainArray.Length > 0)
-        {
-            await JS.InvokeVoidAsync("pictureRowCanvasRenderer.setImage",
-                _canvasId, _imageDataUrl, State.MainArray.Length);
-        }
-
-        await InvokeAsync(StateHasChanged);
+        // サービスに追加 → OnChanged イベントで OnImageServiceChanged が呼ばれる
+        _imageService.AddImage(dataUrl, fileName);
     }
 
     private async Task OnCanvasClick()
@@ -324,6 +335,7 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     public async ValueTask DisposeAsync()
     {
         RenderSettings.OnChanged -= OnRenderSettingsChanged;
+        _imageService.OnChanged -= OnImageServiceChanged;
         DebugSettings.Log($"[PictureRowRenderer] DisposeAsync called for canvas: {_canvasId}");
 
         try { await JS.InvokeVoidAsync("pictureRowCanvasRenderer.disposeDropZone", _dropZoneId); } catch { }

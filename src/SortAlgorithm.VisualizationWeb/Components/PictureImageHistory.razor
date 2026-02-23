@@ -1,0 +1,44 @@
+@using SortAlgorithm.VisualizationWeb.Services
+@inject PictureImageService ImageService
+@implements IDisposable
+
+@if (ImageService.History.Count > 0)
+{
+    <div style="display: flex; gap: 4px; align-items: center; flex-wrap: nowrap;">
+        @foreach (var entry in ImageService.History)
+        {
+            var isCurrent = entry == ImageService.Current;
+            <img src="@entry.DataUrl"
+                 alt="@entry.FileName"
+                 title="@entry.FileName"
+                 @onclick="() => SelectEntry(entry)"
+                 style="width: @(ThumbnailWidth)px; height: @(ThumbnailHeight)px;
+                        object-fit: cover; border-radius: 3px; cursor: pointer;
+                        border: 2px solid @(isCurrent ? "#3B82F6" : "rgba(255,255,255,0.25)");
+                        opacity: @(isCurrent ? "1.0" : "0.55");
+                        transition: opacity 0.15s, border-color 0.15s;" />
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public int ThumbnailWidth  { get; set; } = 36;
+    [Parameter] public int ThumbnailHeight { get; set; } = 27;
+
+    protected override void OnInitialized()
+    {
+        ImageService.OnChanged += OnServiceChanged;
+    }
+
+    private void OnServiceChanged() => InvokeAsync(StateHasChanged);
+
+    private void SelectEntry(PictureImageService.ImageEntry entry)
+    {
+        ImageService.SetCurrent(entry);
+    }
+
+    public void Dispose()
+    {
+        ImageService.OnChanged -= OnServiceChanged;
+    }
+}
