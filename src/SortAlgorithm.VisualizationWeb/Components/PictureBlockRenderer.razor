@@ -1,0 +1,343 @@
+@using SortAlgorithm.VisualizationWeb.Models
+@using SortAlgorithm.VisualizationWeb.Services
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject DebugSettings DebugSettings
+@inject RenderSettings RenderSettings
+@inject PictureImageService _imageService
+@implements IAsyncDisposable
+
+<div id="@_dropZoneId"
+class="picture-block-container @(State?.PlaybackState == PlaybackState.Playing ? "playing" : "") @(_isDragOver ? "drag-over" : "")"
+@onclick="OnCanvasClick"
+style="position: relative; width: 100%; height: 100%; align-self: stretch;">
+
+    @if (State != null && State.MainArray.Length > 0)
+    {
+        <canvas @key="_canvasId" id="@_canvasId" style="width: 100%; height: 100%; display: block;"></canvas>
+
+        @* 履歴 + 画像変更ボタン（右上に表示） *@
+        <div style="position: absolute; top: 8px; right: 8px; z-index: 10;
+                    display: flex; gap: 6px; align-items: center;"
+             @onclick:stopPropagation="true">
+            <PictureImageHistory ThumbnailWidth="36" ThumbnailHeight="27" />
+            <label style="background: rgba(0,0,0,0.6); color: #fff; border: 1px solid #555;
+                          border-radius: 6px; padding: 4px 10px; font-size: 0.8rem; cursor: pointer;
+                          user-select: none; white-space: nowrap;"
+                   title="Upload image to visualize">
+                📷 @(_imageService.Current != null ? "Change Image" : "Upload Image")
+                <InputFile OnChange="HandleFileUpload"
+                           accept="image/*"
+                           style="display: none;" />
+            </label>
+        </div>
+
+        @* ドラッグオーバー時のオーバーレイ *@
+        @if (_isDragOver)
+        {
+            <div style="position: absolute; inset: 0; z-index: 20; pointer-events: none;
+                        background: rgba(59,130,246,0.25); border: 3px dashed #3B82F6;
+                        border-radius: 4px; display: flex; align-items: center; justify-content: center;">
+                <span style="color: #fff; font-size: 1.4rem; text-shadow: 0 1px 4px rgba(0,0,0,0.8);">
+                    🖼️ Drop image here
+                </span>
+            </div>
+        }
+    }
+    else
+    {
+        @* 初期状態: 画像アップロード UI *@
+        <div style="text-align: center; color: #999; height: 100%; display: flex; flex-direction: column;
+                    justify-content: center; align-items: center; gap: 1rem;
+                    @(_isDragOver ? "outline: 3px dashed #3B82F6; outline-offset: -12px; background: rgba(59,130,246,0.08);" : "")">
+            <p style="font-size: 2.5rem; margin: 0;">@(_isDragOver ? "🖼️" : "🖼️")</p>
+            @if (_isDragOver)
+            {
+                <p style="margin: 0; color: #3B82F6; font-weight: bold;">Drop image here</p>
+            }
+            else
+            {
+                <p style="margin: 0;">Click "Generate &amp; Sort" to start visualization</p>
+                <p style="margin: 0; font-size: 0.85rem; color: #666;">
+                    Upload or drag &amp; drop an image to sort its blocks
+                </p>
+<PictureImageHistory ThumbnailWidth="48" ThumbnailHeight="36" />
+                <label style="background: #3B82F6; color: #fff; border: none; border-radius: 6px;
+                              padding: 8px 20px; font-size: 0.9rem; cursor: pointer; user-select: none;">
+                    📷 @(_imageService.Current != null ? "Change Image" : "Upload Image")
+                    <InputFile OnChange="HandleFileUpload"
+                               accept="image/*"
+                               style="display: none;" />
+                </label>
+                @if (_imageService.Current != null)
+                {
+                    <p style="margin: 0; font-size: 0.85rem; color: #10B981;">✅ Image loaded</p>
+                }
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public VisualizationState? State { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public int GridColumnCount { get; set; } = 1;
+
+    private string _canvasId   = $"sortPictureBlockCanvas_{Guid.NewGuid():N}";
+    private string _dropZoneId = $"sortPictureBlockDrop_{Guid.NewGuid():N}";
+    private bool _isInitialized = false;
+    private bool _isInitializing = false;
+    private bool _isDropZoneRegistered = false;
+    private bool _previousHasData = false;
+    private int _lastSortVersion = -1;
+
+    private int _previousServiceVersion = -1;
+
+    private bool _isDragOver = false;
+    private bool _previousIsDragOver = false;
+
+    private DotNetObjectReference<PictureBlockRenderer>? _dotNetRef;
+
+    protected override void OnInitialized()
+    {
+        RenderSettings.OnChanged += OnRenderSettingsChanged;
+        _imageService.OnChanged += OnImageServiceChanged;
+        _dotNetRef = DotNetObjectReference.Create(this);
+    }
+
+    private void OnImageServiceChanged()
+    {
+        InvokeAsync(async () =>
+        {
+            if (_isInitialized && State?.MainArray.Length > 0)
+            {
+                var current = _imageService.Current;
+                if (current != null)
+                    await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.setImage",
+                        _canvasId, current.DataUrl, State.MainArray.Length);
+            }
+            StateHasChanged();
+        });
+    }
+
+    private void OnRenderSettingsChanged()
+    {
+        InvokeAsync(async () =>
+        {
+            var oldCanvasId   = _canvasId;
+            var oldDropZoneId = _dropZoneId;
+            var wasInitialized = _isInitialized;
+
+            _canvasId   = $"sortPictureBlockCanvas_{Guid.NewGuid():N}";
+            _dropZoneId = $"sortPictureBlockDrop_{Guid.NewGuid():N}";
+            _isInitialized = false;
+            _isDropZoneRegistered = false;
+            _lastSortVersion = -1;
+            StateHasChanged();
+
+            if (wasInitialized)
+            {
+                try { await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.dispose", oldCanvasId); } catch { }
+            }
+            try { await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.disposeDropZone", oldDropZoneId); } catch { }
+        });
+    }
+
+    protected override bool ShouldRender()
+    {
+        var hasData = State?.MainArray.Length > 0;
+        var serviceVersion = _imageService.Version;
+        var shouldRender = _previousHasData       != hasData
+                        || (hasData && !_isInitialized)
+                        || _previousServiceVersion != serviceVersion
+                        || _previousIsDragOver     != _isDragOver;
+        _previousHasData        = hasData;
+        _previousServiceVersion = serviceVersion;
+        _previousIsDragOver     = _isDragOver;
+        return shouldRender;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_isInitialized) return;
+        await RenderCanvas();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!_isDropZoneRegistered && _dotNetRef != null)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.setupDropZone", _dropZoneId, _dotNetRef);
+                _isDropZoneRegistered = true;
+            }
+            catch { }
+        }
+
+        if (State?.MainArray.Length == 0) return;
+
+        if (_isInitialized || _isInitializing) return;
+        _isInitializing = true;
+        var targetCanvasId = _canvasId;
+
+        try
+        {
+            var success = await JS.InvokeAsync<bool>("pictureBlockCanvasRenderer.initialize", targetCanvasId, RenderSettings.UseWebGL);
+            if (success && _canvasId == targetCanvasId)
+            {
+                _isInitialized = true;
+                await RenderCanvas();
+            }
+        }
+        finally
+        {
+            _isInitializing = false;
+            if (!_isInitialized)
+                StateHasChanged();
+        }
+    }
+
+    private async Task RenderCanvas()
+    {
+        if (!_isInitialized || State == null || State.MainArray.Length == 0) return;
+
+        try
+        {
+            if (_lastSortVersion != State.SortVersion)
+            {
+                _lastSortVersion = State.SortVersion;
+                var currentImage = _imageService.Current;
+                if (currentImage != null)
+                    await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.setImage",
+                        _canvasId, currentImage.DataUrl, State.MainArray.Length);
+                await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.setArray",
+                    _canvasId,
+                    State.MainArray,
+                    State.BufferArrays,
+                    State.CompareIndices,
+                    State.SwapIndices,
+                    State.ReadIndices,
+                    State.WriteIndices,
+                    State.IsSortCompleted,
+                    State.ShowCompletionHighlight);
+            }
+            else if (State.MainArrayDelta != null)
+            {
+                await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.applyFrame",
+                    _canvasId,
+                    State.MainArrayDelta,
+                    State.BufferArrayDeltas,
+                    State.CompareIndices,
+                    State.SwapIndices,
+                    State.ReadIndices,
+                    State.WriteIndices,
+                    State.IsSortCompleted,
+                    State.ShowCompletionHighlight);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.updateData",
+                    _canvasId,
+                    State.MainArray,
+                    State.CompareIndices,
+                    State.SwapIndices,
+                    State.ReadIndices,
+                    State.WriteIndices,
+                    State.IsSortCompleted,
+                    State.BufferArrays,
+                    State.ShowCompletionHighlight);
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugSettings.Log($"PictureBlock Canvas render error: {ex.Message}");
+        }
+    }
+
+    [JSInvokable]
+    public void OnDragStateChanged(bool isDragOver)
+    {
+        _isDragOver = isDragOver;
+        InvokeAsync(StateHasChanged);
+    }
+
+    [JSInvokable]
+    public void OnFileDropped(string dataUrl, string fileName, long fileSize)
+    {
+        DebugSettings.Log($"[PictureBlockRenderer] File dropped: {fileName} ({fileSize} bytes)");
+        LoadImageFromDataUrl(dataUrl, fileName);
+    }
+
+    [JSInvokable]
+    public void OnDropError(string message)
+    {
+        DebugSettings.Log($"[PictureBlockRenderer] Drop error: {message}");
+    }
+
+    private async Task HandleFileUpload(InputFileChangeEventArgs e)
+    {
+        var file = e.File;
+        if (file == null) return;
+
+        const long maxAllowedSize = 20 * 1024 * 1024;
+        try
+        {
+            using var stream = file.OpenReadStream(maxAllowedSize);
+            using var ms = new MemoryStream();
+            await stream.CopyToAsync(ms);
+            var bytes = ms.ToArray();
+            var base64 = Convert.ToBase64String(bytes);
+            var dataUrl = $"data:{file.ContentType};base64,{base64}";
+            DebugSettings.Log($"[PictureBlockRenderer] Image selected: {file.Name} ({bytes.Length} bytes)");
+            LoadImageFromDataUrl(dataUrl, file.Name);
+        }
+        catch (Exception ex)
+        {
+            DebugSettings.Log($"[PictureBlockRenderer] Image load error: {ex.Message}");
+        }
+    }
+
+    private void LoadImageFromDataUrl(string dataUrl, string fileName)
+    {
+        _imageService.AddImage(dataUrl, fileName);
+    }
+
+    private async Task OnCanvasClick()
+    {
+        await OnClick.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        RenderSettings.OnChanged -= OnRenderSettingsChanged;
+        _imageService.OnChanged -= OnImageServiceChanged;
+        DebugSettings.Log($"[PictureBlockRenderer] DisposeAsync called for canvas: {_canvasId}");
+
+        try { await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.disposeDropZone", _dropZoneId); } catch { }
+
+        if (_isInitialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("pictureBlockCanvasRenderer.dispose", _canvasId);
+                DebugSettings.Log($"[PictureBlockRenderer] Successfully disposed canvas: {_canvasId}");
+            }
+            catch (Exception ex)
+            {
+                DebugSettings.Log($"[PictureBlockRenderer] ERROR disposing canvas {_canvasId}: {ex.Message}");
+            }
+        }
+        else
+        {
+            DebugSettings.Log($"[PictureBlockRenderer] Canvas {_canvasId} was not initialized, skipping dispose");
+        }
+
+        _dotNetRef?.Dispose();
+    }
+}

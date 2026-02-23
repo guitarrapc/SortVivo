@@ -16,5 +16,6 @@ builder.Services.AddSingleton<ArrayPatternRegistry>();
 builder.Services.AddSingleton<ComparisonModeService>();
 builder.Services.AddSingleton<DebugSettings>();
 builder.Services.AddSingleton<RenderSettings>();
+builder.Services.AddSingleton<PictureImageService>();
 
 await builder.Build().RunAsync();

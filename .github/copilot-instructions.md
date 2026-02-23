@@ -29,6 +29,8 @@ When implementing or reviewing sorting algorithms, refer to these detailed guide
 
 **Key Rule:** Always use `SortSpan<T, TComparer, TContext>` methods (`Read`, `Write`, `Compare`, `Swap`, `CopyTo`) instead of direct array access. This ensures accurate statistics tracking. All algorithms use the generic `TComparer : IComparer<T>` pattern for zero-allocation devirtualized comparisons, with convenience overloads that delegate via `new ComparableComparer<T>()`. This follows the same pattern as `MemoryExtensions.Sort` in dotnet/runtime - runtime validation instead of compile-time constraints.
 
+**Script Rule:** Don't write any multi-line PowerShell Code in the shell. If you need to run a script, create a file then executte it.
+
 ## How to Work on This Project
 
 ### Running Tests
