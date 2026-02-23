@@ -29,6 +29,12 @@ window.pictureRowCanvasRenderer = {
   _imageBlobCacheKeys: [],      // FIFO キー管理（最大 5 件）
   _maxBlobCacheSize: 5,
 
+  // ImageBitmap デコードキャッシュ（メインスレッドで 1 回だけ createImageBitmap を実行）
+  // ComparisonMode の 6 インスタンスが同じ画像を使う場合に JPEG デコードを共有する
+  _bitmapDecodeCache: new Map(),  // dataUrl → Promise<ImageBitmap>
+  _bitmapDecodeCacheKeys: [],     // FIFO キー管理（最大 3 件）
+  _maxBitmapDecodeSize: 3,
+
   // HSL カラー LUT（Canvas 2D fallback 用）
   _colorLUTMax: -1,
   _colorLUT: null,
@@ -144,6 +150,27 @@ window.pictureRowCanvasRenderer = {
     this._imageBlobCacheKeys.push(dataUrl);
   },
 
+  /**
+   * メインスレッドで createImageBitmap を 1 回だけ実行し Promise をキャッシュする。
+   * ComparisonMode の複数 Worker が同じ画像を参照する場合に JPEG デコードを共有できる。
+   * @param {string} dataUrl
+   * @param {Blob} blob
+   * @returns {Promise<ImageBitmap>}
+   */
+  _getBitmapDecodePromise: function (dataUrl, blob) {
+    let promise = this._bitmapDecodeCache.get(dataUrl);
+    if (!promise) {
+      promise = createImageBitmap(blob);
+      if (this._bitmapDecodeCacheKeys.length >= this._maxBitmapDecodeSize) {
+        const oldKey = this._bitmapDecodeCacheKeys.shift();
+        this._bitmapDecodeCache.delete(oldKey);
+      }
+      this._bitmapDecodeCache.set(dataUrl, promise);
+      this._bitmapDecodeCacheKeys.push(dataUrl);
+    }
+    return promise;
+  },
+
   setImage: async function (canvasId, dataUrl, numRows) {
     if (!dataUrl || numRows <= 0) return;
 
@@ -151,10 +178,10 @@ window.pictureRowCanvasRenderer = {
 
     const workerInfo = this.workers.get(canvasId);
     if (workerInfo) {
-      try {
-        // Blob キャッシュを利用（同じ dataUrl なら atob は1回だけ実行）
-        let cached = this._imageBlobCache.get(dataUrl);
-        if (!cached) {
+      // Blob キャッシュを利用（同じ dataUrl なら atob は1回だけ実行）
+      let cached = this._imageBlobCache.get(dataUrl);
+      if (!cached) {
+        try {
           const base64 = dataUrl.split(',')[1];
           const mimeMatch = dataUrl.match(/data:([^;]+);/);
           const mimeType = mimeMatch ? mimeMatch[1] : 'image/png';
@@ -166,12 +193,42 @@ window.pictureRowCanvasRenderer = {
           const blob = new Blob([bytes.buffer], { type: mimeType });
           this._cacheBlob(dataUrl, blob, mimeType);
           cached = { blob, mimeType };
+        } catch (err) {
+          window.debugHelper.error('PictureRow setImage blob decode error:', err);
+          return;
         }
-        // Blob を Worker へ送信（構造化クローン - 内部データ共有）
-        workerInfo.worker.postMessage({ type: 'setImage', imageBlob: cached.blob, numRows });
-      } catch (err) {
-        window.debugHelper.error('PictureRow setImage error:', err);
       }
+
+      // Worker の現在の画像を即座にクリアしてバーモード fallback にする
+      workerInfo.worker.postMessage({ type: 'clearImage' });
+
+      // メインスレッドで JPEG を 1 回だけデコード（ComparisonMode の 6 Worker が共有）
+      // 各 Worker には createImageBitmap(sharedBitmap) で独立コピーを転送する
+      const self = this;
+      this._getBitmapDecodePromise(dataUrl, cached.blob)
+        .then(function (sharedBitmap) {
+          // Worker が既に破棄されていれば何もしない
+          if (!self.workers.has(canvasId)) return;
+          // 共有 bitmap から Worker 専用コピーを生成（JPEG 再デコードなし・ピクセルコピーのみ）
+          return createImageBitmap(sharedBitmap);
+        })
+        .then(function (workerBitmap) {
+          if (!workerBitmap) return;
+          const wi = self.workers.get(canvasId);
+          if (!wi) {
+            workerBitmap.close();
+            return;
+          }
+          // Transferable として Worker へ転送（ゼロコピー）
+          wi.worker.postMessage(
+            { type: 'setImageBitmap', bitmap: workerBitmap, numRows },
+            [workerBitmap]
+          );
+          window.debugHelper.log('PictureRow setImageBitmap sent:', canvasId, 'numRows:', numRows);
+        })
+        .catch(function (err) {
+          window.debugHelper.error('PictureRow setImage decode error:', canvasId, err);
+        });
       return;
     }
 

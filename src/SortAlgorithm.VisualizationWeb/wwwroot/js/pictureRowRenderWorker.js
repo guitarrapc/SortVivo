@@ -191,13 +191,14 @@ self.onmessage = function (e) {
       // 古い bitmap を即座に無効化し、createImageBitmap 完了前に setArray が届いても
       // draw() がバーモード fallback になるようにする（下半分ブラック防止）
       const requestId = ++pendingImageRequestId;
+      if (imageBitmap) { imageBitmap.close(); }
       imageBitmap = null;
       imageNumRows = 0;
       if (arrays.main && renderParams) scheduleDraw();
 
       createImageBitmap(blobOrBuffer).then(function (bmp) {
         // 後続の setImage が来ていた場合は古い結果を破棄
-        if (requestId !== pendingImageRequestId) return;
+        if (requestId !== pendingImageRequestId) { bmp.close(); return; }
         imageBitmap = bmp;
         imageNumRows = msg.numRows;
         if (arrays.main && renderParams) scheduleDraw();
@@ -212,8 +213,18 @@ self.onmessage = function (e) {
     }
 
     case 'clearImage': {
+      if (imageBitmap) { imageBitmap.close(); }
       imageBitmap = null;
       imageNumRows = 0;
+      if (arrays.main && renderParams) scheduleDraw();
+      break;
+    }
+
+    case 'setImageBitmap': {
+      // メインスレッドでデコード済みの ImageBitmap を直接受け取る（非同期処理不要）
+      if (imageBitmap) { imageBitmap.close(); }
+      imageBitmap = msg.bitmap;
+      imageNumRows = msg.numRows;
       if (arrays.main && renderParams) scheduleDraw();
       break;
     }
@@ -290,6 +301,7 @@ self.onmessage = function (e) {
       ctx = null;
       arrays = { main: null, buffers: new Map() };
       renderParams = null;
+      if (imageBitmap) { imageBitmap.close(); }
       imageBitmap = null;
       imageNumRows = 0;
       pendingImageRequestId = 0;
