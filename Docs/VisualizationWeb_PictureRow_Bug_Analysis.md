@@ -1,19 +1,26 @@
-# PictureRow ComparisonMode バグ分析
+# Picture Mode バグ分析
+
+> Picture Row / Column / Block の全 Worker に共通する問題を調査・対応したドキュメント。
 
 ## 報告された症状
 
 | 項目 | 内容 |
 |------|------|
-| モード | ComparisonMode / Picture Row |
-| 条件 | Array Size: **2048**、インスタンス数: **6** |
+| 対象モード | **Picture Row / Picture Column / Picture Block** |
+| 初回報告条件 | ComparisonMode / Array Size: **2048**、インスタンス数: **6** |
 | 症状1 | すべてのキャンバスで、**画像の上半分だけ表示され下半分が真っ暗** |
 | 症状2 | **動作のカクツキ**（フレームドロップ） |
+| 症状3（後続報告） | Picture × 大 n（4096 など）で **Chrome NP > 200ms**、Canvas が主因 |
 | 正常ケース | Array Size: 1024、インスタンス数: 6 → 問題なし |
 | レンダラー | WebGL / CPU Worker どちらでも発生 |
 
+
+
 ---
 
-## バグA：下半分ブラック問題
+## バグA：下半分ブラック問題（Picture Row）
+
+> **影響範囲**: `pictureRowRenderWorker.js` のみ（Column・Block は画像サイズが変わっても同じ問題が潜在）
 
 ### 根本原因
 
@@ -118,11 +125,13 @@ Canvas 2D fallback は「img が null の間はバーモード」という自然
 
 ---
 
-## バグC：Canvas NP 200ms+ 問題（Picture × 大n で発生）
+## バグC：Canvas NP 200ms+ 問題（全 Picture モード × 大 n）
+
+> **影響範囲**: `pictureRowRenderWorker.js` / `pictureColumnRenderWorker.js` / `pictureBlockRenderWorker.js` の全 Worker
 
 ### 症状
 - 非画像ソート（4096×4）はスムーズ
-- **Picture モードのみ** n=4096 でカクツキ継続
+- **全 Picture モード（Row / Column / Block）** で n=4096 のときカクツキ継続
 - Chrome DevTools Performance パネルで **NP（Non-Paint）> 200ms** が毎フレーム発生
 - 「NP の大半が Canvas にある」との報告
 
@@ -211,36 +220,72 @@ n=4096 個のコマンドを毎フレーム GPU に投げると、**コマンド
 - `buildPreScaledPixels()` が失敗した場合（例: OffscreenCanvas 未サポート）、`drawFast()` は `false` を返す
 - 既存の n × drawImage ループにフォールバックする（`draw()` に保持）
 
----
+### 修正対象ファイルと実装方針
 
-### 修正対象ファイル
+全 3 Worker に同一の `buildPreScaledPixels()` + `drawFast()` パターンを適用した。  
+モードによって事前スケールの次元と描画アルゴリズムが異なる。
 
-| ファイル | 変更内容 |
-|---------|---------|
-| `wwwroot/js/pictureRowRenderWorker.js` | `buildPreScaledPixels()` / `drawFast()` 追加、全ハンドラに統合 |
+| Worker | 事前スケール寸法 | `drawFast()` アルゴリズム |
+|--------|---------------|------------------------|
+| `pictureRowRenderWorker.js` | `physW × n`（1px/行） | 逆引きマップ(physH) + `TypedArray.set()` × physH（行コピー） |
+| `pictureColumnRenderWorker.js` | `n × physH`（1px/列） | 逆引きマップ(physW) + Uint32 gather × physH×physW（列ごとに色引き） |
+| `pictureBlockRenderWorker.js` | `physW × physH`（全体） | ブロック単位 `set()` コピー × n×blockH（2D ブロックコピー） |
 
-#### 新規追加 State 変数
+#### 新規追加 State 変数（全 Worker 共通）
 
 ```javascript
-let preScaledPixels = null;   // キャンバス幅に事前スケール済み行ピクセル
-let preScaledNumRows = 0;     // preScaledPixels の行数
-let preScaledPhysW = 0;       // 構築時の物理キャンバス幅
-let outputImageData = null;   // 再利用可能な出力 ImageData
-let rowMappingBuffer = null;  // 再利用可能な逆引きマップ
+let pendingImageRequestId = 0; // setImage リクエスト追跡
+let preScaledPixels = null;    // 事前スケール済みピクセルキャッシュ
+let outputImageData = null;    // 再利用可能な出力 ImageData
+// ※ Row: preScaledNumRows, preScaledPhysW, rowMappingBuffer
+// ※ Column: preScaledNumCols, preScaledPhysH, colMappingBuffer
+// ※ Block: preScaledPhysW, preScaledPhysH（マッピングバッファなし）
 ```
 
-#### `buildPreScaledPixels()` が呼ばれるタイミング
+#### `buildPreScaledPixels()` が呼ばれるタイミング（全モード共通）
 
 | イベント | 理由 |
 |---------|-----|
 | `setImageBitmap` | 新しい画像受信後にキャッシュ構築 |
 | `setImage` の `.then()` | 新しい画像受信後にキャッシュ構築 |
-| `resize` | キャンバス幅変化時に physW が変わるため再構築 |
+| `resize` | キャンバスサイズ変化時に再構築 |
 | `setImage` / `clearImage` の先頭 | 古いキャッシュを無効化してバーモード fallback へ |
+
+#### フォールバック動作
+
+- `buildPreScaledPixels()` が失敗した場合（例: OffscreenCanvas 未サポート）、`drawFast()` は `false` を返す
+- 既存の n × drawImage ループにフォールバックする（`draw()` に保持）
+
+---
+
+## バグD：Column / Block Worker の追加問題（バグC 調査中に発見）
+
+> バグ C の修正のため Column・Block Worker を調査した際に、Row にはすでに修正済みの問題が残っていることが判明した。
+
+### 発見した問題一覧
+
+| 問題 | Row Worker | Column Worker | Block Worker |
+|------|-----------|--------------|-------------|
+| バグA レース条件（`setImage`） | ✅ 修正済み | ❌ 同じ問題あり | ❌ 同じ問題あり |
+| `pendingImageRequestId` | ✅ あり | ❌ なし | ❌ なし |
+| `setImageBitmap` ハンドラ | ✅ あり | ❌ **実装なし** | ❌ **実装なし** |
+| `clearImage` ハンドラ | ✅ あり | ❌ **実装自体なし** | ✅ あり（preScaled リセット未対応） |
+
+#### Column Worker に `clearImage` ハンドラが欠落していた
+
+`pictureColumnCanvasRenderer.js` は `clearImage` メッセージを Worker に送信しているが、  
+`pictureColumnRenderWorker.js` にはそのハンドラが実装されていなかった。  
+→ Blazor から `clearImage()` を呼んでも Worker 内の画像がクリアされない状態だった。
 
 ---
 
 
+
+
+
+## バグB：カクツキ問題（ComparisonMode × 大 n）
+
+> **影響範囲**: 全 Picture モード（Row / Column / Block）、ComparisonMode で顕著
 
 ### 根本原因（複数）
 
@@ -296,72 +341,117 @@ Blazor WASM のヒープが圧迫されると **GC Pause** が定期的に発生
 
 ## 影響コード箇所一覧
 
-| ファイル | 行番号 | 内容 |
-|---------|-------|------|
-| `wwwroot/js/pictureRowRenderWorker.js` | 183〜199 | `setImage` ハンドラー（レース条件の発生源） |
-| `wwwroot/js/pictureRowRenderWorker.js` | 105, 117 | `draw()` 内 `rowIdx >= imageNumRows` スキップ条件 |
-| `wwwroot/js/pictureRowRenderWorker.js` | 89 | `imageBitmap && imageNumRows > 0` チェック |
-| `Services/ComparisonModeService.cs` | `AddAlgorithm()` | `ExecuteAndRecord` 同期ブロック |
-| `Components/PictureRowRenderer.razor` | `RenderCanvas()` | setImage → setArray 呼び出し順序 |
+### バグA（レース条件）
+
+| ファイル | 内容 | 状態 |
+|---------|------|------|
+| `pictureRowRenderWorker.js` | `setImage` ハンドラの非同期レース条件 | ✅ 修正済み |
+| `pictureColumnRenderWorker.js` | 同上 | ✅ 修正済み |
+| `pictureBlockRenderWorker.js` | 同上 | ✅ 修正済み |
+
+### バグC（n × drawImage NP 200ms）
+
+| ファイル | 内容 | 状態 |
+|---------|------|------|
+| `pictureRowRenderWorker.js` | `draw()` 内 n 回 `drawImage` → `drawFast()` 高速パスに置換 | ✅ 修正済み |
+| `pictureColumnRenderWorker.js` | 同上（列方向） | ✅ 修正済み |
+| `pictureBlockRenderWorker.js` | 同上（ブロック方向） | ✅ 修正済み |
+
+### バグD（Column / Block Worker の追加欠落）
+
+| ファイル | 問題 | 状態 |
+|---------|------|------|
+| `pictureColumnRenderWorker.js` | `clearImage` ハンドラが完全に欠落 | ✅ 追加済み |
+| `pictureColumnRenderWorker.js` | `setImageBitmap` ハンドラなし | ✅ 追加済み |
+| `pictureColumnRenderWorker.js` | `pendingImageRequestId` なし | ✅ 追加済み |
+| `pictureBlockRenderWorker.js` | `setImageBitmap` ハンドラなし | ✅ 追加済み |
+| `pictureBlockRenderWorker.js` | `pendingImageRequestId` なし | ✅ 追加済み |
+
+### バグB（カクツキ・未解決分）
+
+| ファイル | 内容 | 状態 |
+|---------|------|------|
+| `Services/ComparisonModeService.cs` | `ExecuteAndRecord` 同期ブロック | 未着手 |
+| `Services/PlaybackService.cs` | 6 インスタンス独立 RAF ループ | 未着手 |
 
 ---
 
 ## 修正方針
 
-### Fix A：レース条件の解消（バグA 対応）
+### Fix A：レース条件の解消（バグA 対応）✅ 適用済み
 
-**方針**: `setImage` 受信時に**即座に `imageBitmap = null` にリセット**する。  
-`createImageBitmap` が完了するまで `draw()` はバーモード fallback になる。  
-（半黒表示よりバー表示のほうが UX として許容される）
+**対象 Worker**: Row / Column / Block の全 3 Worker
 
-**修正対象**: `wwwroot/js/pictureRowRenderWorker.js`
+**方針**: `setImage` 受信時に**即座に `imageBitmap = null` / `preScaledPixels = null` にリセット**する。  
+`createImageBitmap` が完了するまで `draw()` はバーモード fallback になる。
 
 ```javascript
-// ---- 変更前 ----
+// ---- 変更後（全 Worker 共通パターン） ----
 case 'setImage': {
-  const blobOrBuffer = msg.imageBlob ? msg.imageBlob : ...;
-  if (!blobOrBuffer) break;
+  const requestId = ++pendingImageRequestId;
+  if (imageBitmap) { imageBitmap.close(); }
+  imageBitmap = null;
+  imageNum*** = 0;      // Row: imageNumRows, Column: imageNumCols, Block: imageNumBlocks
+  preScaledPixels = null; // 高速パスキャッシュを即座に無効化
+  if (arrays.main && renderParams) scheduleDraw(); // バーモードで即時再描画
+
   createImageBitmap(blobOrBuffer).then(function (bmp) {
+    if (requestId !== pendingImageRequestId) { bmp.close(); return; }
     imageBitmap = bmp;
-    imageNumRows = msg.numRows;  // ← 非同期完了後にだけ更新（レース条件）
+    imageNum*** = msg.num***;
+    buildPreScaledPixels(); // 高速パスキャッシュを再構築
     if (arrays.main && renderParams) scheduleDraw();
   }).catch(...);
   break;
 }
-
-// ---- 変更後 ----
-case 'setImage': {
-  const blobOrBuffer = msg.imageBlob ? msg.imageBlob : ...;
-  if (!blobOrBuffer) break;
-
-  // 受信直後に古い bitmap を無効化し、draw() をバーモード fallback にする
-  imageBitmap = null;
-  imageNumRows = 0;
-  if (arrays.main && renderParams) scheduleDraw(); // バーモードでの即時再描画
-
-  const requestId = ++pendingImageRequestId; // リクエスト追跡（後述）
-  createImageBitmap(blobOrBuffer).then(function (bmp) {
-    if (requestId !== pendingImageRequestId) return; // 古いリクエストは無視
-    imageBitmap = bmp;
-    imageNumRows = msg.numRows;
-    if (arrays.main && renderParams) scheduleDraw();
-  }).catch(function (err) {
-    if (requestId !== pendingImageRequestId) return;
-    imageBitmap = null;
-    imageNumRows = 0;
-    if (arrays.main && renderParams) scheduleDraw();
-  });
-  break;
-}
 ```
-
-**追加変数**: ファイル先頭に `let pendingImageRequestId = 0;` を追加。  
-`dispose` ハンドラーにも `pendingImageRequestId = 0;` を追加。
 
 **効果**:
 - `setImage` 受信 → 即座に `imageBitmap = null` → `draw()` はバーモードへ fallback
-- `createImageBitmap` 完了後 → 正しい `imageBitmap` と `imageNumRows` がセットされ画像表示
+- `createImageBitmap` 完了後 → 正しい状態が設定され画像表示
 - 複数回 `setImage` が連続送信された場合も最新のリクエストだけが反映される
+
+---
+
+### Fix C：Canvas NP 200ms の解消（バグC 対応）✅ 適用済み
+
+**対象 Worker**: Row / Column / Block の全 3 Worker
+
+**方針**: n × `drawImage` → **`putImageData` × 1 回**に変換する
+
+#### Fix C の処理フロー
+
+```
+【setImageBitmap / setImage.then() 受信時】（1回だけ実行）
+  buildPreScaledPixels():
+    Row   : OffscreenCanvas(physW × n) に drawImage → getImageData
+    Column: OffscreenCanvas(n × physH) に drawImage → getImageData
+    Block : OffscreenCanvas(physW × physH) に drawImage → getImageData
+
+【draw() 毎フレーム】
+  drawFast():
+    Row   : rowMap[physH]構築(O(n)) → TypedArray.set() × physH → putImageData × 1
+    Column: colMap[physW]構築(O(n)) → Uint32 gather × physH×physW → putImageData × 1
+    Block : ブロック単位 set() × n×blockH → putImageData × 1
+    共通  : ハイライト fillRect × ~4回
+```
+
+#### パフォーマンス比較（n=4096）
+
+| 処理 | 修正前（n × drawImage） | 修正後（putImageData） |
+|------|------------------------|----------------------|
+| GPU コマンド数/フレーム | 4,096 個 | **1 個** |
+| 推定 NP（Row） | ~200ms | **~5–15ms** |
+| 推定 NP（Column） | ~200ms | **~5–20ms** |
+| 推定 NP（Block） | ~200ms | **~5–15ms** |
+
+#### 追加メモリ使用量（n=4096、physW=physH=600）
+
+| Worker | `preScaledPixels` | `outputImageData` | Worker あたり合計 |
+|--------|--------------------|-------------------|----------------|
+| Row | 600×4096×4 = 9.8 MB | 600×1200×4 = 2.9 MB | ~12.7 MB |
+| Column | 4096×600×4 = 9.8 MB | 600×1200×4 = 2.9 MB | ~12.7 MB |
+| Block | 600×600×4 = 1.4 MB | 600×600×4 = 1.4 MB | ~2.9 MB |
 
 ---
 
@@ -432,44 +522,67 @@ await Task.Run(async () => {
 
 ## 修正優先順位
 
-| 優先度 | Fix | 難易度 | 効果 | 状態 |
-|--------|-----|--------|------|------|
-| **P0 (必須)** | Fix A: `setImage` レース条件解消 | 低 | バグA(下半分ブラック)が解消 | ✅ 適用済み |
-| **P0 (必須)** | Fix C: Canvas NP 200ms → `putImageData` 高速パス | 中 | Picture × 大n のカクツキ解消 | ✅ 適用済み |
-| **P1 (推奨)** | Fix B-2: 画像デコードの共有化 | 中 | Worker 起動時のカクツキ軽減 | ✅ 適用済み (`_bitmapDecodeCache`) |
-| **P2 (任意)** | Fix B-3: `ExecuteAndRecord` 非同期化 | 高 | アルゴリズム追加時のフリーズ解消 | 未着手 |
-| **P3 (任意)** | Fix B-4: `applyFrame` バッチ化 | 高 | 再生中の JS Interop 負荷削減 | 未着手 |
+| 優先度 | Fix | 対象 | 難易度 | 効果 | 状態 |
+|--------|-----|------|--------|------|------|
+| **P0** | Fix A: `setImage` レース条件解消 | 全3 Worker | 低 | 下半分ブラックが解消 | ✅ 適用済み |
+| **P0** | Fix C: Canvas NP 200ms → `putImageData` 高速パス | 全3 Worker | 中 | Picture × 大n のカクツキ解消 | ✅ 適用済み |
+| **P0** | Fix D: Column/Block Worker の欠落ハンドラ補完 | Column/Block | 低 | `clearImage` / `setImageBitmap` / レース条件修正 | ✅ 適用済み |
+| **P1** | Fix B-2: 画像デコードの共有化 | Row のみ | 中 | Worker 起動時のカクツキ軽減 | ✅ 適用済み（`_bitmapDecodeCache`） |
+| **P1** | Fix B-2: Column/Block にも共有化を拡張 | Column/Block | 中 | 同上 | 未着手 |
+| **P2** | Fix B-3: `ExecuteAndRecord` 非同期化 | C# | 高 | アルゴリズム追加時のフリーズ解消 | 未着手 |
+| **P3** | Fix B-4: `applyFrame` バッチ化 | C# / JS | 高 | 再生中の JS Interop 負荷削減 | 未着手 |
 
 ---
 
 ## 修正後の期待される動作
 
-### Array Size 4096 × Picture モード（シングルインスタンス）
+### 全 Picture モード × n=4096（シングルインスタンス）
 
-- `setImageBitmap` 受信後: `buildPreScaledPixels()` で ~10–30ms の前処理（1回）
-- 毎フレーム: `drawFast()` で ~5–15ms（従来 ~200ms → **10–20x 高速化**）
-- ハイライトオーバーレイ: 数回の `fillRect` で <1ms
+| タイミング | 動作 |
+|----------|------|
+| `setImageBitmap` 受信後 | `buildPreScaledPixels()` で 10–30ms の前処理（1回のみ） |
+| 毎フレーム（修正前） | n × drawImage ~200ms |
+| 毎フレーム（修正後） | `drawFast()` ~5–20ms（**10–20x 高速化**） |
+| ウィンドウリサイズ後 | `buildPreScaledPixels()` が自動再実行されるため正常動作 |
 
-### Array Size 2048 × 6インスタンス（ComparisonMode）
+### ComparisonMode × Array Size 2048 × 6インスタンス
 
 - ソート開始直後: **バーモード**で表示（画像デコード中）
-- `createImageBitmap` 完了後 (~50ms/共有デコード + ~20ms/コピー): **画像モード**に切り替わり全行が正常表示
-- ソートアニメーション中: **全行が正常に更新される**（下半分ブラックなし・NP < 20ms）
+- `createImageBitmap` 完了後 (~50ms): **画像モードに切り替わり全域が正常表示**（下半分ブラックなし）
+- ソートアニメーション中: NP < 20ms でスムーズ
 
 ### 注意事項
 
-- Fix A 適用後は、ソート開始から ~100ms の間はバーが表示される（正常な Loading 挙動）
-- Fix C の `preScaledPixels` は画像 × キャンバスサイズあたり ~10MB のメモリを追加消費する
-- resize 時に自動再構築されるため、ウィンドウリサイズ後も正常動作する
+- `setImage` / `setImageBitmap` 受信から ~100ms の間はバーが表示される（正常な Loading 挙動）
+- `preScaledPixels` は Row/Column で ~10MB、Block で ~1.4MB のメモリを追加消費する
+- Column/Block の `_bitmapDecodeCache` 共有化は未着手のため、ComparisonMode での初回デコードは Worker 数分かかる
 
 ---
 
 ## 関連ファイル
 
+### Worker（OffscreenCanvas）
+
+| ファイル | 対象モード | 適用済み Fix |
+|---------|---------|------------|
+| `wwwroot/js/pictureRowRenderWorker.js` | Picture Row | Fix A / C |
+| `wwwroot/js/pictureColumnRenderWorker.js` | Picture Column | Fix A / C / D |
+| `wwwroot/js/pictureBlockRenderWorker.js` | Picture Block | Fix A / C / D |
+
+### Main Thread レンダラー
+
+| ファイル | 対象モード | 適用済み Fix |
+|---------|---------|------------|
+| `wwwroot/js/pictureRowCanvasRenderer.js` | Picture Row | Fix B-2（`_bitmapDecodeCache`） |
+| `wwwroot/js/pictureColumnCanvasRenderer.js` | Picture Column | — |
+| `wwwroot/js/pictureBlockCanvasRenderer.js` | Picture Block | — |
+
+### Blazor / C#
+
 | ファイル | 役割 |
 |---------|------|
-| `wwwroot/js/pictureRowRenderWorker.js` | OffscreenCanvas Worker（Fix A・C の実装箇所） |
-| `wwwroot/js/pictureRowCanvasRenderer.js` | Main Thread / Canvas 2D fallback（Fix B-2 の実装箇所） |
 | `Components/PictureRowRenderer.razor` | Blazor コンポーネント（setImage/setArray 呼び出し） |
-| `Services/ComparisonModeService.cs` | 比較モード管理（バグBの発生箇所） |
-| `Services/PlaybackService.cs` | 再生制御・RAF ループ |
+| `Components/PictureColumnRenderer.razor` | 同上（Column） |
+| `Components/PictureBlockRenderer.razor` | 同上（Block） |
+| `Services/ComparisonModeService.cs` | 比較モード管理（バグB 未解決） |
+| `Services/PlaybackService.cs` | 再生制御・RAF ループ（バグB 未解決） |
