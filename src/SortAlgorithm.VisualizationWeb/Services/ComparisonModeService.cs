@@ -76,7 +76,6 @@ public class ComparisonModeService : IDisposable
         {
             var (operations, statistics, actualExecutionTime) = _executor.ExecuteAndRecord(_state.InitialArray, metadata);
 
-
             var playback = new PlaybackService(_js);
             playback.LoadOperations(_state.InitialArray, operations, statistics, actualExecutionTime);
             

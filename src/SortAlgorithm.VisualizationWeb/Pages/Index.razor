@@ -168,9 +168,9 @@
                 }
                 else
                 {
-                    <NormalModeControls 
+                <NormalModeControls 
                         Playback="Playback"
-                        OnGenerateAndSort="GenerateAndSort"
+                        OnGenerateAndSort="GenerateAndSortAsync"
                         OnSpeedSettingsChanged="OnSpeedSettingsChanged" />
                 }
             </div>
@@ -441,7 +441,7 @@ private string _runningAlgorithmName = string.Empty;
         return algo?.TimeComplexity ?? "Unknown";
     }
 
-    private void GenerateAndSort()
+    private async Task GenerateAndSortAsync()
     {
         var metadata = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
         if (metadata == null)
@@ -467,10 +467,10 @@ private string _runningAlgorithmName = string.Empty;
         var random = new Random();
         var array = pattern.Generator(size, random);
 
-        // ソート実行と操作記録（ReadOnlySpanを使用）
+        // ソート実行と操作記録（ExecuteAndRecordAsync: Task.Yield() でUIスレッドを解放しながら実行）
         try
         {
-            var (operations, statistics, actualExecutionTime) = Executor.ExecuteAndRecord(array.AsSpan(), metadata);
+            var (operations, statistics, actualExecutionTime) = await Executor.ExecuteAndRecordAsync(array, metadata);
             Playback.LoadOperations(array.AsSpan(), operations, statistics, actualExecutionTime);
             DebugSettings.Log($"Loaded {operations.Count} operations for {SelectedAlgorithm} with {pattern.Name} pattern");
         }

@@ -166,8 +166,7 @@ public class SortExecutor
     /// O(n²) アルゴリズムの記録パスは依然として同期ブロッキングだが、
     /// yield の挿入により O(n log n) では体感フリーズがほぼ解消される。
     /// </remarks>
-    public async Task<(List<SortOperation> Operations, StatisticsContext Statistics, TimeSpan ActualExecutionTime)>
-        ExecuteAndRecordAsync(int[] sourceArray, AlgorithmMetadata algorithm)
+    public async Task<(List<SortOperation> Operations, StatisticsContext Statistics, TimeSpan ActualExecutionTime)> ExecuteAndRecordAsync(int[] sourceArray, AlgorithmMetadata algorithm)
     {
         var n = sourceArray.Length;
         var workArray = ArrayPool<int>.Shared.Rent(n);
