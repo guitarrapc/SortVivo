@@ -12,6 +12,15 @@ class="picture-row-container @(State?.PlaybackState == PlaybackState.Playing ? "
 @onclick="OnCanvasClick"
 style="position: relative; width: 100%; height: 100%; align-self: stretch;">
 
+    @if (_isLoadingImage)
+    {
+        <div class="loading-overlay" style="z-index: 30; border-radius: 4px;"
+             @onclick:stopPropagation="true">
+            <div class="loading-spinner"></div>
+            <span>⏳ Loading image...</span>
+        </div>
+    }
+
     @if (State != null && State.MainArray.Length > 0)
     {
         <canvas @key="_canvasId" id="@_canvasId" style="width: 100%; height: 100%; display: block;"></canvas>
@@ -103,6 +112,10 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     private bool _isDragOver = false;
     private bool _previousIsDragOver = false;
 
+    // 画像ロード中フラグ
+    private bool _isLoadingImage = false;
+    private bool _previousIsLoadingImage = false;
+
     // DotNetObjectReference（ドラッグ＆ドロップ JS コールバック用）
     private DotNetObjectReference<PictureRowRenderer>? _dotNetRef;
 
@@ -124,6 +137,7 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
                     await JS.InvokeVoidAsync("pictureRowCanvasRenderer.setImage",
                         _canvasId, current.DataUrl, State.MainArray.Length);
             }
+            _isLoadingImage = false;
             StateHasChanged();
         });
     }
@@ -155,13 +169,15 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     {
         var hasData = State?.MainArray.Length > 0;
         var serviceVersion = _imageService.Version;
-        var shouldRender = _previousHasData       != hasData
+        var shouldRender = _previousHasData        != hasData
                         || (hasData && !_isInitialized)
                         || _previousServiceVersion != serviceVersion
-                        || _previousIsDragOver     != _isDragOver;
+                        || _previousIsDragOver     != _isDragOver
+                        || _previousIsLoadingImage != _isLoadingImage;
         _previousHasData        = hasData;
         _previousServiceVersion = serviceVersion;
         _previousIsDragOver     = _isDragOver;
+        _previousIsLoadingImage = _isLoadingImage;
         return shouldRender;
     }
 
@@ -281,7 +297,14 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     public void OnFileDropped(string dataUrl, string fileName, long fileSize)
     {
         DebugSettings.Log($"[PictureRowRenderer] File dropped: {fileName} ({fileSize} bytes)");
-        LoadImageFromDataUrl(dataUrl, fileName);
+        InvokeAsync(() =>
+        {
+            _isLoadingImage = true;
+            StateHasChanged();
+            LoadImageFromDataUrl(dataUrl, fileName);
+            // _isLoadingImage は OnImageServiceChanged 内でクリアされる
+            return Task.CompletedTask;
+        });
     }
 
     /// <summary>ドロップエラーを JS から受け取る</summary>
@@ -301,6 +324,9 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
         var file = e.File;
         if (file == null) return;
 
+        _isLoadingImage = true;
+        StateHasChanged();
+
         const long maxAllowedSize = 20 * 1024 * 1024; // 20MB
         try
         {
@@ -313,10 +339,13 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
 
             DebugSettings.Log($"[PictureRowRenderer] Image selected: {file.Name} ({bytes.Length} bytes)");
             LoadImageFromDataUrl(dataUrl, file.Name);
+            // _isLoadingImage は OnImageServiceChanged 内でクリアされる
         }
         catch (Exception ex)
         {
             DebugSettings.Log($"[PictureRowRenderer] Image load error: {ex.Message}");
+            _isLoadingImage = false;
+            StateHasChanged();
         }
     }
 
