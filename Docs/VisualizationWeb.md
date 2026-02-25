@@ -571,18 +571,7 @@ sortAlgorithm.Sort(span);
 
 チュートリアルページを別途用意して、基本的なソートアルゴリズムの動作を少数のマーブルアニメーションで説明するコンテンツを提供します。
 
-パス設計
-
-```
-/tutorial  → TutorialPage.razor  (別ページ)
-/          → Index.razor (既存の可視化ページ)
-```
-
-概要
-
-- 典型的なソートアルゴリズムの動作を少数のマーブルアニメーションで説明するチュートリアル
-- 画面上部: アルゴリズムの説明、計算量の解説を表示する (AlgorithmRegistryにTutorial Descriptionを設ける)
-- 画面下部: RxMarbles https://rxmarbles.com/ のような、少数のマーブルを使ったソートの仕組みを順番に説明するものをイメージしています
+VisualizationWeb_tutorial.md参照
 
 ## 5. パフォーマンス要件
 
