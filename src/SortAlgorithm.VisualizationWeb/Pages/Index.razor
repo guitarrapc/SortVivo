@@ -32,7 +32,7 @@
 
         <div class="header__actions">
             <NavLink href="tutorial" class="tutorial-nav-btn" title="チュートリアルへ">🎓 Tutorial</NavLink>
-            <button class="header__settings-btn" title="Settings (coming soon)" disabled>⚙ Settings</button>
+            <button class="header__settings-btn" @onclick="() => _settingsOpen = true" title="Settings">⚙ Settings</button>
         </div>
     </div>
 
@@ -43,6 +43,8 @@
         @bind-SelectedPatternName="SelectedPatternName"
         @bind-SelectedVisualizationMode="SelectedVisualizationMode"
         @bind-IsComparisonMode="_isComparisonMode"
+        @bind-SelectedCategory="_selectedCategory"
+        @bind-AutoSwitchToRecommendedSize="_autoSwitchToRecommendedSize"
         IsOpen="_quickAccessOpen"
         OnClose="() => _quickAccessOpen = false"
         OnResizeStart="HandleResizeStart"
@@ -57,6 +59,15 @@
         OnVisualizationModeChanged="OnVisualizationModeChanged"
         OnSpeedSettingsChanged="OnSpeedSettingsChanged"
         OnComparisonModeChanged="OnComparisonModeChanged" />
+
+    <SettingsModal
+        IsOpen="_settingsOpen"
+        OnClose="() => _settingsOpen = false"
+        Playback="Playback"
+        RenderSettings="RenderSettings"
+        DebugSettings="DebugSettings"
+        @bind-AutoSwitchToRecommendedSize="_autoSwitchToRecommendedSize"
+        @bind-SelectedCategory="_selectedCategory" />
 
 
 
@@ -141,6 +152,13 @@ private string _runningAlgorithmName = string.Empty;
 
     // Quick Access パネル（モバイル / タブレット）
     private bool _quickAccessOpen = false;
+
+    // Settings モーダル
+    private bool _settingsOpen = false;
+
+    // Settings: QuickAccessPanel と共有する設定
+    private string _selectedCategory = string.Empty;
+    private bool _autoSwitchToRecommendedSize = false;
 
     // サイドバーリサイズ関連
     private int _sidebarWidth = 280; // デフォルト幅（px）

@@ -2,7 +2,6 @@
 @using SortAlgorithm.VisualizationWeb.Services
 @inject AlgorithmRegistry AlgorithmRegistry
 @inject ArrayPatternRegistry ArrayPatternRegistry
-@inject IJSRuntime JS
 
 @* モバイル / タブレット: オーバーレイ背景 *@
 @if (IsOpen)
@@ -174,91 +173,6 @@
 
         </fieldset>
 
-        @* ── Advanced Settings (Layer 3 items — Phase 3 で Settings モーダルへ移動予定) ── *@
-        <details class="qap__advanced">
-            <summary class="qap__advanced-summary">⚙️ Advanced</summary>
-            <div class="qap__advanced-body">
-
-                <div class="qap__item">
-                    <span class="stat-label">
-                        Renderer
-                        <span class="qap__count">(@(RenderSettings.UseWebGL ? "WebGL" : "Canvas 2D"))</span>
-                    </span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" @bind="RenderSettings.UseWebGL" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="qap__item">
-                    <span class="stat-label">Auto Reset on Complete</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" @bind="Playback.AutoReset" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="qap__item">
-                    <span class="stat-label">Instant Mode</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" @bind="Playback.InstantMode" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="qap__item">
-                    <span class="stat-label">Sound</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" @bind="Playback.SoundEnabled" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                @if (Playback.SoundEnabled)
-                {
-                    <div class="qap__item qap__item--vertical">
-                        <div class="qap__slider-header">
-                            <span class="stat-label">Volume</span>
-                            <span class="stat-value qap__slider-value">@((int)(Playback.SoundVolume * 100))%</span>
-                        </div>
-                        <input type="range" min="0" max="1" step="0.05" @bind="Playback.SoundVolume" />
-                        @if (Playback.SpeedMultiplier > 50)
-                        {
-                            <span class="qap__warn">⚠️ Muted (speed &gt; 50x)</span>
-                        }
-                    </div>
-                }
-
-                <div class="qap__item">
-                    <span class="stat-label">Auto Switch to Recommended Size</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" @bind="_autoSwitchToRecommendedSize" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-                <div class="qap__item">
-                    <span class="stat-label">Category Filter</span>
-                    <select @bind="_selectedCategory" style="width: 100%;">
-                        <option value="">All Categories</option>
-                        @foreach (var category in AlgorithmRegistry.GetCategories())
-                        {
-                            <option value="@category">@category</option>
-                        }
-                    </select>
-                </div>
-
-                <div class="qap__item">
-                    <span class="stat-label">🐛 Debug Log</span>
-                    <label class="toggle-switch">
-                        <input type="checkbox" @bind="DebugSettings.IsEnabled" @bind:after="HandleDebugToggleChanged" />
-                        <span class="toggle-slider"></span>
-                    </label>
-                </div>
-
-            </div>
-        </details>
-
     </div>
 </div>
 
@@ -307,8 +221,11 @@
     [Parameter] public EventCallback OnComparisonModeChanged { get; set; }
 
     // ── 内部状態 ──────────────────────────────────────────────────────────────
-    private string _selectedCategory = string.Empty;
-    private bool _autoSwitchToRecommendedSize = false;
+    [Parameter] public string SelectedCategory { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SelectedCategoryChanged { get; set; }
+
+    [Parameter] public bool AutoSwitchToRecommendedSize { get; set; }
+    [Parameter] public EventCallback<bool> AutoSwitchToRecommendedSizeChanged { get; set; }
 
     private static readonly int[] AvailableSizes = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
 
@@ -330,7 +247,7 @@
     private async Task HandleAlgorithmChange(string newValue)
     {
         await SelectedAlgorithmChanged.InvokeAsync(newValue);
-        if (_autoSwitchToRecommendedSize)
+        if (AutoSwitchToRecommendedSize)
         {
             var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == newValue);
             if (algo != null)
@@ -374,13 +291,6 @@
         await OnComparisonModeChanged.InvokeAsync();
     }
 
-    // ── Debug Log 変更 ───────────────────────────────────────────────────────
-    private async Task HandleDebugToggleChanged()
-    {
-        await JS.InvokeVoidAsync("debugHelper.setDebugMode", DebugSettings.IsEnabled);
-    }
-
-    // ── ヘルパー ─────────────────────────────────────────────────────────────
     private string GetSizeRecommendation()
     {
         var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
@@ -403,9 +313,9 @@
 
     private IEnumerable<IGrouping<string, AlgorithmMetadata>> GetAlgorithmsByCategory()
     {
-        var source = string.IsNullOrEmpty(_selectedCategory)
+        var source = string.IsNullOrEmpty(SelectedCategory)
             ? AlgorithmRegistry.GetAllAlgorithms()
-            : AlgorithmRegistry.GetByCategory(_selectedCategory);
+            : AlgorithmRegistry.GetByCategory(SelectedCategory);
 
         var categoryOrder = source
             .Select((a, i) => new { a.Category, i })
