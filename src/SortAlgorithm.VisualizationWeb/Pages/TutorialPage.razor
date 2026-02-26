@@ -60,7 +60,7 @@
             </div>
             @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
             {
-                <div class="desc-body">@_selectedAlgorithm.TutorialDescription</div>
+                <div class="desc-body">@RenderDescription(_selectedAlgorithm.TutorialDescription)</div>
             }
         </div>
 
@@ -398,4 +398,56 @@
     private IEnumerable<AlgorithmMetadata> GetAlgorithmsByCategory(string category)
         => GetTutorialAlgorithms()
             .Where(a => a.Category == category);
+
+    // ─── 説明テキストのフォーマット ────────────────────────────────────────
+
+    private static MarkupString RenderDescription(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return new MarkupString(string.Empty);
+
+        var sb = new System.Text.StringBuilder();
+        bool inList = false;
+
+        foreach (var rawLine in text.Split('\n'))
+        {
+            var line = rawLine.TrimEnd();
+
+            if (line.StartsWith("- "))
+            {
+                if (!inList) { sb.Append("<ul>"); inList = true; }
+                var content = line[2..];
+                var ci = content.IndexOf(':');
+                if (ci > 0)
+                {
+                    var label = System.Net.WebUtility.HtmlEncode(content[..ci]);
+                    var rest = System.Net.WebUtility.HtmlEncode(content[(ci + 1)..]);
+                    sb.Append($"<li><strong>{label}:</strong>{rest}</li>");
+                }
+                else
+                {
+                    sb.Append($"<li>{System.Net.WebUtility.HtmlEncode(content)}</li>");
+                }
+            }
+            else
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                var ci = line.IndexOf(':');
+                if (ci > 0)
+                {
+                    var label = System.Net.WebUtility.HtmlEncode(line[..ci]);
+                    var rest = System.Net.WebUtility.HtmlEncode(line[(ci + 1)..]);
+                    sb.Append($"<p><strong>{label}:</strong>{rest}</p>");
+                }
+                else
+                {
+                    sb.Append($"<p>{System.Net.WebUtility.HtmlEncode(line)}</p>");
+                }
+            }
+        }
+
+        if (inList) sb.Append("</ul>");
+        return new MarkupString(sb.ToString());
+    }
 }

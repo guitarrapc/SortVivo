@@ -149,6 +149,28 @@
     line-height: 1.6;
 }
 
+.desc-body ::deep p {
+    margin: 0 0 0.5rem 0;
+}
+
+.desc-body ::deep p:last-child {
+    margin-bottom: 0;
+}
+
+.desc-body ::deep strong {
+    color: #d1d5db;
+}
+
+.desc-body ::deep ul {
+    margin: 0.125rem 0 0.5rem 1.25rem;
+    padding: 0;
+    list-style: disc;
+}
+
+.desc-body ::deep li {
+    margin-bottom: 0.25rem;
+}
+
 /* ─── ナラティブパネル ─────────────────────────────────────────────────── */
 .tutorial-narrative-panel {
     background: #1f2937;
