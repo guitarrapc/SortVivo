@@ -13,11 +13,11 @@
 
     @* ─── ヘッダー ─────────────────────────────────────────────────────── *@
     <div class="tutorial-header">
-        <a href="/" class="tutorial-back-link">← 可視化へ戻る</a>
-        <h1 class="tutorial-title">🎓 チュートリアル</h1>
+        <a href="/" class="tutorial-back-link">← Back</a>
+        <h1 class="tutorial-title">🎓 Tutorial</h1>
         <div class="tutorial-algo-selector">
             <select @onchange="OnAlgorithmChanged" class="algo-select">
-                <option value="">── アルゴリズムを選択 ──</option>
+                <option value="">Select Algorithm</option>
                 @foreach (var category in GetTutorialCategories())
                 {
                     <optgroup label="@category">
@@ -38,15 +38,15 @@
     @if (_isLoading)
     {
         <div class="tutorial-loading">
-            <span class="loading-spinner">⏳</span> 計算中...
+            <span class="loading-spinner">⏳</span> Computing...
         </div>
     }
     else if (_selectedAlgorithm == null)
     {
         <div class="tutorial-empty">
             <div class="empty-icon">🎓</div>
-            <div class="empty-text">上のドロップダウンからアルゴリズムを選択してください。</div>
-        <div class="empty-hint">固定配列を使ってソートの仕組みをステップごとに説明します。アルゴリズムによっては説明に適した専用配列を使用します。</div>
+            <div class="empty-text">Select an algorithm from the dropdown above.</div>
+        <div class="empty-hint">Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.</div>
         </div>
     }
     else
@@ -55,8 +55,8 @@
         <div class="tutorial-description-panel">
             <div class="desc-name">@_selectedAlgorithm.Name</div>
             <div class="desc-meta">
-                <span class="desc-badge">時間計算量: @_selectedAlgorithm.TimeComplexity</span>
-                <span class="desc-badge">カテゴリ: @_selectedAlgorithm.Category</span>
+                <span class="desc-badge">Time Complexity: @_selectedAlgorithm.TimeComplexity</span>
+                <span class="desc-badge">Category: @_selectedAlgorithm.Category</span>
             </div>
             @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
             {
@@ -67,7 +67,7 @@
         @if (_steps.Count == 0)
         {
             <div class="tutorial-empty">
-                <div class="empty-text">このアルゴリズムには記録された操作がありません。</div>
+                <div class="empty-text">No recorded operations for this algorithm.</div>
             </div>
         }
         else
@@ -77,11 +77,11 @@
                 <div class="narrative-badge">
                     @if (_currentStepIndex < 0)
                     {
-                        <span>開始状態</span>
+                        <span>Initial State</span>
                     }
                     else
                     {
-                        <span>ステップ @(_currentStepIndex + 1) / @_steps.Count</span>
+                        <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
                     }
                 </div>
                 <div class="narrative-text">@GetCurrentNarrative()</div>
@@ -93,7 +93,7 @@
                     Values="@GetCurrentMainArray()"
                     HighlightIndices="@GetCurrentHighlightIndices()"
                     HighlightType="@GetCurrentHighlightType()"
-                    Label="メイン配列" />
+                    Label="Main Array" />
 
                 @foreach (var bufferId in GetCurrentBufferIds())
                 {
@@ -101,7 +101,7 @@
                         Values="@GetCurrentBufferArray(bufferId)"
                         HighlightIndices="@GetCurrentBufferHighlightIndices(bufferId)"
                         HighlightType="@GetCurrentHighlightType()"
-                        Label="@($"バッファ {bufferId}")"
+                        Label="@($"Buffer {bufferId}")"
                         IsBuffer="true" />
                 }
             </div>
@@ -111,29 +111,29 @@
                 <div class="ctrl-step-counter">
                     @if (_currentStepIndex < 0)
                     {
-                        <span>開始状態</span>
+                        <span>Initial State</span>
                     }
                     else
                     {
-                        <span>ステップ @(_currentStepIndex + 1) / @_steps.Count</span>
+                        <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
                     }
                 </div>
                 <div class="ctrl-buttons">
-                    <button class="ctrl-btn" title="最初へ (Home)"
+                    <button class="ctrl-btn" title="First (Home)"
                             @onclick="GoToFirst" disabled="@(_currentStepIndex <= -1)">◀◀</button>
-                    <button class="ctrl-btn" title="前へ (←)"
+                    <button class="ctrl-btn" title="Previous (←)"
                             @onclick="GoToPrevious" disabled="@(_currentStepIndex <= -1)">◀</button>
-                    <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "一時停止 (Space)" : "自動再生 (Space)")"
+                    <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
                             @onclick="ToggleAutoPlay">
                         @(_isAutoPlaying ? "⏸" : "▶")
                     </button>
-                    <button class="ctrl-btn" title="次へ (→)"
+                    <button class="ctrl-btn" title="Next (→)"
                             @onclick="GoToNext" disabled="@(_currentStepIndex >= _steps.Count - 1)">▶</button>
-                    <button class="ctrl-btn" title="最後へ (End)"
+                    <button class="ctrl-btn" title="Last (End)"
                             @onclick="GoToLast" disabled="@(_currentStepIndex >= _steps.Count - 1)">▶▶</button>
                 </div>
                 <div class="ctrl-speed">
-                    <label>速度:</label>
+                    <label>Speed:</label>
                     <input type="range" min="200" max="2000" step="100"
                            value="@_autoPlaySpeedMs"
                            @oninput="OnSpeedChanged" />
@@ -142,7 +142,7 @@
             </div>
 
             <div class="ctrl-keyboard-hint">
-                キーボード: ← → で前後ステップ / Space で再生・停止 / Home・End で最初・最後
+                Keyboard: ← → to step / Space to play/pause / Home·End for first·last
             </div>
         }
     }
@@ -369,7 +369,7 @@
 
     private string GetCurrentNarrative()
         => _currentStepIndex < 0
-            ? $"ソート前の配列です。{_selectedAlgorithm?.Name} の動作をステップごとに確認しましょう。"
+            ? $"This is the array before sorting. Follow {_selectedAlgorithm?.Name} step by step."
             : _steps[_currentStepIndex].Narrative;
 
     private IEnumerable<int> GetCurrentBufferIds()

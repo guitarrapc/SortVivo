@@ -3,13 +3,13 @@
 namespace SortAlgorithm.VisualizationWeb.Services;
 
 /// <summary>
-/// SortOperation のリストをチュートリアル用の TutorialStep リストへ変換するビルダー。
-/// 操作ごとに配列スナップショット・ハイライト情報・日本語ナラティブを生成する。
+/// Builder that converts a list of SortOperations into a list of TutorialSteps.
+/// Generates array snapshots, highlight info, and narrative text for each operation.
 /// </summary>
 public static class TutorialStepBuilder
 {
     /// <summary>
-    /// 初期配列と操作リストから TutorialStep のリストを生成する。
+    /// Builds a list of TutorialSteps from the initial array and a list of operations.
     /// </summary>
     public static List<TutorialStep> Build(int[] initialArray, List<SortOperation> operations)
     {
@@ -21,14 +21,14 @@ public static class TutorialStepBuilder
         {
             var op = operations[opIdx];
 
-            // ナラティブとハイライトは操作適用前の値で生成する
+            // Generate narrative and highlights from values before applying the operation
             var (highlights, bufferHighlights, highlightType, narrative) =
                 GenerateStepInfo(op, mainArray, bufferArrays);
 
-            // 操作を配列状態に適用
+            // Apply the operation to the array state
             ApplyOperation(op, mainArray, bufferArrays);
 
-            // 適用後のスナップショットを保存
+            // Save a snapshot after applying
             var snapshot = (int[])mainArray.Clone();
             var bufferSnapshots = bufferArrays.ToDictionary(kv => kv.Key, kv => (int[])kv.Value.Clone());
 
@@ -47,7 +47,7 @@ public static class TutorialStepBuilder
         return steps;
     }
 
-    // ─── バッファー初期化 ──────────────────────────────────────────────────
+    // ─── Buffer initialization ──────────────────────────────────────────────
 
     private static Dictionary<int, int[]> InitializeBufferArrays(int mainArrayLength, List<SortOperation> operations)
     {
@@ -72,13 +72,13 @@ public static class TutorialStepBuilder
             }
         }
 
-        // バッファーはメイン配列以上のサイズを確保してインデックス範囲外を防ぐ
+        // Ensure buffers are at least as large as the main array to prevent index out-of-range
         return maxSizes.ToDictionary(
             kv => kv.Key,
             kv => new int[Math.Max(kv.Value, mainArrayLength)]);
     }
 
-    // ─── ステップ情報生成 ──────────────────────────────────────────────────
+    // ─── Step info generation ──────────────────────────────────────────────
 
     private static (int[] highlights, Dictionary<int, int[]> bufferHighlights, OperationType type, string narrative)
         GenerateStepInfo(SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
@@ -101,12 +101,12 @@ public static class TutorialStepBuilder
         string loc2 = FormatLocation(op.BufferId2, op.Index2);
 
         string resultText = op.CompareResult > 0
-            ? $"{vi} > {vj} → 順序が逆なので入れ替えが必要"
+            ? $"{vi} > {vj} → out of order, swap needed"
             : op.CompareResult < 0
-                ? $"{vi} < {vj} → 順序は正しい"
-                : $"{vi} = {vj} → 同じ値なので順序は正しい";
+                ? $"{vi} < {vj} → already in order"
+                : $"{vi} = {vj} → equal, no swap needed";
 
-        string narrative = $"{loc1} の値 {vi} と {loc2} の値 {vj} を比較: {resultText}";
+        string narrative = $"Compare {loc1} ({vi}) and {loc2} ({vj}): {resultText}";
 
         int[] highlights = op.BufferId1 == 0 && op.BufferId2 == 0
             ? [op.Index1, op.Index2]
@@ -125,7 +125,7 @@ public static class TutorialStepBuilder
         int vi = GetValue(op.BufferId1, op.Index1, mainArray, bufferArrays);
         int vj = GetValue(op.BufferId1, op.Index2, mainArray, bufferArrays);
 
-        string narrative = $"位置 {op.Index1} の値 {vi} と 位置 {op.Index2} の値 {vj} を入れ替える";
+        string narrative = $"Swap value {vi} at index {op.Index1} with value {vj} at index {op.Index2}";
 
         int[] highlights = op.BufferId1 == 0 ? [op.Index1, op.Index2] : [];
         var bufHighlights = new Dictionary<int, int[]>();
@@ -140,7 +140,7 @@ public static class TutorialStepBuilder
     {
         int v = GetValue(op.BufferId1, op.Index1, mainArray, bufferArrays);
         string loc = FormatLocation(op.BufferId1, op.Index1);
-        string narrative = $"{loc} の値 {v} を読み取る";
+        string narrative = $"Read value {v} from {loc}";
 
         int[] highlights = op.BufferId1 == 0 ? [op.Index1] : [];
         var bufHighlights = new Dictionary<int, int[]>();
@@ -154,7 +154,7 @@ public static class TutorialStepBuilder
     {
         string loc = FormatLocation(op.BufferId1, op.Index1);
         string valStr = op.Value.HasValue ? op.Value.Value.ToString() : "?";
-        string narrative = $"{loc} に値 {valStr} を書き込む";
+        string narrative = $"Write value {valStr} to {loc}";
 
         int[] highlights = op.BufferId1 == 0 ? [op.Index1] : [];
         var bufHighlights = new Dictionary<int, int[]>();
@@ -166,15 +166,15 @@ public static class TutorialStepBuilder
 
     private static (int[], Dictionary<int, int[]>, OperationType, string) BuildRangeCopyInfo(SortOperation op)
     {
-        string srcName = op.BufferId1 == 0 ? "メイン配列" : $"バッファ {op.BufferId1}";
-        string dstName = op.BufferId2 == 0 ? "メイン配列" : $"バッファ {op.BufferId2}";
+        string srcName = op.BufferId1 == 0 ? "main array" : $"buffer {op.BufferId1}";
+        string dstName = op.BufferId2 == 0 ? "main array" : $"buffer {op.BufferId2}";
         int srcEnd = op.Index1 + op.Length - 1;
 
         string narrative = op.Length == 1
-            ? $"{srcName} の位置 {op.Index1} の値を {dstName} の位置 {op.Index2} にコピーする"
-            : $"{srcName} の位置 {op.Index1}〜{srcEnd} ({op.Length} 個) を {dstName} の位置 {op.Index2} からコピーする";
+            ? $"Copy value at index {op.Index1} of {srcName} to index {op.Index2} of {dstName}"
+            : $"Copy {op.Length} elements ({op.Index1}–{srcEnd}) from {srcName} to index {op.Index2} of {dstName}";
 
-        // ソース側をハイライト（読み取り）
+        // Highlight source side (read)
         int[] highlights = op.BufferId1 == 0
             ? Enumerable.Range(op.Index1, op.Length).ToArray()
             : [];
@@ -194,7 +194,7 @@ public static class TutorialStepBuilder
         return (highlights, bufHighlights, OperationType.RangeCopy, narrative);
     }
 
-    // ─── 操作適用 ─────────────────────────────────────────────────────────
+    // ─── Apply operation ─────────────────────────────────────────────────
 
     private static void ApplyOperation(SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
     {
@@ -238,7 +238,7 @@ public static class TutorialStepBuilder
                 }
                 else
                 {
-                    // Values が null の場合はソース配列から直接コピー
+                    // Values is null: copy directly from the source array
                     int[] srcArr = GetArray(op.BufferId1, mainArray, bufferArrays);
                     for (int k = 0; k < op.Length; k++)
                     {
@@ -253,7 +253,7 @@ public static class TutorialStepBuilder
         }
     }
 
-    // ─── ヘルパー ─────────────────────────────────────────────────────────
+    // ─── Helpers ─────────────────────────────────────────────────────────
 
     private static int[] GetArray(int bufferId, int[] mainArray, Dictionary<int, int[]> bufferArrays)
         => bufferId == 0 ? mainArray : bufferArrays.GetValueOrDefault(bufferId, mainArray);
@@ -266,8 +266,8 @@ public static class TutorialStepBuilder
     }
 
     private static string FormatLocation(int bufferId, int index)
-        => index < 0 ? "一時値"
-        : bufferId == 0 ? $"位置 {index}" : $"バッファ位置 {index}";
+        => index < 0 ? "temp"
+        : bufferId == 0 ? $"index {index}" : $"buffer index {index}";
 
     private static void AddBufferHighlight(Dictionary<int, int[]> dict, int bufferId, int index)
     {
