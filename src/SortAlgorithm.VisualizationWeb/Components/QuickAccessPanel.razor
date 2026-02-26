@@ -37,7 +37,7 @@
             <div class="qap__item">
                 <div class="qap__label-row">
                     <span class="stat-label">Algorithm</span>
-                    <NavLink href="tutorial" class="qap__help-link" title="Learn about this algorithm">?</NavLink>
+                    <a href="tutorial/@Uri.EscapeDataString(SelectedAlgorithm)" class="qap__help-link" title="Learn about this algorithm">?</a>
                 </div>
                 <select value="@SelectedAlgorithm"
                         @onchange="e => HandleAlgorithmChange((string)e.Value!)">

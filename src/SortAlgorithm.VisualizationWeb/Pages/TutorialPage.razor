@@ -7,14 +7,30 @@
 @inject AlgorithmRegistry AlgorithmRegistry
 @implements IDisposable
 
-<PageTitle>Tutorial - Sort Algorithm</PageTitle>
+<PageTitle>@(_selectedAlgorithm != null ? $"Tutorial: {_selectedAlgorithm.Name}" : "Tutorial") - Sort Algorithm</PageTitle>
 
 <div class="tutorial-page" @onkeydown="OnKeyDown" @onkeydown:preventDefault tabindex="0" @ref="_containerRef">
 
-    @* ─── ヘッダー ─────────────────────────────────────────────────────── *@
+    @* ─── ヘッダー（メインと同スタイル） ──────────────────────────────────── *@
     <div class="tutorial-header">
         <a href="/" class="tutorial-back-link">← Back</a>
-        <h1 class="tutorial-title">🎓 Tutorial</h1>
+        <h1 class="tutorial-title">
+            🎓 Tutorial
+            @if (_selectedAlgorithm != null)
+            {
+                <span class="tutorial-title__algo">: @_selectedAlgorithm.Name</span>
+            }
+        </h1>
+        <div class="tutorial-header__actions">
+            @if (_selectedAlgorithm != null)
+            {
+                <a href="@GetTryThisAlgorithmUrl()" class="tutorial-try-btn">▶ Try this algorithm</a>
+            }
+        </div>
+    </div>
+
+    @* ─── ツールバー（アルゴリズム選択 + ナビ操作 + Speed） ────────────────── *@
+    <div class="tutorial-toolbar">
         <div class="tutorial-algo-selector">
             <select @onchange="OnAlgorithmChanged" class="algo-select">
                 <option value="">Select Algorithm</option>
@@ -32,6 +48,45 @@
                 }
             </select>
         </div>
+
+        @{
+            bool noSteps = _selectedAlgorithm == null || _steps.Count == 0;
+        }
+
+        <div class="ctrl-step-counter">
+            @if (_currentStepIndex < 0)
+            {
+                <span>@(noSteps ? "—" : "Initial")</span>
+            }
+            else
+            {
+                <span>@(_currentStepIndex + 1) / @_steps.Count</span>
+            }
+        </div>
+
+        <div class="ctrl-buttons">
+            <button class="ctrl-btn" title="First (Home)"
+                    @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">◀◀</button>
+            <button class="ctrl-btn" title="Previous (←)"
+                    @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">◀</button>
+            <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
+                    @onclick="ToggleAutoPlay" disabled="@noSteps">
+                @(_isAutoPlaying ? "⏸" : "▶")
+            </button>
+            <button class="ctrl-btn" title="Next (→)"
+                    @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶</button>
+            <button class="ctrl-btn" title="Last (End)"
+                    @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶▶</button>
+        </div>
+
+        <div class="ctrl-speed">
+            <label>Speed</label>
+            <input type="range" min="200" max="2000" step="100"
+                   value="@_autoPlaySpeedMs"
+                   @oninput="OnSpeedChanged"
+                   @onkeydown:stopPropagation />
+            <span class="speed-label">@_autoPlaySpeedMs ms</span>
+        </div>
     </div>
 
     @* ─── コンテンツエリア ──────────────────────────────────────────────── *@
@@ -46,21 +101,31 @@
         <div class="tutorial-empty">
             <div class="empty-icon">🎓</div>
             <div class="empty-text">Select an algorithm from the dropdown above.</div>
-        <div class="empty-hint">Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.</div>
+            <div class="empty-hint">Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.</div>
         </div>
     }
     else
     {
-        @* ─── アルゴリズム説明パネル ──────────────────────────────────────── *@
+        @* ─── アルゴリズム説明パネル（モバイルで折りたたみ可能） ──────────────── *@
         <div class="tutorial-description-panel">
-            <div class="desc-name">@_selectedAlgorithm.Name</div>
-            <div class="desc-meta">
-                <span class="desc-badge">Time Complexity: @_selectedAlgorithm.TimeComplexity</span>
-                <span class="desc-badge">Category: @_selectedAlgorithm.Category</span>
+            <div class="tdp-header">
+                <div class="desc-name">@_selectedAlgorithm.Name</div>
+                <div class="tdp-header__right">
+                    <div class="desc-meta">
+                        <span class="desc-badge">@_selectedAlgorithm.TimeComplexity</span>
+                        <span class="desc-badge">@_selectedAlgorithm.Category</span>
+                    </div>
+                    <button class="tdp-toggle" @onclick="() => _descExpanded = !_descExpanded"
+                            title="@(_descExpanded ? "Collapse" : "Expand")">
+                        @(_descExpanded ? "▲" : "▼")
+                    </button>
+                </div>
             </div>
-            @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
+            @if (_descExpanded && !string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
             {
-                <div class="desc-body">@RenderDescription(_selectedAlgorithm.TutorialDescription)</div>
+                <div class="tdp-body">
+                    <div class="desc-body">@RenderDescription(_selectedAlgorithm.TutorialDescription)</div>
+                </div>
             }
         </div>
 
@@ -105,49 +170,14 @@
                         IsBuffer="true" />
                 }
             </div>
-
-            @* ─── コントロール ────────────────────────────────────────────── *@
-            <div class="tutorial-controls">
-                <div class="ctrl-step-counter">
-                    @if (_currentStepIndex < 0)
-                    {
-                        <span>Initial State</span>
-                    }
-                    else
-                    {
-                        <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
-                    }
-                </div>
-                <div class="ctrl-buttons">
-                    <button class="ctrl-btn" title="First (Home)"
-                            @onclick="GoToFirst" disabled="@(_currentStepIndex <= -1)">◀◀</button>
-                    <button class="ctrl-btn" title="Previous (←)"
-                            @onclick="GoToPrevious" disabled="@(_currentStepIndex <= -1)">◀</button>
-                    <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
-                            @onclick="ToggleAutoPlay">
-                        @(_isAutoPlaying ? "⏸" : "▶")
-                    </button>
-                    <button class="ctrl-btn" title="Next (→)"
-                            @onclick="GoToNext" disabled="@(_currentStepIndex >= _steps.Count - 1)">▶</button>
-                    <button class="ctrl-btn" title="Last (End)"
-                            @onclick="GoToLast" disabled="@(_currentStepIndex >= _steps.Count - 1)">▶▶</button>
-                </div>
-                <div class="ctrl-speed">
-                    <label>Speed:</label>
-                    <input type="range" min="200" max="2000" step="100"
-                           value="@_autoPlaySpeedMs"
-                           @oninput="OnSpeedChanged"
-                           @onkeydown:stopPropagation />
-                    <span class="speed-label">@_autoPlaySpeedMs ms</span>
-                </div>
-            </div>
-
-            <div class="ctrl-keyboard-hint">
-                Keyboard: ← → to step / Space to play/pause / Home·End for first·last
-            </div>
         }
     }
+
+    <div class="ctrl-keyboard-hint">
+        Keyboard: ← → to step · Space to play/pause · Home · End
+    </div>
 </div>
+
 
 @code {
     [Parameter] public string? AlgorithmName { get; set; }
@@ -163,6 +193,7 @@
     private bool _isLoading;
     private bool _isAutoPlaying;
     private int _autoPlaySpeedMs = 800;
+    private bool _descExpanded = true;
 
     private CancellationTokenSource? _autoPlayCts;
     private ElementReference _containerRef;
@@ -403,6 +434,11 @@
             .Where(a => a.Category == category);
 
     // ─── 説明テキストのフォーマット ────────────────────────────────────────
+
+    private string GetTryThisAlgorithmUrl()
+        => _selectedAlgorithm != null
+            ? $"/?algo={Uri.EscapeDataString(_selectedAlgorithm.Name)}"
+            : "/";
 
     private static MarkupString RenderDescription(string? text)
     {
