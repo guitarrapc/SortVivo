@@ -159,12 +159,17 @@ public class AlgorithmRegistry
             tutorialDescription: "Inserts elements into a self-balancing binary search tree (such as a red-black tree or AVL tree) that automatically keeps its height at O(log n), then recovers sorted output with an in-order traversal. The balancing guarantee ensures O(n log n) worst-case even for sorted or reverse-sorted input, unlike a plain binary search tree.");
 
         // Joke Sorts - O(n!) ~ O(∞) - 推奨8（注意: 極めて遅い）
+        // Bogo sort: ランダムシャッフルで非決定的のためチュートリアル対象外。
+        // Slow / Stooge: 決定的な再帰アルゴリズムのため、4要素に絞ってチュートリアル可能。
         Add("Bogo sort", "Joke Sorts", "O(n!)", 8, 8, (arr, ctx) => BogoSort.Sort(arr, ctx), "⚠️ Extremely slow!",
-            tutorialDescription: "Repeatedly checks whether the array is sorted, and if not, shuffles it completely at random and tries again. With n elements there are n! possible orderings, so the expected number of shuffles before hitting the sorted one is n!, giving an expected time of O(n · n!). It has no practical use and exists purely as a humorous illustration of what \"not\" to do.");
+            tutorialDescription: "Repeatedly checks whether the array is sorted, and if not, shuffles it completely at random and tries again. With n elements there are n! possible orderings, so the expected number of shuffles before hitting the sorted one is n!, giving an expected time of O(n · n!). It has no practical use and exists purely as a humorous illustration of what \"not\" to do.",
+            excludeFromTutorial: true);
         Add("Slow sort", "Joke Sorts", "O(n^(log n))", MAX_SIZE, 16, (arr, ctx) => SlowSort.Sort(arr, ctx), "⚠️ Extremely slow!",
-            tutorialDescription: "A deliberately inefficient recursive algorithm based on the tongue-in-cheek principle of \"multiply and surrender\". It finds the maximum of a subarray by recursively sorting both halves and comparing their last elements, then moves that maximum to the end and recurses on the remainder — doing far more work than necessary at every step, resulting in super-polynomial O(n^(log n)) time.");
+            tutorialDescription: "A deliberately inefficient recursive algorithm based on the tongue-in-cheek principle of \"multiply and surrender\". It finds the maximum of a subarray by recursively sorting both halves and comparing their last elements, then moves that maximum to the end and recurses on the remainder — doing far more work than necessary at every step, resulting in super-polynomial O(n^(log n)) time.",
+            tutorialArrayType: TutorialArrayType.FourElement);
         Add("Stooge sort", "Joke Sorts", "O(n^2.7)", MAX_SIZE, 16, (arr, ctx) => StoogeSort.Sort(arr, ctx), "⚠️ Extremely slow!",
-            tutorialDescription: "Recursively sorts the first two-thirds of the array, then the last two-thirds, then the first two-thirds again. The triple-recursive structure is correct but wildly wasteful: the recurrence T(n) = 3T(2n/3) solves to O(n^2.71), worse than any practical sorting algorithm and introduced in CLRS as a cautionary example of how a correct algorithm can still be egregiously inefficient.");
+            tutorialDescription: "Recursively sorts the first two-thirds of the array, then the last two-thirds, then the first two-thirds again. The triple-recursive structure is correct but wildly wasteful: the recurrence T(n) = 3T(2n/3) solves to O(n^2.71), worse than any practical sorting algorithm and introduced in CLRS as a cautionary example of how a correct algorithm can still be egregiously inefficient.",
+            tutorialArrayType: TutorialArrayType.FourElement);
     }
 
     private void Add(string name, string category, string complexity, int maxElements, int recommendedSize,

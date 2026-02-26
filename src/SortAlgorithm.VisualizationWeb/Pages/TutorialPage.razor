@@ -387,7 +387,7 @@
 
     private IEnumerable<AlgorithmMetadata> GetTutorialAlgorithms()
         => AlgorithmRegistry.GetAllAlgorithms()
-            .Where(a => a.Category != "Joke Sorts" && !a.ExcludeFromTutorial);
+            .Where(a => !a.ExcludeFromTutorial);
 
     private IEnumerable<string> GetTutorialCategories()
         => GetTutorialAlgorithms()

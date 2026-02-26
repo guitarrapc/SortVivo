@@ -19,6 +19,13 @@ public enum TutorialArrayType
     /// MSD: 十の位でバケット分割後、各バケット内で一の位の再帰が見える。
     /// </summary>
     TwoDigitDecimal,
+
+    /// <summary>
+    /// 4要素配列: [4, 1, 3, 2]
+    /// 計算量が超多項式・階乗級のアルゴリズム向け。
+    /// 要素数を絞ることで操作数を現実的な範囲に収め、再帰構造や無駄な処理を見せる。
+    /// </summary>
+    FourElement,
 }
 
 /// <summary>
@@ -33,6 +40,7 @@ public static class TutorialArrayTypeExtensions
     public static int[] ToArray(this TutorialArrayType type) => type switch
     {
         TutorialArrayType.TwoDigitDecimal => [53, 57, 31, 36, 82, 85, 61, 48],
+        TutorialArrayType.FourElement     => [4, 1, 3, 2],
         _ => [5, 3, 8, 1, 9, 2, 7, 4],
     };
 }
