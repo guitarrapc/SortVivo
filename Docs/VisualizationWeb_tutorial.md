@@ -171,11 +171,60 @@ Merge sort など補助配列が必要なアルゴリズムは、バッファー
 #### `AlgorithmMetadata` への追加
 
 ```csharp
-/// <summary>チュートリアルでの説明文（日本語）</summary>
+/// <summary>チュートリアルでの説明文</summary>
 public string TutorialDescription { get; init; } = string.Empty;
 ```
 
-`TutorialDescription` には「アルゴリズムの基本的な考え方」を2〜3文で記述する。なければ空文字のまま（ナラティブテキストのみで進行）。
+##### TutorialDescription フォーマット
+
+3つのセクションで構成し、C# Raw String Literal（`"""`）で記述する。
+
+```
+How it works: <コアの操作を1文で — 何をする操作か>
+
+Key property: <他のソートとの違い・際立つ性質を1文で — 何がユニークか>
+
+Watch for:
+- <OperationType>: <その操作で何を観察すべきか>
+- <OperationType>: <その操作で何を観察すべきか>
+- [End of pass/phase: フェーズ境界の観察点（必要な場合のみ）]
+```
+
+| セクション | 目的 | 備考 |
+|---|---|---|
+| `How it works` | コアの操作を1文で説明する | 操作動詞（Repeatedly / Scans / Picks / Divides …）で始める |
+| `Key property` | 他のソートとの比較・際立つ性質を1文で説明する | 比較優位・制約・計算量の特徴など |
+| `Watch for` | アニメーションで注目すべき操作を箇条書きで説明する | `SortOperation` 型名（`Compare` / `Swap` / `IndexRead` / `IndexWrite` / `RangeCopy`）を先頭に置く |
+
+`Watch for` の箇条書きはそのアルゴリズムに関係するもののみ記載（全列挙しない）。`End of pass` などフェーズ区切りの観察点は必要な場合のみ追加する。
+
+##### 記述例
+
+```csharp
+// Bubble sort — Compare・Swap が主役で、Swap の方向が明確なケース
+tutorialDescription: """
+    How it works: Repeatedly compares adjacent pairs and swaps them if they are in the wrong order, with each pass moving the largest unsorted value one step closer to its final position at the end.
+
+    Key property: The simplest O(n²) sort — no lookahead, no memory — which is why it performs the most redundant comparisons of any straightforward sort.
+
+    Watch for:
+    - Compare: each adjacent pair is tested left-to-right; when already in order the pointer just advances without any swap
+    - Swap: fires only when left > right, nudging the larger value exactly one step rightward
+    - End of pass: the active region shrinks by one as the rightmost unsorted element settles into its final position
+    """
+
+// Merge sort — RangeCopy・Compare・IndexWrite が揃うケース
+tutorialDescription: """
+    How it works: Recursively splits the array in half until each sub-array holds a single element, then merges adjacent sub-arrays back together in sorted order.
+
+    Key property: Stable and guarantees O(n log n) in all cases, but requires an auxiliary array of the same size as the input to perform the merge step.
+
+    Watch for:
+    - RangeCopy: the left and right halves are copied into a temporary buffer before each merge
+    - Compare: the merge reads from both buffer halves simultaneously and always picks the smaller value
+    - IndexWrite: sorted values are written back from the buffer to the original array one by one
+    """
+```
 
 #### アーキテクチャへの影響（新規ファイル）
 
