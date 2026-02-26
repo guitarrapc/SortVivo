@@ -260,6 +260,7 @@
 
     private void GoToLast()
     {
+        StopAutoPlay();
         _currentStepIndex = _steps.Count - 1;
         StateHasChanged();
     }
@@ -301,7 +302,8 @@
                 await Task.Delay(_autoPlaySpeedMs, token);
                 await InvokeAsync(() =>
                 {
-                    _currentStepIndex++;
+                    if (_currentStepIndex < _steps.Count - 1)
+                        _currentStepIndex++;
                     StateHasChanged();
                 });
             }
