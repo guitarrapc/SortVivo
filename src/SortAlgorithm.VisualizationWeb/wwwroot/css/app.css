@@ -78,6 +78,25 @@ html, body {
     content: '⏸';
 }
 
+.tutorial-nav-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.3rem;
+    background: #1d4ed8;
+    color: #fff;
+    text-decoration: none;
+    padding: 0.35rem 0.875rem;
+    border-radius: 0.375rem;
+    font-size: 0.875rem;
+    font-weight: 600;
+    transition: background 0.15s;
+    white-space: nowrap;
+}
+
+.tutorial-nav-btn:hover {
+    background: #2563eb;
+    color: #fff;
+}
 
 
 .visualization-page {

@@ -29,6 +29,7 @@
             }
         </h1>
         <div style="display: flex; align-items: center; gap: 1rem;">
+            <NavLink href="tutorial" class="tutorial-nav-btn" title="チュートリアルへ">🎓 Tutorial</NavLink>
             <label class="toggle-switch" style="display: flex; align-items: center; gap: 0.5rem;">
                 <span style="font-size: 0.9em; color: #999;">🐛 Debug Log</span>
                 <input type="checkbox" @bind="DebugSettings.IsEnabled" @bind:after="OnDebugToggleChanged" />

@@ -1,0 +1,456 @@
+@page "/tutorial"
+@page "/tutorial/{AlgorithmName}"
+@using SortAlgorithm.VisualizationWeb.Models
+@using SortAlgorithm.VisualizationWeb.Services
+@using SortAlgorithm.VisualizationWeb.Components
+@inject SortExecutor Executor
+@inject AlgorithmRegistry AlgorithmRegistry
+@implements IDisposable
+
+<PageTitle>Tutorial - Sort Algorithm</PageTitle>
+
+<div class="tutorial-page" @onkeydown="OnKeyDown" @onkeydown:preventDefault tabindex="0" @ref="_containerRef">
+
+    @* ─── ヘッダー ─────────────────────────────────────────────────────── *@
+    <div class="tutorial-header">
+        <a href="/" class="tutorial-back-link">← Back</a>
+        <h1 class="tutorial-title">🎓 Tutorial</h1>
+        <div class="tutorial-algo-selector">
+            <select @onchange="OnAlgorithmChanged" class="algo-select">
+                <option value="">Select Algorithm</option>
+                @foreach (var category in GetTutorialCategories())
+                {
+                    <optgroup label="@category">
+                        @foreach (var algo in GetAlgorithmsByCategory(category))
+                        {
+                            <option value="@algo.Name"
+                                    selected="@(_selectedAlgorithm?.Name == algo.Name)">
+                                @algo.Name
+                            </option>
+                        }
+                    </optgroup>
+                }
+            </select>
+        </div>
+    </div>
+
+    @* ─── コンテンツエリア ──────────────────────────────────────────────── *@
+    @if (_isLoading)
+    {
+        <div class="tutorial-loading">
+            <span class="loading-spinner">⏳</span> Computing...
+        </div>
+    }
+    else if (_selectedAlgorithm == null)
+    {
+        <div class="tutorial-empty">
+            <div class="empty-icon">🎓</div>
+            <div class="empty-text">Select an algorithm from the dropdown above.</div>
+        <div class="empty-hint">Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.</div>
+        </div>
+    }
+    else
+    {
+        @* ─── アルゴリズム説明パネル ──────────────────────────────────────── *@
+        <div class="tutorial-description-panel">
+            <div class="desc-name">@_selectedAlgorithm.Name</div>
+            <div class="desc-meta">
+                <span class="desc-badge">Time Complexity: @_selectedAlgorithm.TimeComplexity</span>
+                <span class="desc-badge">Category: @_selectedAlgorithm.Category</span>
+            </div>
+            @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
+            {
+                <div class="desc-body">@RenderDescription(_selectedAlgorithm.TutorialDescription)</div>
+            }
+        </div>
+
+        @if (_steps.Count == 0)
+        {
+            <div class="tutorial-empty">
+                <div class="empty-text">No recorded operations for this algorithm.</div>
+            </div>
+        }
+        else
+        {
+            @* ─── ナラティブパネル ────────────────────────────────────────── *@
+            <div class="tutorial-narrative-panel">
+                <div class="narrative-badge">
+                    @if (_currentStepIndex < 0)
+                    {
+                        <span>Initial State</span>
+                    }
+                    else
+                    {
+                        <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
+                    }
+                </div>
+                <div class="narrative-text">@GetCurrentNarrative()</div>
+            </div>
+
+            @* ─── マーブルエリア ──────────────────────────────────────────── *@
+            <div class="tutorial-marble-area">
+                <MarbleRenderer
+                    Values="@GetCurrentMainArray()"
+                    HighlightIndices="@GetCurrentHighlightIndices()"
+                    HighlightType="@GetCurrentHighlightType()"
+                    Label="Main Array" />
+
+                @foreach (var bufferId in GetCurrentBufferIds())
+                {
+                    <MarbleRenderer
+                        Values="@GetCurrentBufferArray(bufferId)"
+                        HighlightIndices="@GetCurrentBufferHighlightIndices(bufferId)"
+                        HighlightType="@GetCurrentHighlightType()"
+                        Label="@($"Buffer {bufferId}")"
+                        IsBuffer="true" />
+                }
+            </div>
+
+            @* ─── コントロール ────────────────────────────────────────────── *@
+            <div class="tutorial-controls">
+                <div class="ctrl-step-counter">
+                    @if (_currentStepIndex < 0)
+                    {
+                        <span>Initial State</span>
+                    }
+                    else
+                    {
+                        <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
+                    }
+                </div>
+                <div class="ctrl-buttons">
+                    <button class="ctrl-btn" title="First (Home)"
+                            @onclick="GoToFirst" disabled="@(_currentStepIndex <= -1)">◀◀</button>
+                    <button class="ctrl-btn" title="Previous (←)"
+                            @onclick="GoToPrevious" disabled="@(_currentStepIndex <= -1)">◀</button>
+                    <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
+                            @onclick="ToggleAutoPlay">
+                        @(_isAutoPlaying ? "⏸" : "▶")
+                    </button>
+                    <button class="ctrl-btn" title="Next (→)"
+                            @onclick="GoToNext" disabled="@(_currentStepIndex >= _steps.Count - 1)">▶</button>
+                    <button class="ctrl-btn" title="Last (End)"
+                            @onclick="GoToLast" disabled="@(_currentStepIndex >= _steps.Count - 1)">▶▶</button>
+                </div>
+                <div class="ctrl-speed">
+                    <label>Speed:</label>
+                    <input type="range" min="200" max="2000" step="100"
+                           value="@_autoPlaySpeedMs"
+                           @oninput="OnSpeedChanged"
+                           @onkeydown:stopPropagation />
+                    <span class="speed-label">@_autoPlaySpeedMs ms</span>
+                </div>
+            </div>
+
+            <div class="ctrl-keyboard-hint">
+                Keyboard: ← → to step / Space to play/pause / Home·End for first·last
+            </div>
+        }
+    }
+</div>
+
+@code {
+    [Parameter] public string? AlgorithmName { get; set; }
+
+    // ─── デフォルトチュートリアル配列 ──────────────────────────────────────
+    private int[] GetTutorialArrayFor(AlgorithmMetadata algo)
+        => algo.TutorialArrayType.ToArray();
+
+    // ─── 状態 ──────────────────────────────────────────────────────────────
+    private AlgorithmMetadata? _selectedAlgorithm;
+    private List<TutorialStep> _steps = [];
+    private int _currentStepIndex = -1;  // -1 = 開始状態（操作適用前）
+    private bool _isLoading;
+    private bool _isAutoPlaying;
+    private int _autoPlaySpeedMs = 800;
+
+    private CancellationTokenSource? _autoPlayCts;
+    private ElementReference _containerRef;
+
+    // ─── ライフサイクル ────────────────────────────────────────────────────
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (string.IsNullOrEmpty(AlgorithmName)) return;
+
+        var decoded = Uri.UnescapeDataString(AlgorithmName);
+        var algo = GetTutorialAlgorithms()
+            .FirstOrDefault(a => string.Equals(a.Name, decoded, StringComparison.OrdinalIgnoreCase));
+
+        if (algo != null && algo != _selectedAlgorithm)
+            await LoadAlgorithm(algo);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+            await _containerRef.FocusAsync();
+    }
+
+    public void Dispose()
+    {
+        _autoPlayCts?.Cancel();
+        _autoPlayCts?.Dispose();
+    }
+
+    // ─── アルゴリズム選択 ──────────────────────────────────────────────────
+
+    private async Task OnAlgorithmChanged(ChangeEventArgs e)
+    {
+        var name = e.Value?.ToString();
+        if (string.IsNullOrEmpty(name)) return;
+
+        var algo = GetTutorialAlgorithms().FirstOrDefault(a => a.Name == name);
+        if (algo != null)
+            await LoadAlgorithm(algo);
+    }
+
+    private async Task LoadAlgorithm(AlgorithmMetadata algo)
+    {
+        StopAutoPlay();
+        _selectedAlgorithm = algo;
+        _steps = [];
+        _currentStepIndex = -1;
+        _isLoading = true;
+        StateHasChanged();
+
+        await Task.Yield();
+
+        try
+        {
+            var tutorialArray = GetTutorialArrayFor(algo);
+            var (operations, _, _) = await Executor.ExecuteAndRecordAsync(tutorialArray, algo);
+            _steps = TutorialStepBuilder.Build(tutorialArray, operations);
+        }
+        finally
+        {
+            _isLoading = false;
+            StateHasChanged();
+        }
+    }
+
+    // ─── ナビゲーション ────────────────────────────────────────────────────
+
+    private void GoToFirst()
+    {
+        _currentStepIndex = -1;
+        StateHasChanged();
+    }
+
+    private void GoToPrevious()
+    {
+        if (_currentStepIndex > -1)
+        {
+            _currentStepIndex--;
+            StateHasChanged();
+        }
+    }
+
+    private void GoToNext()
+    {
+        if (_currentStepIndex < _steps.Count - 1)
+        {
+            _currentStepIndex++;
+            StateHasChanged();
+        }
+        else if (_isAutoPlaying)
+        {
+            StopAutoPlay();
+        }
+    }
+
+    private void GoToLast()
+    {
+        StopAutoPlay();
+        _currentStepIndex = _steps.Count - 1;
+        StateHasChanged();
+    }
+
+    // ─── 自動再生 ──────────────────────────────────────────────────────────
+
+    private void ToggleAutoPlay()
+    {
+        if (_isAutoPlaying)
+            StopAutoPlay();
+        else
+            StartAutoPlay();
+    }
+
+    private void StartAutoPlay()
+    {
+        if (_currentStepIndex >= _steps.Count - 1)
+            _currentStepIndex = -1;
+
+        _isAutoPlaying = true;
+        _autoPlayCts = new CancellationTokenSource();
+        _ = RunAutoPlayLoop(_autoPlayCts.Token);
+    }
+
+    private void StopAutoPlay()
+    {
+        _autoPlayCts?.Cancel();
+        _autoPlayCts?.Dispose();
+        _autoPlayCts = null;
+        _isAutoPlaying = false;
+    }
+
+    private async Task RunAutoPlayLoop(CancellationToken token)
+    {
+        try
+        {
+            while (!token.IsCancellationRequested && _currentStepIndex < _steps.Count - 1)
+            {
+                await Task.Delay(_autoPlaySpeedMs, token);
+                await InvokeAsync(() =>
+                {
+                    if (_currentStepIndex < _steps.Count - 1)
+                        _currentStepIndex++;
+                    StateHasChanged();
+                });
+            }
+        }
+        catch (OperationCanceledException) { }
+        finally
+        {
+            await InvokeAsync(() =>
+            {
+                _isAutoPlaying = false;
+                StateHasChanged();
+            });
+        }
+    }
+
+    private void OnSpeedChanged(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out int val))
+            _autoPlaySpeedMs = val;
+    }
+
+    // ─── キーボード ────────────────────────────────────────────────────────
+
+    private void OnKeyDown(KeyboardEventArgs e)
+    {
+        switch (e.Key)
+        {
+            case "ArrowLeft":
+                GoToPrevious();
+                break;
+            case "ArrowRight":
+                GoToNext();
+                break;
+            case " ":
+                ToggleAutoPlay();
+                break;
+            case "Home":
+                GoToFirst();
+                break;
+            case "End":
+                GoToLast();
+                break;
+        }
+    }
+
+    // ─── 現在ステップのデータ取得 ──────────────────────────────────────────
+
+    private int[] GetCurrentMainArray()
+        => _currentStepIndex < 0 ? GetTutorialArrayFor(_selectedAlgorithm!) : _steps[_currentStepIndex].ArraySnapshot;
+
+    private int[] GetCurrentHighlightIndices()
+        => _currentStepIndex < 0 ? [] : _steps[_currentStepIndex].HighlightIndices;
+
+    private int[] GetCurrentBufferHighlightIndices(int bufferId)
+    {
+        if (_currentStepIndex < 0) return [];
+        var step = _steps[_currentStepIndex];
+        return step.BufferHighlightIndices.TryGetValue(bufferId, out var indices) ? indices : [];
+    }
+
+    private OperationType GetCurrentHighlightType()
+        => _currentStepIndex < 0 ? OperationType.Compare : _steps[_currentStepIndex].HighlightType;
+
+    private string GetCurrentNarrative()
+        => _currentStepIndex < 0
+            ? $"This is the array before sorting. Follow {_selectedAlgorithm?.Name} step by step."
+            : _steps[_currentStepIndex].Narrative;
+
+    private IEnumerable<int> GetCurrentBufferIds()
+    {
+        if (_currentStepIndex < 0) return [];
+        return _steps[_currentStepIndex].BufferSnapshots.Keys.OrderBy(k => k);
+    }
+
+    private int[] GetCurrentBufferArray(int bufferId)
+    {
+        if (_currentStepIndex < 0) return [];
+        var step = _steps[_currentStepIndex];
+        return step.BufferSnapshots.TryGetValue(bufferId, out var arr) ? arr : [];
+    }
+
+    // ─── アルゴリズムリスト ────────────────────────────────────────────────
+
+    private IEnumerable<AlgorithmMetadata> GetTutorialAlgorithms()
+        => AlgorithmRegistry.GetAllAlgorithms()
+            .Where(a => !a.ExcludeFromTutorial);
+
+    private IEnumerable<string> GetTutorialCategories()
+        => GetTutorialAlgorithms()
+            .Select(a => a.Category)
+            .Distinct()
+            .OrderBy(c => c);
+
+    private IEnumerable<AlgorithmMetadata> GetAlgorithmsByCategory(string category)
+        => GetTutorialAlgorithms()
+            .Where(a => a.Category == category);
+
+    // ─── 説明テキストのフォーマット ────────────────────────────────────────
+
+    private static MarkupString RenderDescription(string? text)
+    {
+        if (string.IsNullOrWhiteSpace(text)) return new MarkupString(string.Empty);
+
+        var sb = new System.Text.StringBuilder();
+        bool inList = false;
+
+        foreach (var rawLine in text.Split('\n'))
+        {
+            var line = rawLine.TrimEnd();
+
+            if (line.StartsWith("- "))
+            {
+                if (!inList) { sb.Append("<ul>"); inList = true; }
+                var content = line[2..];
+                var ci = content.IndexOf(':');
+                if (ci > 0)
+                {
+                    var label = System.Net.WebUtility.HtmlEncode(content[..ci]);
+                    var rest = System.Net.WebUtility.HtmlEncode(content[(ci + 1)..]);
+                    sb.Append($"<li><strong>{label}:</strong>{rest}</li>");
+                }
+                else
+                {
+                    sb.Append($"<li>{System.Net.WebUtility.HtmlEncode(content)}</li>");
+                }
+            }
+            else
+            {
+                if (inList) { sb.Append("</ul>"); inList = false; }
+                if (string.IsNullOrWhiteSpace(line)) continue;
+
+                var ci = line.IndexOf(':');
+                if (ci > 0)
+                {
+                    var label = System.Net.WebUtility.HtmlEncode(line[..ci]);
+                    var rest = System.Net.WebUtility.HtmlEncode(line[(ci + 1)..]);
+                    sb.Append($"<p><strong>{label}:</strong>{rest}</p>");
+                }
+                else
+                {
+                    sb.Append($"<p>{System.Net.WebUtility.HtmlEncode(line)}</p>");
+                }
+            }
+        }
+
+        if (inList) sb.Append("</ul>");
+        return new MarkupString(sb.ToString());
+    }
+}

@@ -1,0 +1,54 @@
+@using SortAlgorithm.VisualizationWeb.Models
+
+<div class="marble-row-container">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <div class="marble-row-label">@Label</div>
+    }
+    <div class="marble-row">
+        @for (int i = 0; i < Values.Length; i++)
+        {
+            var idx = i;
+            bool highlighted = HighlightSet.Contains(idx);
+            string bgColor = highlighted ? GetHighlightColor() : DefaultColor;
+            string marbleClass = highlighted ? "marble marble-highlighted" : "marble";
+            <div class="marble-slot">
+                <div class="@marbleClass" style="background: @bgColor;">
+                    @(Values[idx] != 0 || !IsBuffer ? Values[idx].ToString() : "")
+                </div>
+                <div class="marble-index">@idx</div>
+            </div>
+        }
+    </div>
+</div>
+
+@code {
+    /// <summary>表示する配列の値</summary>
+    [Parameter] public int[] Values { get; set; } = [];
+
+    /// <summary>ハイライト対象のインデックス</summary>
+    [Parameter] public int[] HighlightIndices { get; set; } = [];
+
+    /// <summary>ハイライトの種類（マーブル色を決定）</summary>
+    [Parameter] public OperationType HighlightType { get; set; }
+
+    /// <summary>行ラベル（例: "メイン配列"）</summary>
+    [Parameter] public string Label { get; set; } = string.Empty;
+
+    /// <summary>バッファー配列かどうか（true の場合、値 0 を空表示にする）</summary>
+    [Parameter] public bool IsBuffer { get; set; } = false;
+
+    private const string DefaultColor = "#3B82F6";
+
+    private HashSet<int> HighlightSet => [.. HighlightIndices];
+
+    private string GetHighlightColor() => HighlightType switch
+    {
+        OperationType.Compare    => "#A855F7",
+        OperationType.Swap       => "#EF4444",
+        OperationType.IndexRead  => "#FBBF24",
+        OperationType.IndexWrite => "#F97316",
+        OperationType.RangeCopy  => "#F97316",
+        _                        => DefaultColor
+    };
+}
