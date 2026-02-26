@@ -277,7 +277,8 @@ public class AlgorithmRegistry
                 - Compare: adjacent pairs are tested during the run-detection scan; each confirmed run is pushed onto the merge stack
                 - IndexWrite: Insertion sort extends runs that fall below minrun, stitching short sequences into longer ones before any merging begins
                 - RangeCopy: when the stack triggers a merge, the shorter of the two runs is copied into a buffer; sorted values are then written back
-                """);
+                """,
+            tutorialArrayType: TutorialArrayType.MultiRun);
         Add("Powersort", "Merge Sorts", "O(n log n)", MAX_SIZE, 2048, (arr, ctx) => PowerSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Scans the input for natural runs like Timsort, but schedules merges by computing a "power" value from each run's position and size to determine the provably optimal merge order.
@@ -288,7 +289,8 @@ public class AlgorithmRegistry
                 - Compare: adjacent pairs are tested during the run-detection scan; a power value is computed from each run's position in the array and its length relative to its neighbour
                 - RangeCopy: when two runs are merged, the shorter is copied into a buffer before the merge begins
                 - IndexWrite: values from the buffer are written back into the original array as the merge proceeds
-                """);
+                """,
+            tutorialArrayType: TutorialArrayType.MultiRun);
         Add("ShiftSort", "Merge Sorts", "O(n log n)", MAX_SIZE, 2048, (arr, ctx) => ShiftSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Scans the input to detect both ascending and descending runs, reverses any descending runs in-place to convert them to ascending, then merges all runs using an adaptive strategy similar to Timsort.
@@ -299,7 +301,8 @@ public class AlgorithmRegistry
                 - Compare: adjacent pairs are tested to distinguish ascending runs from descending ones; descending run boundaries are recorded for reversal
                 - Swap: detected descending runs are reversed in-place by swapping symmetric pairs around the midpoint, converting them to ascending at zero allocation cost
                 - RangeCopy: after all runs are prepared, adjacent runs are merged using a buffer-based merge step identical to Timsort's
-                """);
+                """,
+            tutorialArrayType: TutorialArrayType.MultiRun);
 
         // Heap Sorts - O(n log n) - 推奨2048
         Add("Heapsort", "Heap Sorts", "O(n log n)", MAX_SIZE, 2048, (arr, ctx) => HeapSort.Sort(arr, ctx),
