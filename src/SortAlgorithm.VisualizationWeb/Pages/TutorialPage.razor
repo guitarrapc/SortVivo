@@ -9,7 +9,7 @@
 
 <PageTitle>Tutorial - Sort Algorithm</PageTitle>
 
-<div class="tutorial-page" @onkeydown="OnKeyDown" tabindex="0" @ref="_containerRef">
+<div class="tutorial-page" @onkeydown="OnKeyDown" @onkeydown:preventDefault tabindex="0" @ref="_containerRef">
 
     @* ─── ヘッダー ─────────────────────────────────────────────────────── *@
     <div class="tutorial-header">
@@ -136,7 +136,8 @@
                     <label>Speed:</label>
                     <input type="range" min="200" max="2000" step="100"
                            value="@_autoPlaySpeedMs"
-                           @oninput="OnSpeedChanged" />
+                           @oninput="OnSpeedChanged"
+                           @onkeydown:stopPropagation />
                     <span class="speed-label">@_autoPlaySpeedMs ms</span>
                 </div>
             </div>
