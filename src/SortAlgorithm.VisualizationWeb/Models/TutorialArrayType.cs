@@ -28,10 +28,9 @@ public enum TutorialArrayType
     FourElement,
 
     /// <summary>
-    /// 64要素・3 run 配列: desc(16) + asc(32) + desc(16) の構造で値 1〜64 を全使用する配列。
-    /// 全 run が minRun(=16) 以上のため run 拡張は発生せず、run 検知・逆順化・バッファーマージを確認できる。
-    /// TimSort は invariant B 違反で左ペアを先に merge し、PowerSort は node power により右ペアを先に merge するため、
-    /// チュートリアルでマージ順序の違いを視覚的に比較できる。
+    /// 32要素・複数 run 配列: 昇順 run 2本と降順 run 2本を交互に並べた値 1〜32 の配列。
+    /// MIN_MERGE=32 以上のサイズを確保し、run 検知・逆順化・run 拡張・バッファーを使ったマージを
+    /// チュートリアルで視覚的に確認できるようにする。TimSort・PowerSort・ShiftSort 向け。
     /// </summary>
     MultiRun,
 }
@@ -49,10 +48,9 @@ public static class TutorialArrayTypeExtensions
     {
         TutorialArrayType.TwoDigitDecimal => [53, 57, 31, 36, 82, 85, 61, 48],
         TutorialArrayType.FourElement     => [4, 1, 3, 2],
-        // desc(16) + asc(32) + desc(16) = 64要素、値 1〜64 全使用
-        // TimSort: invariant B 違反で左ペア(run0+run1)を先に merge
-        // PowerSort: node power(p01=1 < p12=2)により右ペア(run1+run2)を先に merge
-        TutorialArrayType.MultiRun        => [57, 53, 49, 45, 42, 38, 35, 31, 28, 24, 21, 17, 14, 10, 6, 1, 4, 8, 12, 15, 18, 20, 23, 25, 27, 30, 32, 34, 36, 39, 40, 43, 44, 46, 47, 48, 51, 52, 54, 55, 56, 58, 59, 60, 61, 62, 63, 64, 50, 41, 37, 33, 29, 26, 22, 19, 16, 13, 11, 9, 7, 5, 3, 2],
+        // 昇降混在・不均一 run (5,4,6,3,4,4,3,3) × 8 run、値 2〜37 全32要素
+        // run 長が不揃いなため TimSort の stack invariant 調整が多く発生する
+        TutorialArrayType.MultiRun        => [3, 8, 15, 22, 31, 28, 20, 13, 5, 7, 12, 18, 24, 30, 37, 34, 25, 11, 14, 19, 26, 35, 32, 23, 16, 6, 9, 17, 27, 21, 10, 2],
         _ => [5, 3, 8, 1, 9, 2, 7, 4],
     };
 }
