@@ -260,12 +260,14 @@ public static class TutorialStepBuilder
 
     private static int GetValue(int bufferId, int index, int[] mainArray, Dictionary<int, int[]> bufferArrays)
     {
+        if (index < 0) return 0;
         var arr = GetArray(bufferId, mainArray, bufferArrays);
         return index < arr.Length ? arr[index] : 0;
     }
 
     private static string FormatLocation(int bufferId, int index)
-        => bufferId == 0 ? $"位置 {index}" : $"バッファ位置 {index}";
+        => index < 0 ? "一時値"
+        : bufferId == 0 ? $"位置 {index}" : $"バッファ位置 {index}";
 
     private static void AddBufferHighlight(Dictionary<int, int[]> dict, int bufferId, int index)
     {
