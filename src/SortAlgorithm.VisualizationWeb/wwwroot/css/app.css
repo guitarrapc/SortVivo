@@ -295,14 +295,9 @@ html, body {
     background-color: var(--bg-dark);
     border-radius: 4px;
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-}
-
-.qap__item--vertical {
     flex-direction: column;
     align-items: stretch;
+    gap: 6px;
 }
 
 .qap__item--vertical input[type="range"] {
