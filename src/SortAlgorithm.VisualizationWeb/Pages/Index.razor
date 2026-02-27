@@ -271,7 +271,8 @@ private VisualizationMode SelectedVisualizationMode { get; set; } = Visualizatio
         var pattern = GetSelectedPattern();
         if (pattern == null) { DebugSettings.Log($"Pattern not found: {SelectedPatternName}"); return; }
 
-        var size = Math.Min(ArraySize, metadata.MaxElements);
+        var size = Math.Min(ArraySize, Math.Min(metadata.MaxElements,
+            ComparisonState.MaxComparisonElements(ComparisonMode.State.Instances.Count + 1)));
         var array = pattern.Generator(size, new Random());
 
         _loadingState = LoadingState.AddingAlgorithm;

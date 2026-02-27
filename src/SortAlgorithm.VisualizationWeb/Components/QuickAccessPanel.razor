@@ -55,10 +55,10 @@
 
             @* ── Array Size ── *@
             <div class="qap__item">
-                <span class="stat-label">Array Size @GetSizeRecommendation()</span>
-                <select value="@ArraySize"
+                <span class="stat-label">Array Size @GetArraySizeLabel()</span>
+                <select value="@Math.Min(ArraySize, GetEffectiveMaxSize())"
                         @onchange="e => HandleArraySizeChange(int.Parse((string)e.Value!))">
-                    @foreach (var size in AvailableSizes)
+                    @foreach (var size in GetFilteredSizes())
                     {
                         <option value="@size">@size @(IsRecommendedSize(size) ? "⭐" : "")</option>
                     }
@@ -258,6 +258,20 @@
     }
 
     // ── Comparison Mode 変更 ─────────────────────────────────────────────────
+    private int GetEffectiveMaxSize()
+        => ComparisonState.MaxComparisonElements(ComparisonMode.State.Instances.Count + 1);
+
+    private IEnumerable<int> GetFilteredSizes()
+        => AvailableSizes.Where(s => s <= GetEffectiveMaxSize());
+
+    private string GetArraySizeLabel()
+    {
+        var effectiveMax = GetEffectiveMaxSize();
+        if (effectiveMax < AvailableSizes[^1])
+            return $"(Max: {effectiveMax})";
+        return GetSizeRecommendation();
+    }
+
     private string GetSizeRecommendation()
     {
         var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);

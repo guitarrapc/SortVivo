@@ -29,6 +29,23 @@ public class ComparisonState
     /// 最大比較可能数
     /// </summary>
     public const int MaxComparisons = 9;
+
+    /// <summary>
+    /// 比較モードでのアルゴリズム数に応じた最大配列サイズ。
+    /// 各 SortOperation はヒープ上のオブジェクトとして記録されるため、
+    /// アルゴリズム数が増えると総メモリ消費が線形に増加し WASM の OOM を引き起こす。
+    /// - N=1:   制限なし (int.MaxValue)
+    /// - N=2:   4096
+    /// - N=3-6: 2048
+    /// - N≥7:   1024
+    /// </summary>
+    public static int MaxComparisonElements(int instanceCount) => instanceCount switch
+    {
+        <= 1 => int.MaxValue,
+        <= 2 => 4096,
+        <= 6 => 2048,
+        _    => 1024,
+    };
     
     /// <summary>
     /// グリッド列数を計算

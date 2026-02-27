@@ -1819,6 +1819,15 @@ fieldset.controls-fieldset[disabled] * {
     border-radius: 4px;
 }
 
+.array-size-badge {
+    font-size: 0.75em;
+    color: #60a5fa;
+    font-family: 'Courier New', monospace;
+    background: #1e2a3a;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+}
+
 .stat-mini {
     display: flex;
     flex-direction: column;
