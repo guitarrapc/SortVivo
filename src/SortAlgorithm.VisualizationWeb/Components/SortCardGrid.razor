@@ -21,6 +21,7 @@
                 CardSize="@GetCardSize()"
                 ShowRemoveButton="true"
                 Playback="@instance.Playback"
+                ExcludeAlgorithmNames="@GetOtherAlgorithmNames(index)"
                 OnRemove="@(() => OnRemoveInstance(index))"
                 OnAlgorithmSelected="@(algoName => OnReplaceAlgorithm.InvokeAsync((index, algoName)))"
                 OnVisualizationClick="@OnVisualizationClick"
@@ -118,6 +119,14 @@
         if (OnRemove.HasDelegate)
             await OnRemove.InvokeAsync(index);
     }
+
+    /// <summary>指定インデックス以外のカードで使用中のアルゴリズム名リストを返す。</summary>
+    private IReadOnlyList<string> GetOtherAlgorithmNames(int currentIndex) =>
+        Instances
+            .Select((inst, i) => (inst, i))
+            .Where(x => x.i != currentIndex)
+            .Select(x => x.inst.AlgorithmName)
+            .ToList();
 
     public async ValueTask DisposeAsync()
     {

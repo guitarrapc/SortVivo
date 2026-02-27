@@ -135,6 +135,10 @@
     [Parameter]
     public EventCallback<string> OnAlgorithmSelected { get; set; }
 
+    /// <summary>已に比較中の他カードのアルゴリズム名セット。ドロップダウンから除外する。</summary>
+    [Parameter]
+    public IReadOnlyList<string> ExcludeAlgorithmNames { get; set; } = [];
+
     /// <summary>PlaybackService の購読に使用。StateChanged を受けて再描画する。</summary>
     [Parameter]
     public PlaybackService? Playback { get; set; }
@@ -188,7 +192,8 @@
 
     private IEnumerable<IGrouping<string, AlgorithmMetadata>> GetAlgorithmsByCategory()
     {
-        var all = AlgorithmRegistry.GetAllAlgorithms();
+        var all = AlgorithmRegistry.GetAllAlgorithms()
+            .Where(a => !ExcludeAlgorithmNames.Contains(a.Name));
         var order = all.Select((a, i) => new { a.Category, i })
             .GroupBy(x => x.Category)
             .ToDictionary(g => g.Key, g => g.Min(x => x.i));
