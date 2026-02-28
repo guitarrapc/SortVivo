@@ -1,26 +1,16 @@
-/* ─── ページ全体 ───────────────────────────────────────────────────────── */
+/* ─── ページ全体（メインと同グリッドレイアウト） ─────────────────────────── */
 .tutorial-page {
-    display: flex;
-    flex-direction: column;
-    gap: 0.75rem;
-    padding: 0;
+    display: grid;
+    grid-template-columns: 240px 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    gap: 10px;
+    padding: 10px;
     background: var(--bg-dark);
-    min-height: 100vh;
     color: var(--text-light);
     outline: none;
 }
 
-/* ─── ヘッダー（メインと同スタイル） ──────────────────────────────────── */
-.tutorial-header {
-    display: flex;
-    align-items: center;
-    gap: 0.75rem;
-    background: var(--bg-panel);
-    padding: 0 1rem;
-    height: 3.5rem;
-    border-bottom: 1px solid #3A3A3A;
-    flex-shrink: 0;
-}
 
 .tutorial-back-link {
     color: var(--text-gray);
@@ -51,12 +41,6 @@
     color: var(--text-gray);
 }
 
-.tutorial-header__actions {
-    display: flex;
-    align-items: center;
-    gap: 0.5rem;
-    flex-shrink: 0;
-}
 
 .tutorial-try-btn {
     display: inline-flex;
@@ -76,140 +60,98 @@
     opacity: 0.85;
 }
 
-/* ─── ツールバー ───────────────────────────────────────────────────────── */
-.tutorial-toolbar {
+
+/* ─── メインエリア（visualization-area 相当） ──────────────────────────── */
+.tutorial-main-area {
+    grid-row: 2;
+    background-color: var(--bg-panel);
+    border-radius: 8px;
+    padding: 12px;
     display: flex;
-    align-items: flex-start;
-    gap: 0.75rem;
-    padding: 0.625rem 1rem;
-    background: var(--bg-panel);
-    border-bottom: 1px solid #3A3A3A;
-    flex-wrap: wrap;
-    flex-shrink: 0;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    min-height: 0;
+    position: relative;
 }
 
-/* ツールバー内カード: compact padding */
-.tutorial-toolbar .ui-card {
-    padding: 0.5rem 0.75rem;
-}
-
-/* Playback カード: step counter + buttons を横並び */
-.tutorial-playback-row {
+/* ─── 再生コントロールバー（PlayControlBar 相当） ──────────────────────── */
+.tutorial-play-control-bar {
     display: flex;
     align-items: center;
-    gap: 0.5rem;
-}
-
-.tutorial-algo-selector {
-    display: flex;
-    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 8px 0;
     flex-shrink: 0;
+    position: relative; /* keyboard-hint の absolute positioning の基準 */
 }
 
-.algo-select {
-    background: #3A3A3A;
-    color: var(--text-light);
-    border: 1px solid #4A4A4A;
-    border-radius: 6px;
-    padding: 0.5rem 0.875rem;
-    font-size: 1rem;
-    min-width: 200px;
-    cursor: pointer;
-}
-
-.algo-select:focus {
-    outline: none;
-    border-color: var(--color-compare);
-    box-shadow: 0 0 0 2px rgba(168, 85, 247, 0.25);
+.tutorial-keyboard-hint {
+    position: absolute;
+    right: 0;
+    font-size: 0.72rem;
+    color: #4A4A4A;
+    white-space: nowrap;
 }
 
 .ctrl-step-counter {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     color: var(--text-gray);
-    min-width: 70px;
+    min-width: 80px;
     text-align: center;
     white-space: nowrap;
+    font-weight: 500;
 }
 
 .ctrl-buttons {
     display: flex;
-    gap: 0.375rem;
+    gap: 10px;
     align-items: center;
 }
 
+/* Tutorial ボタン: メイン PlayControlBar と同サイズ・スタイル */
 .ctrl-btn {
-    background: #3A3A3A;
-    color: var(--text-light);
-    border: 1px solid #4A4A4A;
-    border-radius: 6px;
-    padding: 0 0.875rem;
-    font-size: 1rem;
+    height: 60px;
+    min-width: 70px;
+    padding: 0;
+    border: none;
+    border-radius: 8px;
+    font-size: 1.6rem;
     cursor: pointer;
-    transition: background 0.15s, border-color 0.15s;
-    min-width: 44px;
-    height: 40px;
     display: flex;
     align-items: center;
     justify-content: center;
+    transition: background-color 0.15s, transform 0.1s, opacity 0.15s;
+    background: #3A3A3A;
+    color: var(--text-light);
 }
 
 .ctrl-btn:hover:not(:disabled) {
     background: #4A4A4A;
-    border-color: #5A5A5A;
+    transform: scale(1.08);
+}
+
+.ctrl-btn:active {
+    transform: scale(0.95);
 }
 
 .ctrl-btn:disabled {
     opacity: 0.35;
     cursor: not-allowed;
+    transform: none;
 }
 
+/* Play/Pause ボタン: 色を変えるだけで高さは統一 */
 .ctrl-play {
     background: var(--color-compare);
-    border-color: var(--color-compare);
-    font-size: 1.3rem;
-    padding: 0;
-    min-width: 60px;
-    height: 48px;
+    min-width: 80px; /* 少しだけ幅を広げる */
 }
 
 .ctrl-play:hover:not(:disabled) {
-    opacity: 0.85;
+    background: #9333EA;
 }
 
-.ctrl-speed {
-    display: flex;
-    align-items: center;
-    gap: 0.4rem;
-    font-size: 0.8rem;
-    color: var(--text-gray);
-    flex-shrink: 0;
-}
 
-.ctrl-speed label {
-    white-space: nowrap;
-    color: var(--text-gray);
-}
-
-.ctrl-speed input[type="range"] {
-    accent-color: var(--color-compare);
-    width: 90px;
-    cursor: pointer;
-}
-
-.speed-label {
-    min-width: 50px;
-    color: var(--text-light);
-    font-size: 0.8rem;
-    font-family: 'Courier New', monospace;
-}
-
-/* ─── キーボードヒント ─────────────────────────────────────────────────── */
-.ctrl-keyboard-hint {
-    text-align: center;
-    font-size: 0.72rem;
-    color: #4A4A4A;
-    padding: 0.25rem 1rem 0.75rem;
-}
 
 /* ─── ローディング・空状態 ─────────────────────────────────────────────── */
 .tutorial-loading {
@@ -265,7 +207,6 @@
     border-left: 4px solid var(--color-compare);
     border-radius: 8px;
     padding: 0.875rem 1rem;
-    margin: 0 1rem;
     display: flex;
     flex-direction: column;
     gap: 0.5rem;
@@ -363,7 +304,6 @@
     border: 1px solid #3A3A3A;
     border-radius: 8px;
     padding: 0.75rem 1rem;
-    margin: 0 1rem;
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
@@ -396,7 +336,6 @@
     border: 1px solid #3A3A3A;
     border-radius: 8px;
     padding: 1.25rem 1rem;
-    margin: 0 1rem 0.5rem;
     display: flex;
     flex-direction: column;
     gap: 1.75rem;

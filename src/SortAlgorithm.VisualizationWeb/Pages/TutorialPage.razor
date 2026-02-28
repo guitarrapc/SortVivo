@@ -11,99 +11,123 @@
 
 <div class="tutorial-page" @onkeydown="OnKeyDown" @onkeydown:preventDefault tabindex="0" @ref="_containerRef">
 
-    @* ─── ヘッダー（メインと同スタイル） ──────────────────────────────────── *@
-    <div class="tutorial-header">
-        <a href="/" class="tutorial-back-link">← Back</a>
-        <h1 class="tutorial-title">
-            🎓 Tutorial
-            @if (_selectedAlgorithm != null)
-            {
-                <span class="tutorial-title__algo">: @_selectedAlgorithm.Name</span>
-            }
-        </h1>
-        <div class="tutorial-header__actions">
-            @if (_selectedAlgorithm != null)
-            {
-                <a href="@GetTryThisAlgorithmUrl()" class="tutorial-try-btn">▶ Try this algorithm</a>
-            }
+@* ─── バックドロップ（モバイル / タブレット） ─────────────────────────── *@
+@if (_qapOpen)
+{
+    <div class="qap-backdrop" @onclick="() => _qapOpen = false"></div>
+}
+
+@* ─── ヘッダー（メインと同スタイル） ──────────────────────────────────── *@
+<div class="header">
+    <button class="header__hamburger"
+            @onclick="() => _qapOpen = true"
+            title="Open Panel">☰</button>
+    <a href="/" class="tutorial-back-link">← Back</a>
+    <h1 class="tutorial-title">
+        🎓 Tutorial
+        @if (_selectedAlgorithm != null)
+        {
+            <span class="tutorial-title__algo">: @_selectedAlgorithm.Name</span>
+        }
+    </h1>
+    <div class="header__actions">
+        @if (_selectedAlgorithm != null)
+        {
+            <a href="@GetTryThisAlgorithmUrl()" class="tutorial-try-btn">▶ Try this algorithm</a>
+        }
+    </div>
+</div>
+
+
+    @* ─── サイドバー（Sort Target + Speed） ──────────────────────────────── *@
+    <div class="qap @(_qapOpen ? "qap--mobile-open" : "")">
+        <div class="qap__content">
+            <div class="qap__title-row">
+                <span class="qap__title">Quick Access</span>
+                <button class="qap__mobile-close" @onclick="() => _qapOpen = false" title="Close">✕</button>
+            </div>
+            <fieldset class="controls-fieldset" disabled="@_isLoading">
+
+                @* ── Sort Target ── *@
+                <div class="ui-card">
+                    <span class="ui-card__title">Sort Target</span>
+                    <div class="qap__item">
+                        <span class="stat-label">Algorithm</span>
+                        <select @onchange="OnAlgorithmChanged">
+                            <option value="">Select Algorithm</option>
+                            @foreach (var category in GetTutorialCategories())
+                            {
+                                <optgroup label="@category">
+                                    @foreach (var algo in GetAlgorithmsByCategory(category))
+                                    {
+                                        <option value="@algo.Name"
+                                                selected="@(_selectedAlgorithm?.Name == algo.Name)">
+                                            @algo.Name
+                                        </option>
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                    </div>
+                </div>
+
+                @* ── Speed ── *@
+                <div class="ui-card">
+                    <span class="ui-card__title">Speed</span>
+                    <div class="qap__item qap__item--vertical">
+                        <div class="qap__slider-header">
+                            <span class="stat-label">Interval</span>
+                            <span class="stat-value qap__slider-value">@_autoPlaySpeedMs ms</span>
+                        </div>
+                        <input type="range" min="200" max="2000" step="100"
+                               value="@_autoPlaySpeedMs"
+                               @oninput="OnSpeedChanged"
+                               @onkeydown:stopPropagation />
+                    </div>
+                </div>
+
+            </fieldset>
         </div>
     </div>
 
-    @* ─── ツールバー（アルゴリズム選択 + ナビ操作 + Speed） ────────────────── *@
-    <div class="tutorial-toolbar">
-
-        @* ── Sort Target ── *@
-        <div class="ui-card">
-            <span class="ui-card__title">Algorithm</span>
-            <div class="tutorial-algo-selector">
-                <select @onchange="OnAlgorithmChanged" class="algo-select">
-                    <option value="">Select Algorithm</option>
-                    @foreach (var category in GetTutorialCategories())
-                    {
-                        <optgroup label="@category">
-                            @foreach (var algo in GetAlgorithmsByCategory(category))
-                            {
-                                <option value="@algo.Name"
-                                        selected="@(_selectedAlgorithm?.Name == algo.Name)">
-                                    @algo.Name
-                                </option>
-                            }
-                        </optgroup>
-                    }
-                </select>
-            </div>
-        </div>
-
+    @* ─── メインエリア ────────────────────────────────────────────────────── *@
+    <div class="tutorial-main-area">
         @{
             bool noSteps = _selectedAlgorithm == null || _steps.Count == 0;
         }
 
-        @* ── Playback ── *@
-        <div class="ui-card tutorial-playback-card">
-            <span class="ui-card__title">Playback</span>
-            <div class="tutorial-playback-row">
-                <div class="ctrl-step-counter">
-                    @if (_currentStepIndex < 0)
-                    {
-                        <span>@(noSteps ? "—" : "Initial")</span>
-                    }
-                    else
-                    {
-                        <span>@(_currentStepIndex + 1) / @_steps.Count</span>
-                    }
-                </div>
-                <div class="ctrl-buttons">
-                    <button class="ctrl-btn" title="First (Home)"
-                            @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">◀◀</button>
-                    <button class="ctrl-btn" title="Previous (←)"
-                            @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">◀</button>
-                    <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
-                            @onclick="ToggleAutoPlay" disabled="@noSteps">
-                        @(_isAutoPlaying ? "⏸" : "▶")
-                    </button>
-                    <button class="ctrl-btn" title="Next (→)"
-                            @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶</button>
-                    <button class="ctrl-btn" title="Last (End)"
-                            @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶▶</button>
-                </div>
+        @* ─── 再生コントロールバー ──────────────────────────────────────── *@
+        <div class="tutorial-play-control-bar">
+            <div class="ctrl-step-counter">
+                @if (_currentStepIndex < 0)
+                {
+                    <span>@(noSteps ? "—" : "Initial")</span>
+                }
+                else
+                {
+                    <span>@(_currentStepIndex + 1) / @_steps.Count</span>
+                }
             </div>
+            <div class="ctrl-buttons">
+                <button class="ctrl-btn" title="First (Home)"
+                        @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">◀◀</button>
+                <button class="ctrl-btn" title="Previous (←)"
+                        @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">◀</button>
+                <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
+                        @onclick="ToggleAutoPlay" disabled="@noSteps">
+                    @(_isAutoPlaying ? "⏸" : "▶")
+                </button>
+                <button class="ctrl-btn" title="Next (→)"
+                        @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶</button>
+                <button class="ctrl-btn" title="Last (End)"
+                        @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶▶</button>
+            </div>
+            <span class="tutorial-keyboard-hint">← → Space · Home · End</span>
         </div>
 
-        @* ── Speed ── *@
-        <div class="ui-card">
-            <span class="ui-card__title">Speed</span>
-            <div class="ctrl-speed">
-                <input type="range" min="200" max="2000" step="100"
-                       value="@_autoPlaySpeedMs"
-                       @oninput="OnSpeedChanged"
-                       @onkeydown:stopPropagation />
-                <span class="speed-label">@_autoPlaySpeedMs ms</span>
-            </div>
-        </div>
 
-    </div>
 
-    @* ─── コンテンツエリア ──────────────────────────────────────────────── *@
+    @* ─── コンテンツ ──────────────────────────────────────────────────────── *@
     @if (_isLoading)
     {
         <div class="tutorial-loading">
@@ -114,7 +138,7 @@
     {
         <div class="tutorial-empty">
             <div class="empty-icon">🎓</div>
-            <div class="empty-text">Select an algorithm from the dropdown above.</div>
+            <div class="empty-text">Select an algorithm from the panel on the left.</div>
             <div class="empty-hint">Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.</div>
         </div>
     }
@@ -186,9 +210,6 @@
             </div>
         }
     }
-
-    <div class="ctrl-keyboard-hint">
-        Keyboard: ← → to step · Space to play/pause · Home · End
     </div>
 </div>
 
@@ -208,6 +229,7 @@
     private bool _isAutoPlaying;
     private int _autoPlaySpeedMs = 800;
     private bool _descExpanded = true;
+    private bool _qapOpen = false;  // モバイル / タブレットオーバーレイ
 
     private CancellationTokenSource? _autoPlayCts;
     private ElementReference _containerRef;
