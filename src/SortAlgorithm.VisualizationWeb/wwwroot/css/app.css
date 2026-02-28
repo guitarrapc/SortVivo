@@ -459,7 +459,7 @@ html, body {
 
 /* カードグループ（QuickAccessPanel / TutorialPage ツールバーで共通利用） */
 .ui-card {
-    background-color: var(--bg-card);
+    background-color: #2a2a2a;
     border-radius: 6px;
     padding: 10px;
     display: flex;
