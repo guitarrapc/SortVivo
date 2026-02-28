@@ -47,17 +47,14 @@
                     <span class="ui-card__title">Sort Target</span>
                     <div class="qap__item">
                         <span class="stat-label">Algorithm</span>
-                        <select @onchange="OnAlgorithmChanged">
-                            <option value="">Select Algorithm</option>
+                        <select value="@(_selectedAlgorithm?.Name ?? "")"
+                                @onchange="OnAlgorithmChanged">
                             @foreach (var category in GetTutorialCategories())
                             {
                                 <optgroup label="@category">
                                     @foreach (var algo in GetAlgorithmsByCategory(category))
                                     {
-                                        <option value="@algo.Name"
-                                                selected="@(_selectedAlgorithm?.Name == algo.Name)">
-                                            @algo.Name
-                                        </option>
+                                        <option value="@algo.Name">@algo.Name</option>
                                     }
                                 </optgroup>
                             }
@@ -454,10 +451,18 @@
             .Where(a => !a.ExcludeFromTutorial);
 
     private IEnumerable<string> GetTutorialCategories()
-        => GetTutorialAlgorithms()
+    {
+        var algorithms = GetTutorialAlgorithms();
+        var categoryOrder = algorithms
+            .Select((a, i) => new { a.Category, i })
+            .GroupBy(x => x.Category)
+            .ToDictionary(g => g.Key, g => g.Min(x => x.i));
+
+        return algorithms
             .Select(a => a.Category)
             .Distinct()
-            .OrderBy(c => c);
+            .OrderBy(c => categoryOrder[c]);
+    }
 
     private IEnumerable<AlgorithmMetadata> GetAlgorithmsByCategory(string category)
         => GetTutorialAlgorithms()
