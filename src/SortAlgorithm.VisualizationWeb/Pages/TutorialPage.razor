@@ -149,9 +149,9 @@
                     </button>
                 </div>
             </div>
-            @if (_descExpanded && !string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
+            @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
             {
-                <div class="tdp-body">
+                <div class="tdp-body @(_descExpanded ? "" : "tdp-body--hidden")">
                     <div class="desc-body">@RenderDescription(_selectedAlgorithm.TutorialDescription)</div>
                 </div>
             }
@@ -218,7 +218,7 @@
     private bool _isLoading;
     private bool _isAutoPlaying;
     private int _autoPlaySpeedMs = 800;
-    private bool _descExpanded = true;
+    private bool _descExpanded = false;
     private bool _qapOpen = false;  // モバイル / タブレットオーバーレイ
 
     private CancellationTokenSource? _autoPlayCts;

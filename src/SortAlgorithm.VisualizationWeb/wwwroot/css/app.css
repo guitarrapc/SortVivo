@@ -647,6 +647,11 @@ details[open] .qap__advanced-summary::before {
         pointer-events: auto;
     }
 
+    /* アルゴリズム説明カードはモバイル/タブレットでは非表示（Action カードを見えやすくする） */
+    .algorithm-description-card {
+        display: none;
+    }
+
     /* 展開ボタン表示 */
     .sss__expand-btn {
         display: flex;

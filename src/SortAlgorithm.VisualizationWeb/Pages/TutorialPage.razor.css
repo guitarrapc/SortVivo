@@ -89,6 +89,13 @@
     .tutorial-page {
         grid-template-columns: 1fr;
     }
+
+    /* タブレット/モバイル: 説明折りたたみトグルを表示 */
+    .tdp-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
 }
 
 
@@ -249,6 +256,7 @@
     flex-direction: column;
     gap: 0.5rem;
     box-shadow: 0 2px 8px rgba(142, 192, 124, 0.1);
+    flex-shrink: 0;
 }
 
 .tdp-header {
@@ -345,6 +353,18 @@
     border-color: var(--color-tutorial-accent);
 }
 
+/* モバイル: 説明本文を折りたたみ */
+.tdp-body--hidden {
+    display: none;
+}
+
+/* PC / タブレット: 折りたたみ状態でも常に表示 */
+@media (min-width: 768px) {
+    .tdp-body--hidden {
+        display: block;
+    }
+}
+
 /* ─── ナラティブパネル ─────────────────────────────────────────────────── */
 .tutorial-narrative-panel {
     background: var(--bg-panel);
@@ -354,6 +374,7 @@
     display: flex;
     align-items: flex-start;
     gap: 0.75rem;
+    flex-shrink: 0;
 }
 
 .narrative-badge {
@@ -388,6 +409,8 @@
     gap: 1.75rem;
     align-items: center;
     overflow-x: auto;
+    flex: 1;
+    min-height: 150px;
 }
 
 /* ─── MarbleRenderer スコープ外から指定するスタイル ───────────────────── */
@@ -517,12 +540,6 @@
 
     .ctrl-speed input[type="range"] {
         width: 70px;
-    }
-
-    .tdp-toggle {
-        display: flex;
-        align-items: center;
-        justify-content: center;
     }
 
     .tutorial-description-panel,
