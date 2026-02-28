@@ -165,7 +165,9 @@ html, body {
 }
 
 .header__hamburger {
-    display: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     padding: 6px 10px;
     background: transparent;
     border: 1px solid var(--border-color-light);
@@ -174,10 +176,16 @@ html, body {
     color: var(--text-primary);
     cursor: pointer;
     flex-shrink: 0;
+    transition: background-color 0.15s;
 }
 
 .header__hamburger:hover {
     background-color: var(--bg-hover);
+}
+
+/* TutorialPage: ハンバーガーメニューはモバイルのみ表示 */
+.header__hamburger--mobile-only {
+    display: none;
 }
 
 .header__title {
@@ -271,30 +279,26 @@ html, body {
     background-color: rgba(255, 255, 255, 0.5);
 }
 
-/* PC: 折りたたみボタン */
-.qap__pc-toggle {
-    position: absolute;
-    right: 10px;
-    bottom: 20px;
-    width: 32px;
-    height: 64px;
-    background-color: var(--color-compare);
-    color: var(--text-light);
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    font-size: 1.2rem;
+/* PC: ハンバーガーメニュー（折りたたみボタン） */
+.qap__hamburger {
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 20;
-    transition: all 0.2s;
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    width: 28px;
+    height: 28px;
+    background: var(--bg-hover);
+    border: 1px solid var(--border-color-light);
+    border-radius: 4px;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+    cursor: pointer;
+    transition: background 0.15s, color 0.15s;
+    flex-shrink: 0;
 }
 
-.qap__pc-toggle:hover {
-    background-color: #9333EA;
-    transform: scale(1.05);
+.qap__hamburger:hover {
+    background: #3a3a3a;
+    color: var(--text-primary);
 }
 
 /* 折りたたみ状態 */
@@ -327,12 +331,14 @@ html, body {
     justify-content: space-between;
     align-items: center;
     margin-bottom: 12px;
+    gap: 8px;
 }
 
 .qap__title {
     font-size: 1rem;
     font-weight: 700;
     color: var(--text-primary);
+    flex: 1;
 }
 
 /* 各コントロールアイテム */
@@ -556,15 +562,15 @@ details[open] .qap__advanced-summary::before {
    タブレット (768px〜1279px)
    ============================================= */
 @media (max-width: 1279px) {
-    /* グリッドを1カラムに */
-    .visualization-page {
-        grid-template-columns: 1fr;
-    }
+/* グリッドを1カラムに */
+.visualization-page {
+    grid-template-columns: 1fr;
+}
 
-    /* ☰ ボタンを表示 */
-    .header__hamburger {
-        display: flex;
-    }
+/* TutorialPage: モバイル/タブレットでハンバーガーメニューを表示 */
+.header__hamburger--mobile-only {
+    display: flex;
+}
 
     /* QuickAccessPanel は fixed オーバーレイ */
     .qap {
@@ -590,7 +596,7 @@ details[open] .qap__advanced-summary::before {
 
     /* PC 専用 UI を非表示 */
     .qap__resizer,
-    .qap__pc-toggle {
+    .qap__hamburger {
         display: none;
     }
 

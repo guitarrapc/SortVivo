@@ -22,10 +22,10 @@
      @onmouseup="OnMouseUp"
      @onmousemove:preventDefault="@_isResizing">
     <div class="header">
-        @* モバイル / タブレット: ☰ ハンバーガーボタン *@
+        @* ☰ ハンバーガーボタン (PC: パネル折りたたみ, モバイル: オーバーレイ表示) *@
         <button class="header__hamburger"
-                @onclick="() => _quickAccessOpen = true"
-                title="Open Quick Access Panel">☰</button>
+                @onclick="HandleHamburgerClick"
+                title="@GetHamburgerTitle()">☰</button>
 
         <h1 class="header__title">
             Sort Visualization
@@ -209,6 +209,7 @@ private VisualizationMode SelectedVisualizationMode
     private int _sidebarWidth = 280; // デフォルト幅（px）
     private bool _sidebarCollapsed = false; // 折りたたみ状態
     private bool _isResizing = false;
+    private bool _isMobile = false; // モバイル判定用
     private int _resizeStartX = 0;
     private int _resizeStartWidth = 0;
 
@@ -259,6 +260,7 @@ private VisualizationMode SelectedVisualizationMode
         {
             await JS.InvokeVoidAsync("debugHelper.setDebugMode", DebugSettings.IsEnabled);
             await LoadPreferencesAsync();
+            await UpdateIsMobile();
             return;
         }
 
@@ -356,6 +358,41 @@ private VisualizationMode SelectedVisualizationMode
         _isResizing = true;
         _resizeStartX = (int)e.ClientX;
         _resizeStartWidth = _sidebarWidth;
+    }
+
+    private async Task UpdateIsMobile()
+    {
+        try
+        {
+            _isMobile = await JS.InvokeAsync<bool>("eval", "window.innerWidth < 1280");
+        }
+        catch
+        {
+            _isMobile = false;
+        }
+    }
+
+    private async Task HandleHamburgerClick()
+    {
+        await UpdateIsMobile();
+        if (_isMobile)
+        {
+            // モバイル: オーバーレイを開く
+            _quickAccessOpen = true;
+        }
+        else
+        {
+            // PC: パネルの折りたたみをトグル
+            _sidebarCollapsed = !_sidebarCollapsed;
+            _preferencesDirty = true;
+        }
+    }
+
+    private string GetHamburgerTitle()
+    {
+        if (_isMobile)
+            return "Open Quick Access Panel";
+        return _sidebarCollapsed ? "Show Quick Access Panel" : "Hide Quick Access Panel";
     }
 
     private void OnMouseMove(MouseEventArgs e)

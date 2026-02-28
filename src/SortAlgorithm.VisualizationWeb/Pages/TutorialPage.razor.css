@@ -30,10 +30,17 @@
     white-space: nowrap;
     transition: color 0.2s;
     flex-shrink: 0;
+    position: relative;
+    z-index: 1;
 }
 
 .tutorial-back-link:hover {
     color: var(--text-primary);
+}
+
+/* PC: ハンバーガーメニューを非表示 */
+.tutorial-page .header__hamburger {
+    display: none;
 }
 
 .tutorial-title {
@@ -71,6 +78,17 @@
 .tutorial-try-btn:hover {
     background: linear-gradient(135deg, #6bb05d 0%, #4a8c43 100%);
     opacity: 1;
+}
+
+/* タブレット/モバイル: ハンバーガーメニューを表示 */
+@media (max-width: 1279px) {
+    .tutorial-page .header__hamburger {
+        display: flex;
+    }
+
+    .tutorial-page {
+        grid-template-columns: 1fr;
+    }
 }
 
 

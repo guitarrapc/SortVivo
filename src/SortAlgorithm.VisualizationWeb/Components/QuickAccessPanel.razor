@@ -16,20 +16,7 @@
          @onmousedown="e => OnResizeStart.InvokeAsync(e)"
          @onmousedown:preventDefault></div>
 
-    @* PC: 折りたたみトグル *@
-    <button class="qap__pc-toggle"
-            @onclick="ToggleCollapse"
-            title="@(IsCollapsed ? "Show Panel" : "Hide Panel")">
-        @(IsCollapsed ? "▶" : "◀")
-    </button>
-
     <div class="qap__content">
-
-        @* パネルタイトル + モバイル閉じるボタン *@
-        <div class="qap__title-row">
-            @* <span class="qap__title">Quick Access</span> *@
-            <button class="qap__mobile-close" @onclick="HandleClose" title="Close">✕</button>
-        </div>
 
         @* ── Current Algorithm 説明カード ── *@
         @{
