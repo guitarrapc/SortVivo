@@ -4,7 +4,7 @@
 /* 背景色 */
 --bg-main: #181d1a;
 --bg-card: #242a27;
---bg-panel: #1c2320;
+--bg-panel: transparent;
 --bg-hover: #2d3530;
 
     /* テキスト色 */
