@@ -14,10 +14,12 @@
 /* ─── ヘッダー（背景なし、直接載せる） ────────────────────────────────── */
 .tutorial-page .header {
     grid-column: 1 / -1;
-    padding: 8px 4px;
+    padding: 12px 8px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
 }
 
 
@@ -35,14 +37,15 @@
 }
 
 .tutorial-title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
     margin: 0;
-    font-size: 1.1rem;
+    font-size: 1.75rem;
     font-weight: 700;
     color: var(--text-primary);
-    flex: 1;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    pointer-events: none;
 }
 
 .tutorial-title__algo {

@@ -156,10 +156,12 @@ html, body {
 
 .header {
     grid-column: 1 / -1;
-    padding: 8px 4px;
+    padding: 12px 8px;
     display: flex;
     align-items: center;
-    gap: 10px;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
 }
 
 .header__hamburger {
@@ -179,12 +181,14 @@ html, body {
 }
 
 .header__title {
-    flex: 1;
-    font-size: 1.1rem;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 1.75rem;
     font-weight: 700;
     white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    color: var(--text-primary);
+    pointer-events: none;
 }
 
 .header__actions {
