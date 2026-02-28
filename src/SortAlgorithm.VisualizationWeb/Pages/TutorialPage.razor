@@ -87,16 +87,6 @@
 
         @* ─── 再生コントロールバー ──────────────────────────────────────── *@
         <div class="tutorial-play-control-bar">
-            <div class="ctrl-step-counter">
-                @if (_currentStepIndex < 0)
-                {
-                    <span>@(noSteps ? "—" : "Initial")</span>
-                }
-                else
-                {
-                    <span>@(_currentStepIndex + 1) / @_steps.Count</span>
-                }
-            </div>
             <div class="ctrl-buttons">
                 <button class="ctrl-btn" title="First (Home)"
                         @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">◀◀</button>
