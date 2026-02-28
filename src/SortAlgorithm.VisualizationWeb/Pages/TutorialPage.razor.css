@@ -58,8 +58,8 @@
     display: inline-flex;
     align-items: center;
     padding: 0.25rem 0.625rem;
-    background: var(--color-tutorial-accent);
-    color: var(--bg-main);
+    background: linear-gradient(135deg, #5a9a4d 0%, #3d7a38 100%);
+    color: #fff;
     border-radius: 4px;
     font-size: 0.75rem;
     font-weight: 600;
@@ -69,7 +69,8 @@
 }
 
 .tutorial-try-btn:hover {
-    opacity: 0.85;
+    background: linear-gradient(135deg, #6bb05d 0%, #4a8c43 100%);
+    opacity: 1;
 }
 
 

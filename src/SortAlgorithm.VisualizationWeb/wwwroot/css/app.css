@@ -825,11 +825,12 @@ button:active {
 }
 
 button.primary {
-    background-color: var(--color-accent);
+    background: linear-gradient(135deg, #5a9a4d 0%, #3d7a38 100%);
+    color: #fff;
 }
 
 button.primary:hover {
-    background-color: var(--color-accent-hover);
+    background: linear-gradient(135deg, #6bb05d 0%, #4a8c43 100%);
 }
 
 select {
