@@ -38,7 +38,8 @@
     </div>
 
     <QuickAccessPanel
-        @bind-IsCollapsed="_sidebarCollapsed"
+        IsCollapsed="@_sidebarCollapsed"
+        IsCollapsedChanged="@HandleSidebarCollapsedChanged"
         @bind-SelectedAlgorithm="SelectedAlgorithm"
         @bind-ArraySize="ArraySize"
         @bind-SelectedPatternName="SelectedPatternName"
@@ -60,7 +61,7 @@
 
     <SettingsModal
         IsOpen="_settingsOpen"
-        OnClose="() => _settingsOpen = false"
+        OnClose="HandleSettingsClose"
         Playback="Playback"
         RenderSettings="RenderSettings"
         DebugSettings="DebugSettings"
@@ -145,10 +146,34 @@
 </div>
 
 @code {
-private string SelectedAlgorithm { get; set; } = "Bubble sort";
-private int ArraySize { get; set; } = 64;
-private string SelectedPatternName { get; set; } = "🎲 Random";
-private VisualizationMode SelectedVisualizationMode { get; set; } = VisualizationMode.BarChart;
+// ── コンテンツ状態（URL Query String で保持） ─────────────────────────────
+private string _selectedAlgorithm = "Bubble sort";
+private string SelectedAlgorithm
+{
+    get => _selectedAlgorithm;
+    set { if (_selectedAlgorithm != value) { _selectedAlgorithm = value; UpdateContentStateUrl(); } }
+}
+
+private int _arraySize = 64;
+private int ArraySize
+{
+    get => _arraySize;
+    set { if (_arraySize != value) { _arraySize = value; UpdateContentStateUrl(); } }
+}
+
+private string _selectedPatternName = "🎲 Random";
+private string SelectedPatternName
+{
+    get => _selectedPatternName;
+    set { if (_selectedPatternName != value) { _selectedPatternName = value; UpdateContentStateUrl(); } }
+}
+
+private VisualizationMode _selectedVisualizationMode = VisualizationMode.BarChart;
+private VisualizationMode SelectedVisualizationMode
+{
+    get => _selectedVisualizationMode;
+    set { if (_selectedVisualizationMode != value) { _selectedVisualizationMode = value; UpdateContentStateUrl(); } }
+}
 
     // N に基づく暗黙的モード（トグル不要）
     private bool IsComparisonMode => ComparisonMode.State.Instances.Count > 1;
@@ -173,6 +198,9 @@ private VisualizationMode SelectedVisualizationMode { get; set; } = Visualizatio
     // Settings モーダル
     private bool _settingsOpen = false;
 
+    // 環境設定ダーティフラグ（OnAfterRenderAsync で localStorage に保存）
+    private bool _preferencesDirty = false;
+
     // Settings: QuickAccessPanel と共有する設定
     private string _selectedCategory = string.Empty;
     private bool _autoSwitchToRecommendedSize = false;
@@ -190,7 +218,7 @@ private VisualizationMode SelectedVisualizationMode { get; set; } = Visualizatio
         ComparisonMode.OnStateChanged += OnStateChanged;
         DebugSettings.OnChanged += OnStateChanged;
 
-        // ?algo= クエリパラメータでアルゴリズムを切り替え（チュートリアルからの遷移対応）
+        // URL Query String からコンテンツ状態を復元
         var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
         var qs = uri.Query.TrimStart('?');
         if (!string.IsNullOrEmpty(qs))
@@ -198,15 +226,28 @@ private VisualizationMode SelectedVisualizationMode { get; set; } = Visualizatio
             foreach (var pair in qs.Split('&'))
             {
                 var parts = pair.Split('=', 2);
-                if (parts.Length == 2
-                    && string.Equals(Uri.UnescapeDataString(parts[0]), "algo", StringComparison.OrdinalIgnoreCase))
+                if (parts.Length != 2) continue;
+                var key = Uri.UnescapeDataString(parts[0]);
+                var val = Uri.UnescapeDataString(parts[1].Replace("+", " "));
+                switch (key.ToLowerInvariant())
                 {
-                    var decoded = Uri.UnescapeDataString(parts[1].Replace("+", " "));
-                    var algo = AlgorithmRegistry.GetAllAlgorithms()
-                        .FirstOrDefault(a => string.Equals(a.Name, decoded, StringComparison.OrdinalIgnoreCase));
-                    if (algo != null)
-                        SelectedAlgorithm = algo.Name;
-                    break;
+                    case "algo":
+                        var algo = AlgorithmRegistry.GetAllAlgorithms()
+                            .FirstOrDefault(a => string.Equals(a.Name, val, StringComparison.OrdinalIgnoreCase));
+                        if (algo != null) _selectedAlgorithm = algo.Name;
+                        break;
+                    case "size":
+                        if (int.TryParse(val, out var size)) _arraySize = size;
+                        break;
+                    case "pattern":
+                        var pattern = ArrayPatternRegistry.GetAllPatterns()
+                            .FirstOrDefault(p => string.Equals(p.Name, val, StringComparison.OrdinalIgnoreCase));
+                        if (pattern != null) _selectedPatternName = pattern.Name;
+                        break;
+                    case "mode":
+                        if (Enum.TryParse<VisualizationMode>(val, ignoreCase: true, out var mode))
+                            _selectedVisualizationMode = mode;
+                        break;
                 }
             }
         }
@@ -217,6 +258,96 @@ private VisualizationMode SelectedVisualizationMode { get; set; } = Visualizatio
         if (firstRender)
         {
             await JS.InvokeVoidAsync("debugHelper.setDebugMode", DebugSettings.IsEnabled);
+            await LoadPreferencesAsync();
+            return;
+        }
+
+        if (_preferencesDirty)
+        {
+            _preferencesDirty = false;
+            await SavePreferencesAsync();
+        }
+    }
+
+    // ── URL 更新（コンテンツ状態） ────────────────────────────────────────────
+    private void UpdateContentStateUrl()
+    {
+        var url = $"/?algo={Uri.EscapeDataString(_selectedAlgorithm)}" +
+                  $"&size={_arraySize}" +
+                  $"&pattern={Uri.EscapeDataString(_selectedPatternName)}" +
+                  $"&mode={_selectedVisualizationMode}";
+        NavigationManager.NavigateTo(url, replace: true);
+    }
+
+    // ── localStorage 読み込み（初回レンダリング後） ──────────────────────────
+    private async Task LoadPreferencesAsync()
+    {
+        try
+        {
+            var prefs = await JS.InvokeAsync<Dictionary<string, string>>("stateStorage.loadAll");
+            if (prefs == null) return;
+
+            if (prefs.TryGetValue("sortvis.opsPerFrame", out var ops) && int.TryParse(ops, out var opsVal))
+                Playback.OperationsPerFrame = opsVal;
+            if (prefs.TryGetValue("sortvis.speedMultiplier", out var spd) &&
+                double.TryParse(spd, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var spdVal))
+                Playback.SpeedMultiplier = spdVal;
+            if (prefs.TryGetValue("sortvis.renderer", out var rend))
+                RenderSettings.UseWebGL = rend == "true";
+            if (prefs.TryGetValue("sortvis.autoReset", out var ar))
+                Playback.AutoReset = ar == "true";
+            if (prefs.TryGetValue("sortvis.instantMode", out var im))
+                Playback.InstantMode = im == "true";
+            if (prefs.TryGetValue("sortvis.soundEnabled", out var se))
+                Playback.SoundEnabled = se == "true";
+            if (prefs.TryGetValue("sortvis.soundVolume", out var sv) &&
+                double.TryParse(sv, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var svVal))
+                Playback.SoundVolume = svVal;
+            if (prefs.TryGetValue("sortvis.autoRecommendedSize", out var ars))
+                _autoSwitchToRecommendedSize = ars == "true";
+            if (prefs.TryGetValue("sortvis.categoryFilter", out var cf))
+                _selectedCategory = cf ?? string.Empty;
+            if (prefs.TryGetValue("sortvis.debugLog", out var dl))
+                DebugSettings.IsEnabled = dl == "true";
+            if (prefs.TryGetValue("sortvis.sidebarWidth", out var sw) &&
+                int.TryParse(sw, out var swVal))
+                _sidebarWidth = Math.Clamp(swVal, 200, 500);
+            if (prefs.TryGetValue("sortvis.sidebarCollapsed", out var sc))
+                _sidebarCollapsed = sc == "true";
+
+            StateHasChanged();
+        }
+        catch (Exception ex)
+        {
+            DebugSettings.Log($"[Index] LoadPreferences error: {ex.Message}");
+        }
+    }
+
+    // ── localStorage 保存 ────────────────────────────────────────────────────
+    private async Task SavePreferencesAsync()
+    {
+        try
+        {
+            var inv = System.Globalization.CultureInfo.InvariantCulture;
+            await JS.InvokeVoidAsync("stateStorage.saveAll", new Dictionary<string, string>
+            {
+                ["sortvis.opsPerFrame"]          = Playback.OperationsPerFrame.ToString(),
+                ["sortvis.speedMultiplier"]      = Playback.SpeedMultiplier.ToString(inv),
+                ["sortvis.renderer"]             = RenderSettings.UseWebGL ? "true" : "false",
+                ["sortvis.autoReset"]            = Playback.AutoReset ? "true" : "false",
+                ["sortvis.instantMode"]          = Playback.InstantMode ? "true" : "false",
+                ["sortvis.soundEnabled"]         = Playback.SoundEnabled ? "true" : "false",
+                ["sortvis.soundVolume"]          = Playback.SoundVolume.ToString(inv),
+                ["sortvis.autoRecommendedSize"]  = _autoSwitchToRecommendedSize ? "true" : "false",
+                ["sortvis.categoryFilter"]       = _selectedCategory ?? string.Empty,
+                ["sortvis.debugLog"]             = DebugSettings.IsEnabled ? "true" : "false",
+                ["sortvis.sidebarWidth"]         = _sidebarWidth.ToString(),
+                ["sortvis.sidebarCollapsed"]     = _sidebarCollapsed ? "true" : "false",
+            });
+        }
+        catch (Exception ex)
+        {
+            DebugSettings.Log($"[Index] SavePreferences error: {ex.Message}");
         }
     }
 
@@ -242,6 +373,7 @@ private VisualizationMode SelectedVisualizationMode { get; set; } = Visualizatio
 
     private void OnMouseUp()
     {
+        if (_isResizing) _preferencesDirty = true;
         _isResizing = false;
     }
 
@@ -398,6 +530,7 @@ private VisualizationMode SelectedVisualizationMode { get; set; } = Visualizatio
     {
         if (ComparisonMode.State.Instances.Any())
             ComparisonMode.SetSpeedForAll(Playback.OperationsPerFrame, Playback.SpeedMultiplier);
+        _preferencesDirty = true;
         StateHasChanged();
     }
 
@@ -429,6 +562,24 @@ private VisualizationMode SelectedVisualizationMode { get; set; } = Visualizatio
             ComparisonMode.ToggleSound();
         else
             Playback.SoundEnabled = !Playback.SoundEnabled;
+        _preferencesDirty = true;
+        StateHasChanged();
+    }
+
+    // サイドバー折りたたみ状態変更（設定保存もトリガー）
+    private void HandleSidebarCollapsedChanged(bool value)
+    {
+        _sidebarCollapsed = value;
+        _preferencesDirty = true;
+        StateHasChanged();
+    }
+
+    // Settings モーダルを閉じる（設定保存もトリガー）
+    private void HandleSettingsClose()
+    {
+        _settingsOpen = false;
+        _preferencesDirty = true;
+        StateHasChanged();
     }
 
     public void Dispose()

@@ -374,22 +374,17 @@ html, body {
     width: 100%;
 }
 
-/* カードグループ */
-.qap__card {
+/* カードグループ（QuickAccessPanel / TutorialPage ツールバーで共通利用） */
+.ui-card {
     background-color: var(--bg-dark);
     border-radius: 6px;
     padding: 10px;
     display: flex;
     flex-direction: column;
     gap: 4px;
-    margin-bottom: 8px;
 }
 
-.qap__card:last-child {
-    margin-bottom: 0;
-}
-
-.qap__card-title {
+.ui-card__title {
     font-size: 0.68rem;
     font-weight: 700;
     text-transform: uppercase;
@@ -401,7 +396,7 @@ html, body {
 }
 
 /* カード内アイテムはカードがコンテナなので背景・角丸・外マージン不要 */
-.qap__card .qap__item {
+.ui-card .qap__item {
     margin-bottom: 0;
     padding: 2px 0;
     background: transparent;
@@ -1158,6 +1153,9 @@ fieldset.controls-fieldset {
     padding: 0;
     margin: 0;
     min-inline-size: unset;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
 
 fieldset.controls-fieldset:disabled *,

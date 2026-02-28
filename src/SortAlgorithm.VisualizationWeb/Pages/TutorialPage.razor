@@ -31,62 +31,76 @@
 
     @* ─── ツールバー（アルゴリズム選択 + ナビ操作 + Speed） ────────────────── *@
     <div class="tutorial-toolbar">
-        <div class="tutorial-algo-selector">
-            <select @onchange="OnAlgorithmChanged" class="algo-select">
-                <option value="">Select Algorithm</option>
-                @foreach (var category in GetTutorialCategories())
-                {
-                    <optgroup label="@category">
-                        @foreach (var algo in GetAlgorithmsByCategory(category))
-                        {
-                            <option value="@algo.Name"
-                                    selected="@(_selectedAlgorithm?.Name == algo.Name)">
-                                @algo.Name
-                            </option>
-                        }
-                    </optgroup>
-                }
-            </select>
+
+        @* ── Sort Target ── *@
+        <div class="ui-card">
+            <span class="ui-card__title">Algorithm</span>
+            <div class="tutorial-algo-selector">
+                <select @onchange="OnAlgorithmChanged" class="algo-select">
+                    <option value="">Select Algorithm</option>
+                    @foreach (var category in GetTutorialCategories())
+                    {
+                        <optgroup label="@category">
+                            @foreach (var algo in GetAlgorithmsByCategory(category))
+                            {
+                                <option value="@algo.Name"
+                                        selected="@(_selectedAlgorithm?.Name == algo.Name)">
+                                    @algo.Name
+                                </option>
+                            }
+                        </optgroup>
+                    }
+                </select>
+            </div>
         </div>
 
         @{
             bool noSteps = _selectedAlgorithm == null || _steps.Count == 0;
         }
 
-        <div class="ctrl-step-counter">
-            @if (_currentStepIndex < 0)
-            {
-                <span>@(noSteps ? "—" : "Initial")</span>
-            }
-            else
-            {
-                <span>@(_currentStepIndex + 1) / @_steps.Count</span>
-            }
+        @* ── Playback ── *@
+        <div class="ui-card tutorial-playback-card">
+            <span class="ui-card__title">Playback</span>
+            <div class="tutorial-playback-row">
+                <div class="ctrl-step-counter">
+                    @if (_currentStepIndex < 0)
+                    {
+                        <span>@(noSteps ? "—" : "Initial")</span>
+                    }
+                    else
+                    {
+                        <span>@(_currentStepIndex + 1) / @_steps.Count</span>
+                    }
+                </div>
+                <div class="ctrl-buttons">
+                    <button class="ctrl-btn" title="First (Home)"
+                            @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">◀◀</button>
+                    <button class="ctrl-btn" title="Previous (←)"
+                            @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">◀</button>
+                    <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
+                            @onclick="ToggleAutoPlay" disabled="@noSteps">
+                        @(_isAutoPlaying ? "⏸" : "▶")
+                    </button>
+                    <button class="ctrl-btn" title="Next (→)"
+                            @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶</button>
+                    <button class="ctrl-btn" title="Last (End)"
+                            @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶▶</button>
+                </div>
+            </div>
         </div>
 
-        <div class="ctrl-buttons">
-            <button class="ctrl-btn" title="First (Home)"
-                    @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">◀◀</button>
-            <button class="ctrl-btn" title="Previous (←)"
-                    @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">◀</button>
-            <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
-                    @onclick="ToggleAutoPlay" disabled="@noSteps">
-                @(_isAutoPlaying ? "⏸" : "▶")
-            </button>
-            <button class="ctrl-btn" title="Next (→)"
-                    @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶</button>
-            <button class="ctrl-btn" title="Last (End)"
-                    @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶▶</button>
+        @* ── Speed ── *@
+        <div class="ui-card">
+            <span class="ui-card__title">Speed</span>
+            <div class="ctrl-speed">
+                <input type="range" min="200" max="2000" step="100"
+                       value="@_autoPlaySpeedMs"
+                       @oninput="OnSpeedChanged"
+                       @onkeydown:stopPropagation />
+                <span class="speed-label">@_autoPlaySpeedMs ms</span>
+            </div>
         </div>
 
-        <div class="ctrl-speed">
-            <label>Speed</label>
-            <input type="range" min="200" max="2000" step="100"
-                   value="@_autoPlaySpeedMs"
-                   @oninput="OnSpeedChanged"
-                   @onkeydown:stopPropagation />
-            <span class="speed-label">@_autoPlaySpeedMs ms</span>
-        </div>
     </div>
 
     @* ─── コンテンツエリア ──────────────────────────────────────────────── *@
