@@ -1,5 +1,8 @@
 /* Sort Algorithm Visualization Styles */
 
+/* Google Fonts - Inter: モダンで読みやすいフォント */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
 :root {
 /* 背景色 */
 --bg-main: #181d1a;
@@ -66,11 +69,22 @@
 }
 
 html, body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-main);
-    color: var(--text-primary);
-    height: 100%;
-    overflow: hidden;
+  /* モダンで読みやすいフォントスタック:
+       1. Inter - モダンな欧文フォント (Google Fonts)
+       2. -apple-system/BlinkMacSystemFont - macOS/iOS のシステムフォント
+       3. 'Noto Sans JP' - 日本語用の読みやすいフォント
+       4. 'Segoe UI' - Windows のシステムフォント
+       5. 'Hiragino Sans' - macOS の日本語フォント
+       6. 'Yu Gothic UI' - Windows の日本語フォント
+       7. sans-serif - フォールバック */
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Noto Sans JP', 'Segoe UI', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  font-weight: 400;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  height: 100%;
+  overflow: hidden;
 }
 
 #app {
@@ -192,11 +206,12 @@ html, body {
     position: absolute;
     left: 50%;
     transform: translateX(-50%);
-    font-size: 1.75rem;
+    font-size: 2.25rem;
     font-weight: 700;
     white-space: nowrap;
     color: var(--text-primary);
     pointer-events: none;
+    font-weight: 400;
 }
 
 .header__actions {
