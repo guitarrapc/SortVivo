@@ -38,6 +38,16 @@
     color: var(--text-primary);
 }
 
+/* ☰ と ← Back を左グループとして束ねる（space-between で Back が中央に押し出されるのを防ぐ） */
+.tutorial-header__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
 /* PC: ハンバーガーメニューを非表示 */
 .tutorial-page .header__hamburger {
     display: none;

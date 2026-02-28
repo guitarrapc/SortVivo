@@ -19,10 +19,12 @@
 
 @* ─── ヘッダー（メインと同スタイル） ──────────────────────────────────── *@
 <div class="header">
-    <button class="header__hamburger"
-            @onclick="() => _qapOpen = true"
-            title="Open Panel">☰</button>
-    <a href="/" class="tutorial-back-link">← Back</a>
+    <div class="tutorial-header__left">
+        <button class="header__hamburger"
+                @onclick="() => _qapOpen = true"
+                title="Open Panel">☰</button>
+        <a href="/" class="tutorial-back-link">← Back</a>
+    </div>
     <h1 class="tutorial-title">Sort Visualization: Tutorial</h1>
     <div class="header__actions">
     </div>
