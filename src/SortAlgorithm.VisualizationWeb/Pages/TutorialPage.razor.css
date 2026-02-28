@@ -134,12 +134,21 @@
     position: relative; /* keyboard-hint の absolute positioning の基準 */
 }
 
+/* PC のみ表示（モバイル・タブレットにはキーボードがないため非表示） */
 .tutorial-keyboard-hint {
+    display: none;
     position: absolute;
     right: 0;
     font-size: 0.72rem;
-    color: #4A4A4A;
+    color: var(--text-secondary);
     white-space: nowrap;
+    pointer-events: none;
+}
+
+@media (min-width: 1280px) {
+    .tutorial-keyboard-hint {
+        display: block;
+    }
 }
 
 .ctrl-step-counter {
@@ -573,7 +582,5 @@
         font-size: 0.6rem;
     }
 
-    .ctrl-keyboard-hint {
-        display: none;
-    }
 }
+
