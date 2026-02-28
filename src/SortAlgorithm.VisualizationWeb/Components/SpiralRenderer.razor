@@ -33,6 +33,11 @@
     [Parameter]
     public int GridColumnCount { get; set; } = 1;
 
+    /// <summary>PlaybackService 直接購読で canvas を更新する。Blazor のレンダリングサイクルをバイパスする。</summary>
+    [Parameter]
+    public PlaybackService? Playback { get; set; }
+
+    private PlaybackService? _subscribedPlayback;
     private string _canvasId = $"sortSpiralCanvas_{Guid.NewGuid():N}";
     private bool _isInitialized = false;
     private bool _isInitializing = false;
@@ -43,6 +48,23 @@
     protected override void OnInitialized()
     {
         RenderSettings.OnChanged += OnRenderSettingsChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_subscribedPlayback != Playback)
+        {
+            if (_subscribedPlayback != null)
+                _subscribedPlayback.StateChanged -= OnDirectStateChanged;
+            _subscribedPlayback = Playback;
+            if (_subscribedPlayback != null)
+                _subscribedPlayback.StateChanged += OnDirectStateChanged;
+        }
+    }
+
+    private void OnDirectStateChanged()
+    {
+        InvokeAsync(RenderCanvas);
     }
 
     // レンダラー設定変更時: 旧 canvas を破棄し、新しい canvas ID で再初期化する
@@ -81,6 +103,9 @@
     {
         // ShouldRender() より先に呼ばれるため、毎フレームの JS データ転送はここで行う
         if (!_isInitialized) return;
+
+        // 直接購読モード（Playback 設定済み）は OnDirectStateChanged が canvas を更新するためここはスキップ
+        if (_subscribedPlayback != null) return;
 
         // グリッド列数が変わった場合の記録（ResizeObserver が自動リサイズ＆再描画）
         if (_previousGridColumnCount != GridColumnCount)
@@ -179,6 +204,8 @@
 
     public async ValueTask DisposeAsync()
     {
+        if (_subscribedPlayback != null)
+            _subscribedPlayback.StateChanged -= OnDirectStateChanged;
         RenderSettings.OnChanged -= OnRenderSettingsChanged;
         DebugSettings.Log($"[SpiralRenderer] DisposeAsync called for canvas: {_canvasId}");
 

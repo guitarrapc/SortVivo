@@ -55,6 +55,7 @@
         {
             <BarChartRenderer
                 State="@State"
+                Playback="@Playback"
                 GridColumnCount="@GridColumnCount"
                 OnClick="@OnVisualizationClick" />
         }
@@ -62,6 +63,7 @@
         {
             <CircularRenderer
                 State="@State"
+                Playback="@Playback"
                 GridColumnCount="@GridColumnCount"
                 OnClick="@OnVisualizationClick" />
         }
@@ -69,6 +71,7 @@
         {
             <SpiralRenderer
                 State="@State"
+                Playback="@Playback"
                 GridColumnCount="@GridColumnCount"
                 OnClick="@OnVisualizationClick" />
         }
@@ -76,6 +79,7 @@
         {
             <DotPlotRenderer
                 State="@State"
+                Playback="@Playback"
                 GridColumnCount="@GridColumnCount"
                 OnClick="@OnVisualizationClick" />
         }
@@ -83,6 +87,7 @@
         {
             <PictureRowRenderer
                 State="@State"
+                Playback="@Playback"
                 GridColumnCount="@GridColumnCount"
                 OnClick="@OnVisualizationClick" />
         }
@@ -90,6 +95,7 @@
         {
             <PictureColumnRenderer
                 State="@State"
+                Playback="@Playback"
                 GridColumnCount="@GridColumnCount"
                 OnClick="@OnVisualizationClick" />
         }
@@ -97,6 +103,7 @@
         {
             <PictureBlockRenderer
                 State="@State"
+                Playback="@Playback"
                 GridColumnCount="@GridColumnCount"
                 OnClick="@OnVisualizationClick" />
         }
@@ -148,6 +155,8 @@
     public PlaybackService? Playback { get; set; }
 
     private PlaybackService? _subscribedPlayback;
+    private int _statsFrameCounter = 0;
+    private const int StatsUpdateFrameInterval = 6; // 再生中は ~10fps でStats更新（canvas は直接購読で 60fps）
 
     protected override void OnParametersSet()
     {
@@ -157,6 +166,7 @@
                 _subscribedPlayback.StateChanged -= OnStateChanged;
 
             _subscribedPlayback = Playback;
+            _statsFrameCounter = 0;
 
             if (_subscribedPlayback != null)
                 _subscribedPlayback.StateChanged += OnStateChanged;
@@ -165,6 +175,19 @@
 
     private void OnStateChanged()
     {
+        // 再生中は Stats 表示を StatsUpdateFrameInterval フレームに 1 回だけ更新する。
+        // canvas の描画は各レンダラーが PlaybackService.StateChanged を直接購読して行うため
+        // ここでは Blazor の仮想 DOM 再描画をスロットルするだけでよい。
+        if (State?.PlaybackState == PlaybackState.Playing)
+        {
+            _statsFrameCounter++;
+            if (_statsFrameCounter % StatsUpdateFrameInterval != 0)
+                return;
+        }
+        else
+        {
+            _statsFrameCounter = 0;
+        }
         InvokeAsync(StateHasChanged);
     }
 
