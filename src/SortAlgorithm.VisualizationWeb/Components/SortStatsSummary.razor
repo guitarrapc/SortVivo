@@ -15,67 +15,67 @@
         @if (CardSize == StatsCardSize.Small)
         {
             <span class="stat-mini">
-                <span class="label">Actual</span>
-                <span class="value stat-execution-time">@ExecutionTimeDisplay</span>
+                <span class="value stat-execution-time">@((MarkupString)GetFormattedExecutionTime())</span>
+                <span class="label">Time</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Cmp</span>
                 <span class="value">@FormatCompact(State.CompareCount)</span>
+                <span class="label">Cmp</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Swp</span>
                 <span class="value">@FormatCompact(State.SwapCount)</span>
+                <span class="label">Swp</span>
             </span>
             <span class="stat-mini">
-                <span class="label">%</span>
                 <span class="value">@GetProgressPercentage()%</span>
+                <span class="label">Progress</span>
             </span>
         }
         else if (CardSize == StatsCardSize.Medium)
         {
             <span class="stat-mini">
-                <span class="label">Actual</span>
-                <span class="value stat-execution-time">@ExecutionTimeDisplay</span>
+                <span class="value stat-execution-time">@((MarkupString)GetFormattedExecutionTime())</span>
+                <span class="label">Time</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Cmp</span>
                 <span class="value">@FormatCompact(State.CompareCount)</span>
+                <span class="label">Cmp</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Swp</span>
                 <span class="value">@FormatCompact(State.SwapCount)</span>
+                <span class="label">Swp</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Progress</span>
                 <span class="value">@GetProgressPercentage()%</span>
+                <span class="label">Progress</span>
             </span>
         }
         else
         {
             @* Full size *@
             <span class="stat-mini">
-                <span class="label">Actual</span>
-                <span class="value stat-execution-time">@ExecutionTimeDisplay</span>
+                <span class="value stat-execution-time">@((MarkupString)GetFormattedExecutionTime())</span>
+                <span class="label">Time</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Comparisons</span>
                 <span class="value">@State.CompareCount.ToString("N0")</span>
+                <span class="label">Comparisons</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Swaps</span>
                 <span class="value">@State.SwapCount.ToString("N0")</span>
+                <span class="label">Swaps</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Reads</span>
                 <span class="value">@State.IndexReadCount.ToString("N0")</span>
+                <span class="label">Reads</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Writes</span>
                 <span class="value">@State.IndexWriteCount.ToString("N0")</span>
+                <span class="label">Writes</span>
             </span>
             <span class="stat-mini">
-                <span class="label">Progress</span>
                 <span class="value">@GetProgressPercentage()%</span>
+                <span class="label">Progress</span>
             </span>
         }
 
@@ -204,6 +204,34 @@ private bool _expanded = false;
 
     private bool IsPlaying => State.PlaybackState == PlaybackState.Playing;
 
+    private string GetFormattedExecutionTime()
+    {
+        if (State.ActualExecutionTime == TimeSpan.Zero)
+            return "-";
+
+        if (IsPlaying)
+        {
+            var (currentNum, currentUnit) = SplitTimeAndUnit(State.EstimatedCurrentExecutionTime);
+            var (totalNum, totalUnit) = SplitTimeAndUnit(State.ActualExecutionTime);
+            return $"<span class=\"time-number\">{currentNum}</span><span class=\"time-sep\">/</span><span class=\"time-number\">{totalNum}</span><span class=\"time-unit\">{totalUnit}</span>";
+        }
+
+        var (num, unit) = SplitTimeAndUnit(State.ActualExecutionTime);
+        return $"<span class=\"time-number\">{num}</span><span class=\"time-unit\">{unit}</span>";
+    }
+
+    private static (string number, string unit) SplitTimeAndUnit(TimeSpan time)
+    {
+        if (time.TotalNanoseconds < 1000)
+            return (time.TotalNanoseconds.ToString("F2"), "ns");
+        else if (time.TotalMicroseconds < 1000)
+            return (time.TotalMicroseconds.ToString("F2"), "μs");
+        else if (time.TotalMilliseconds < 1000)
+            return (time.TotalMilliseconds.ToString("F2"), "ms");
+        else
+            return (time.TotalSeconds.ToString("F2"), "s");
+    }
+
     private string ExecutionTimeDisplay
     {
         get
@@ -219,13 +247,13 @@ private bool _expanded = false;
     private static string FormatTime(TimeSpan time)
     {
         if (time.TotalNanoseconds < 1000)
-            return $"{time.TotalNanoseconds:F0} ns";
+            return $"{time.TotalNanoseconds:F0}ns";
         else if (time.TotalMicroseconds < 1000)
-            return $"{TrimTrailingZerosMinOne(time.TotalMicroseconds)} μs";
+            return $"{time.TotalMicroseconds:F2}μs";
         else if (time.TotalMilliseconds < 1000)
-            return $"{TrimTrailingZerosMinOne(time.TotalMilliseconds)} ms";
+            return $"{time.TotalMilliseconds:F2}ms";
         else
-            return $"{TrimTrailingZerosMinOne(time.TotalSeconds)} s";
+            return $"{time.TotalSeconds:F2} s";
     }
 
     private static string FormatCompact(ulong value)
@@ -235,13 +263,5 @@ private bool _expanded = false;
         if (value >= 1_000)
             return $"{value / 1_000.0:F1}K";
         return value.ToString();
-    }
-
-    private static string TrimTrailingZerosMinOne(double value)
-    {
-        var s = value.ToString("F3").TrimEnd('0');
-        if (s.EndsWith('.'))
-            s += "0";
-        return s;
     }
 }

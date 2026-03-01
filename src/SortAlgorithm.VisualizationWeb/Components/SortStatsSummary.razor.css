@@ -13,22 +13,24 @@
 
 /* ── コンパクト行（常時表示） ── */
 .sss__compact {
-    display: flex;
-    flex-wrap: wrap;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
     gap: 8px;
-    align-items: center;
+    align-items: stretch;
 }
 
 /* ── 統計カード（各項目） ── */
 .stat-mini {
-    display: inline-flex;
+    display: flex;
+    flex-direction: column;
     align-items: center;
+    justify-content: center;
     gap: 4px;
-    padding: 6px 10px;
+    padding: 8px 10px;
     background: rgba(127, 168, 111, 0.08);
     border: 1px solid rgba(127, 168, 111, 0.2);
     border-radius: 4px;
-    min-width: fit-content;
+    min-height: 56px;
     transition: background-color 0.15s ease;
 }
 
@@ -37,25 +39,48 @@
 }
 
 .stat-mini .label {
-    font-size: 0.75rem;
-    font-weight: 500;
-    color: var(--text-secondary, #b8c1d0);
+    font-size: 0.7rem;
+    font-weight: 400;
+    color: var(--text-secondary, #9ca3af);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
     white-space: nowrap;
+    order: 2; /* 下に配置 */
 }
 
 .stat-mini .value {
     font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 0.85rem;
-    font-weight: 600;
-    color: var(--text-primary, #ffffff);
-    min-width: 4ch; /* 最小4文字分の幅を確保 */
-    text-align: right;
+    font-size: 1rem;
+    font-weight: 700;
+    color: #a0d68d; /* より鮮やかで読みやすい緑 */
+    text-align: center;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    min-width: 60px;
+    order: 1; /* 上に配置 */
 }
 
-/* 実行時間専用 - より広い固定幅 */
+/* 実行時間専用 */
 .stat-mini .stat-execution-time {
-    min-width: 14ch; /* "0.00 ms / 0.00 ms" や "0.00 ms" に対応 */
+    min-width: 140px;
+}
+
+/* 実行時間の内部要素 - ::deep で動的生成された要素にもスタイル適用 */
+.stat-execution-time ::deep .time-number {
+    /* 数値部分は通常サイズのまま（親の color と font-size を継承） */
+}
+
+.stat-execution-time ::deep .time-sep {
+    margin: 0 0.2em; /* スラッシュ前後の小さなスペース */
+    opacity: 0.7; /* 少し控えめに */
+}
+
+.stat-execution-time ::deep .time-unit {
+    font-size: 0.8em; /* 数値より小さく */
+    opacity: 0.9; /* 少し控えめに */
+    margin-left: 0.15em; /* 数値との間に小さなスペース */
 }
 
 /* ── サイズバリエーション ── */
@@ -67,17 +92,17 @@
 }
 
 .sort-stats-summary--small .stat-mini {
-    padding: 4px 8px;
-    gap: 4px;
-    min-height: 28px;
+    padding: 6px 8px;
+    gap: 3px;
+    min-height: 52px;
 }
 
 .sort-stats-summary--small .stat-mini .label {
-    font-size: 0.7rem;
+    font-size: 0.65rem;
 }
 
 .sort-stats-summary--small .stat-mini .value {
-    font-size: 0.8rem;
+    font-size: 0.9rem;
     min-width: 50px;
 }
 
@@ -91,12 +116,17 @@
 }
 
 .sort-stats-summary--medium .stat-mini {
-    padding: 5px 9px;
-    gap: 5px;
-    min-height: 30px;
+    padding: 7px 9px;
+    gap: 4px;
+    min-height: 54px;
+}
+
+.sort-stats-summary--medium .stat-mini .label {
+    font-size: 0.68rem;
 }
 
 .sort-stats-summary--medium .stat-mini .value {
+    font-size: 0.95rem;
     min-width: 65px;
 }
 
@@ -110,10 +140,17 @@
 }
 
 .sort-stats-summary--full .stat-mini {
-    gap: 8px;
+    gap: 5px;
+    padding: 10px 12px;
+    min-height: 60px;
+}
+
+.sort-stats-summary--full .stat-mini .label {
+    font-size: 0.72rem;
 }
 
 .sort-stats-summary--full .stat-mini .value {
+    font-size: 1.1rem;
     min-width: 80px; /* より広い数値表示 */
 }
 
@@ -233,11 +270,21 @@
     }
 
     .sss__compact {
+        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
         gap: 6px;
     }
 
     .stat-mini {
-        padding: 5px 8px;
+        padding: 7px 8px;
+        min-height: 54px;
+    }
+
+    .stat-mini .value {
+        font-size: 0.95rem;
+    }
+
+    .stat-mini .label {
+        font-size: 0.68rem;
     }
 }
 
@@ -248,19 +295,26 @@
     }
 
     .sss__compact {
+        grid-template-columns: repeat(2, 1fr); /* スマホは2カラム固定 */
         gap: 4px;
     }
 
     .stat-mini {
-        padding: 4px 6px;
-        font-size: 0.75rem;
+        padding: 6px 6px;
+        gap: 3px;
+        min-height: 50px;
     }
 
     .stat-mini .label {
-        font-size: 0.68rem;
+        font-size: 0.62rem;
     }
 
     .stat-mini .value {
-        font-size: 0.78rem;
+        font-size: 0.85rem;
+        min-width: 45px;
+    }
+
+    .stat-mini .stat-execution-time {
+        min-width: 100px;
     }
 }
