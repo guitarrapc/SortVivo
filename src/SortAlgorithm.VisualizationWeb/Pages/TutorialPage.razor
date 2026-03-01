@@ -88,18 +88,43 @@
         @* ─── 再生コントロールバー ──────────────────────────────────────── *@
         <div class="tutorial-play-control-bar">
             <div class="ctrl-buttons">
-                <button class="ctrl-btn" title="First (Home)"
-                        @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">◀◀</button>
-                <button class="ctrl-btn" title="Previous (←)"
-                        @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">◀</button>
-                <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
-                        @onclick="ToggleAutoPlay" disabled="@noSteps">
-                    @(_isAutoPlaying ? "⏸" : "▶")
+                <button class="ctrl-btn" title="First (Home)" @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="4" y="4" width="2" height="16" rx="1"></rect>
+                        <polygon points="19 4 7 12 19 20 19 4"></polygon>
+                    </svg>
                 </button>
-                <button class="ctrl-btn" title="Next (→)"
-                        @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶</button>
-                <button class="ctrl-btn" title="Last (End)"
-                        @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">▶▶</button>
+                <button class="ctrl-btn" title="Previous (←)" @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="19 4 5 12 19 20 19 4"></polygon>
+                    </svg>
+                </button>
+                <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")" @onclick="ToggleAutoPlay" disabled="@noSteps">
+                    @if (_isAutoPlaying)
+                    {
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    }
+                </button>
+                <button class="ctrl-btn" title="Next (→)" @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 4 19 12 5 20 5 4"></polygon>
+                    </svg>
+                </button>
+                <button class="ctrl-btn" title="Last (End)" @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 4 17 12 5 20 5 4"></polygon>
+                        <rect x="18" y="4" width="2" height="16" rx="1"></rect>
+                    </svg>
+                </button>
             </div>
             <span class="tutorial-keyboard-hint">← → Space · Home · End</span>
         </div>
@@ -135,8 +160,7 @@
                         <span class="desc-badge">@_selectedAlgorithm.TimeComplexity</span>
                         <span class="desc-badge">@_selectedAlgorithm.Category</span>
                     </div>
-                    <button class="tdp-toggle" @onclick="() => _descExpanded = !_descExpanded"
-                            title="@(_descExpanded ? "Collapse" : "Expand")">
+                    <button class="tdp-toggle" @onclick="() => _descExpanded = !_descExpanded" title="@(_descExpanded ? "Collapse" : "Expand")">
                         @(_descExpanded ? "▲" : "▼")
                     </button>
                 </div>

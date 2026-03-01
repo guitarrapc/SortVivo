@@ -183,6 +183,12 @@
     color: var(--text-primary);
 }
 
+.ctrl-btn svg {
+    width: 28px;
+    height: 28px;
+    display: block;
+}
+
 .ctrl-btn:hover:not(:disabled) {
     background: var(--color-accent); /* モスグリーン */
     transform: scale(1.08);
