@@ -80,6 +80,8 @@
         }
 
         <PlayControlBar IsPlaying="@GetIsPlaying()"
+                        PlayDisabled="@(ComparisonMode.State.Instances.Count == 0)"
+                        StopDisabled="@(ComparisonMode.State.Instances.Count == 0)"
                         SoundEnabled="@GetSoundEnabled()"
                         SoundDisabled="@(ComparisonMode.State.Instances.Count > 1)"
                         StatusText="@GetComparisonStatusText()"

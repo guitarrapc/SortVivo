@@ -2,31 +2,33 @@
 @using SortAlgorithm.VisualizationWeb.Services
 
 <div class="play-control-bar">
-    <button class="play-control-btn @(IsPlaying ? "btn-pause" : "btn-play")"
-            @onclick="OnTogglePlayPause"
-            title="@(IsPlaying ? "Pause" : "Play")">
-        @if (IsPlaying)
-        {
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <rect x="6" y="4" width="4" height="16"></rect>
-                <rect x="14" y="4" width="4" height="16"></rect>
-            </svg>
-        }
-        else
-        {
-            <svg viewBox="0 0 24 24" fill="currentColor">
-                <polygon points="5 3 19 12 5 21 5 3"></polygon>
-            </svg>
-        }
-    </button>
-
-    <button class="play-control-btn btn-stop"
-            @onclick="OnStop"
-            title="Stop">
+<button class="play-control-btn @(IsPlaying ? "btn-pause" : "btn-play")"
+        @onclick="OnTogglePlayPause"
+        disabled="@PlayDisabled"
+        title="@(IsPlaying ? "Pause" : "Play")">
+    @if (IsPlaying)
+    {
         <svg viewBox="0 0 24 24" fill="currentColor">
-            <rect x="5" y="5" width="14" height="14"></rect>
+            <rect x="6" y="4" width="4" height="16"></rect>
+            <rect x="14" y="4" width="4" height="16"></rect>
         </svg>
-    </button>
+    }
+    else
+    {
+        <svg viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+        </svg>
+    }
+</button>
+
+<button class="play-control-btn btn-stop"
+        @onclick="OnStop"
+        disabled="@StopDisabled"
+        title="Stop">
+    <svg viewBox="0 0 24 24" fill="currentColor">
+        <rect x="5" y="5" width="14" height="14"></rect>
+    </svg>
+</button>
 
     <button class="play-control-btn @(SoundEnabled ? "btn-sound-on" : "btn-sound-off")"
             @onclick="OnToggleSound"
@@ -58,6 +60,12 @@
 @code {
     [Parameter]
     public bool IsPlaying { get; set; }
+
+    [Parameter]
+    public bool PlayDisabled { get; set; }
+
+    [Parameter]
+    public bool StopDisabled { get; set; }
 
     [Parameter]
     public bool SoundEnabled { get; set; }
