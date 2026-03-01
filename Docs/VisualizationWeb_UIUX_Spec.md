@@ -120,23 +120,39 @@ UI Card の論理グループでカード化して縦積み表示する。
 
 テキストなし、SVGアイコン（28×28px）の3ボタン横並び。
 
-| デバイス | ボタンサイズ |
-|---------|------------|
-| PC / タブレット | 48×48px |
-| スマホ | 44×44px |
+| デバイス | ボタンサイズ (height × max-width) |
+|---------|----------|
+| PC | 60px × 180px |
+| タブレット | 40px × 100px |
+| スマホ | 40px × 100px |
 
-### 3.3 ボタン状態
+### 3.3 ボタンスタイル
 
-| ボタン | 状態 | アイコン | 背景色 | tooltip |
-|--------|------|---------|--------|---------|
-| Play/Pause | 停止/一時停止中 | ▶ | `--color-play` (#3b82f6) | "Play" |
-| Play/Pause | 再生中 | ⏸ | `--color-pause` (#a855f7) | "Pause" |
-| Stop | 常時 | ⏹ | `--color-stop` (#e53e3e) | "Stop" |
-| Sound | ON | 🔊 | `--color-sound-on` (#22c55e) | "Sound ON" |
-| Sound | OFF | 🔇 | `--color-sound-off` (#6b7280) + opacity 0.6 | "Sound OFF" |
-| Sound | N>1 時無効 | 🔇 | disabled (opacity 0.35) | "Sound not available in Comparison Mode" |
+全ボタンで **半透明背景 + ボーダー + テキスト色** のパターンを採用。ホバー時は `transform: scale()` を使わず、背景色とボーダー色のみ変化。
 
-### 3.4 補助操作
+| ボタン | 状態 | アイコン | 背景 | テキスト | ボーダー | tooltip |
+|--------|------|---------|--------|--------|----------|----------|
+| Play/Pause | 停止/一時停止中 | ▶ | `rgba(59,130,246,0.2)` | `#60a5fa` | `rgba(59,130,246,0.5)` | "Play" |
+| Play/Pause | 再生中 | ⏸ | `rgba(168,85,247,0.2)` | `#c084fc` | `rgba(168,85,247,0.5)` | "Pause" |
+| Stop | 常時 | ⏹ | `rgba(239,68,68,0.2)` | `#f87171` | `rgba(239,68,68,0.5)` | "Stop" |
+| Sound | ON | 🔊 | `rgba(250,189,47,0.2)` | `#fabd2f` | `rgba(250,189,47,0.5)` | "Sound ON" |
+| Sound | OFF | 🔇 | `rgba(107,114,128,0.2)` | `#9ca3af` | `rgba(107,114,128,0.5)` | "Sound OFF" |
+| Sound | N>1 時無効 | 🔇 | disabled (`opacity: 0.35`) | - | - | "Sound not available in Comparison Mode" |
+
+**ホバー時**: 背景の `alpha` を `0.35` に增加、ボーダーを不透明に
+**アクティブ時**: 背景の `alpha` を `0.5` に增加、ボーダーを少し濃く
+
+### 3.4 ボタン無効化条件
+
+| ソートカード枚数 N | Play/Pause | Stop | Sound |
+|---|---|---|---|
+| **N = 0** | **無効** 🚫 | **無効** 🚫 | 有効 |
+| **N = 1** | 有効 | 有効 | 有効 |
+| **N > 1** | 有効 | 有効 | 無効 |
+
+※ N=0 時：「何もソートが追加されていない状態でPlay/Stopボタンを押せる」違和感を防止。
+
+### 3.5 補助操作
 
 - 可視化エリアクリック: 再生/一時停止トグル
 - N>1 時: 再生コントロール横に `"X/N completed"` 表示
@@ -370,6 +386,16 @@ N>1 で暗黙的に比較表示。Comparison Mode トグルは存在しない。
 | 🎯 Sort Target | Algorithm select |
 | ▶ Playback | Step Counter（"N / M"）、◀◀ ◀ ▶/⏸ ▶ ▶▶、Keyboard Hint |
 | ⚡ Speed | Speed slider（200〜2000ms）+ 値表示 |
+
+**Playback ボタンスタイル**: メインと同じ半透明背景 + ボーダーパターン。ナビボタン（◀◀ ◀ ▶ ▶▶）はモスグリーン系、Play/Pause は青系。
+
+**ボタンサイズ（Tutorial）:**
+
+| デバイス | ナビボタン (height × min-width) | Play/Pause (height × min-width) |
+|---------|----------|----------|
+| PC | 60px × 70px | 60px × 80px |
+| タブレット | 40px × 50px | 40px × 100px |
+| スマホ | 40px × 50px | 40px × 100px |
 
 **デバイス別配置:**
 
