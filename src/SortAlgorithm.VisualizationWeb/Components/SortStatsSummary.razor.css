@@ -14,7 +14,7 @@
 /* ── コンパクト行（常時表示） ── */
 .sss__compact {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    grid-template-columns: repeat(4, 1fr);
     gap: 8px;
     align-items: stretch;
 }
@@ -31,6 +31,8 @@
     border: 1px solid rgba(127, 168, 111, 0.2);
     border-radius: 4px;
     min-height: 56px;
+    min-width: 0;
+    overflow: hidden;
     transition: background-color 0.15s ease;
 }
 
@@ -45,6 +47,10 @@
     text-transform: uppercase;
     letter-spacing: 0.05em;
     white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    text-align: center;
     order: 2; /* 下に配置 */
 }
 
@@ -58,13 +64,7 @@
     overflow: hidden;
     text-overflow: ellipsis;
     width: 100%;
-    min-width: 60px;
     order: 1; /* 上に配置 */
-}
-
-/* 実行時間専用 */
-.stat-mini .stat-execution-time {
-    min-width: 140px;
 }
 
 /* 実行時間の内部要素 - ::deep で動的生成された要素にもスタイル適用 */
@@ -87,56 +87,41 @@
 
 /* Small: 省略形表示（比較4枚以上 / モバイル） */
 .sort-stats-summary--small .sss__compact {
-    grid-template-columns: repeat(auto-fit, minmax(90px, 1fr));
-    gap: 6px;
+    gap: 4px;
 }
 
 .sort-stats-summary--small .stat-mini {
+    padding: 4px 6px;
+    gap: 2px;
+    min-height: 48px;
+}
+
+.sort-stats-summary--small .stat-mini .label {
+    font-size: 0.6rem;
+}
+
+.sort-stats-summary--small .stat-mini .value {
+    font-size: 0.85rem;
+}
+
+/* Medium: 中間表示（比較2〜3枚 PC） */
+.sort-stats-summary--medium .stat-mini {
     padding: 6px 8px;
     gap: 3px;
     min-height: 52px;
 }
 
-.sort-stats-summary--small .stat-mini .label {
+.sort-stats-summary--medium .stat-mini .label {
     font-size: 0.65rem;
 }
 
-.sort-stats-summary--small .stat-mini .value {
-    font-size: 0.9rem;
-    min-width: 50px;
-}
-
-.sort-stats-summary--small .stat-mini .stat-execution-time {
-    min-width: 120px; /* "0.0 ms / 0.0 ms" に対応 */
-}
-
-/* Medium: 中間表示（比較2〜3枚 PC） */
-.sort-stats-summary--medium .sss__compact {
-    grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
-}
-
-.sort-stats-summary--medium .stat-mini {
-    padding: 7px 9px;
-    gap: 4px;
-    min-height: 54px;
-}
-
-.sort-stats-summary--medium .stat-mini .label {
-    font-size: 0.68rem;
-}
-
 .sort-stats-summary--medium .stat-mini .value {
-    font-size: 0.95rem;
-    min-width: 65px;
-}
-
-.sort-stats-summary--medium .stat-mini .stat-execution-time {
-    min-width: 150px;
+    font-size: 0.9rem;
 }
 
 /* Full: フル表示（単一モード PC） */
 .sort-stats-summary--full .sss__compact {
-    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    grid-template-columns: repeat(6, 1fr);
 }
 
 .sort-stats-summary--full .stat-mini {
@@ -151,11 +136,6 @@
 
 .sort-stats-summary--full .stat-mini .value {
     font-size: 1.1rem;
-    min-width: 80px; /* より広い数値表示 */
-}
-
-.sort-stats-summary--full .stat-mini .stat-execution-time {
-    min-width: 170px; /* "0.000 ms / 0.000 ms" に余裕を持って対応 */
 }
 
 /* ── レスポンシブ調整 ── */
@@ -163,55 +143,53 @@
 /* タブレット（768px〜1279px） */
 @media (max-width: 1279px) {
     .sort-stats-summary {
-        padding: 10px;
+        padding: 8px;
     }
 
     .sss__compact {
-        grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-        gap: 6px;
+        gap: 4px;
+    }
+
+    .sort-stats-summary--full .sss__compact {
+        grid-template-columns: repeat(3, 1fr);
     }
 
     .stat-mini {
-        padding: 7px 8px;
-        min-height: 54px;
+        padding: 5px 6px;
+        min-height: 48px;
     }
 
     .stat-mini .value {
-        font-size: 0.95rem;
+        font-size: 0.9rem;
     }
 
     .stat-mini .label {
-        font-size: 0.68rem;
+        font-size: 0.62rem;
     }
 }
 
 /* スマホ（〜767px） */
 @media (max-width: 767px) {
     .sort-stats-summary {
-        padding: 8px;
+        padding: 6px;
     }
 
     .sss__compact {
-        grid-template-columns: repeat(2, 1fr); /* スマホは2カラム固定 */
+        grid-template-columns: repeat(2, 1fr);
         gap: 4px;
     }
 
     .stat-mini {
-        padding: 6px 6px;
-        gap: 3px;
-        min-height: 50px;
+        padding: 4px 4px;
+        gap: 2px;
+        min-height: 44px;
     }
 
     .stat-mini .label {
-        font-size: 0.62rem;
+        font-size: 0.58rem;
     }
 
     .stat-mini .value {
-        font-size: 0.85rem;
-        min-width: 45px;
-    }
-
-    .stat-mini .stat-execution-time {
-        min-width: 100px;
+        font-size: 0.8rem;
     }
 }
