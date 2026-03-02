@@ -268,28 +268,25 @@ private enum CopyFormat
     private string GenerateJson(List<ComparisonInstance> items)
     {
         var rank = 1;
-        var data = items.Select(item => new
+        var data = items.Select(item => new ComparisonStatsDto
         {
-            rank = rank++,
-            algorithm = item.AlgorithmName,
-            complexity = item.Metadata.TimeComplexity,
-            compares = item.State.CompareCount,
-            swaps = item.State.SwapCount,
-            reads = item.State.IndexReadCount,
-            writes = item.State.IndexWriteCount,
-            progress = item.State.IsSortCompleted ? 100 : GetProgressPercentage(item),
-            isCompleted = item.State.IsSortCompleted,
-            executionTime = new
+            Rank = rank++,
+            Algorithm = item.AlgorithmName,
+            Complexity = item.Metadata.TimeComplexity,
+            Compares = item.State.CompareCount,
+            Swaps = item.State.SwapCount,
+            Reads = item.State.IndexReadCount,
+            Writes = item.State.IndexWriteCount,
+            Progress = item.State.IsSortCompleted ? 100 : GetProgressPercentage(item),
+            IsCompleted = item.State.IsSortCompleted,
+            ExecutionTime = new ExecutionTimeDto
             {
-                totalNanoseconds = item.State.ActualExecutionTime.TotalNanoseconds,
-                formatted = FormatTotalTime(item.State.ActualExecutionTime)
+                TotalNanoseconds = item.State.ActualExecutionTime.TotalNanoseconds,
+                Formatted = FormatTotalTime(item.State.ActualExecutionTime)
             }
-        });
+        }).ToList();
 
-        return System.Text.Json.JsonSerializer.Serialize(data, new System.Text.Json.JsonSerializerOptions
-        {
-            WriteIndented = true
-        });
+        return System.Text.Json.JsonSerializer.Serialize(data, ComparisonStatsJsonContext.Default.ListComparisonStatsDto);
     }
 
     private string GenerateMarkdown(List<ComparisonInstance> items)
