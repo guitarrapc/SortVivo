@@ -572,6 +572,7 @@
 
     .tutorial-cards-panel {
         grid-row: auto;
+        padding: 0 10px;
     }
 
     .tutorial-main-area {
