@@ -13,6 +13,7 @@
         <div class="cst-dialog" @onclick:stopPropagation="true">
 
             <div class="cst-dialog-header">
+                <button class="cst-close-btn" @onclick="CloseModal" title="Close">✕</button>
                 <h3 class="cst-dialog-title">📊 Statistics Comparison</h3>
                 <div class="cst-header-controls">
                     <span class="cst-sort-label">Sort by</span>
@@ -43,7 +44,6 @@
                             </div>
                         }
                     </div>
-                    <button class="cst-close-btn" @onclick="CloseModal" title="Close">✕</button>
                 </div>
             </div>
 
