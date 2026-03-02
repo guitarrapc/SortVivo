@@ -63,22 +63,22 @@
 }
 
 .tutorial-title {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    margin: 0;
-    font-size: 2.25rem;
-    font-weight: 400;
-    color: var(--text-primary);
-    white-space: nowrap;
-    pointer-events: none;
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-size: 2.25rem;
+  font-weight: 400;
+  color: var(--text-primary);
+  white-space: nowrap;
+  pointer-events: none;
 }
 
 /* PC: サイドバー幅を考慮してタイトルを右側エリアの中央に配置 */
 @media (min-width: 1280px) {
-    .tutorial-title {
-        left: calc(280px + (100% - 280px) / 2);
-    }
+  .tutorial-title {
+    left: calc(280px + (100% - 280px) / 2);
+  }
 }
 
 .tutorial-title__algo {
@@ -565,7 +565,12 @@
 }
 
 /* ─── タブレット (768px〜1279px) ────────────────────────────────────────── */
-@media (min-width: 768px) and (max-width: 1279px) {
+@media (max-width: 1279px) {
+
+  .tutorial-title {
+    font-size: 1.75rem;
+  }
+
   ::deep .marble {
     width: 48px;
     height: 48px;
@@ -606,27 +611,27 @@
     padding: 0 10px;
   }
 
-    .tutorial-main-area {
-        grid-row: auto;
-        overflow-y: visible;
-        height: auto;
-    }
+  .tutorial-main-area {
+    grid-row: auto;
+    overflow-y: visible;
+    height: auto;
+  }
 
-    /* マーブルエリアを内容に合わせて拡張し、ページ全体でスクロール */
-    .tutorial-marble-area {
-        flex: none;
-        min-height: auto;
-        overflow-x: auto;
-        overflow-y: visible;
-    }
+  /* マーブルエリアを内容に合わせて拡張し、ページ全体でスクロール */
+  .tutorial-marble-area {
+    flex: none;
+    min-height: auto;
+    overflow-x: auto;
+    overflow-y: visible;
+  }
 
-    .tutorial-header {
-    padding: 0 0.75rem;
+  .tutorial-header {
+    padding: 0 0.5rem;
     gap: 0.5rem;
   }
 
   .tutorial-title {
-    font-size: 0.9rem;
+    font-size: 1.2rem;
   }
 
   .tutorial-title__algo {
