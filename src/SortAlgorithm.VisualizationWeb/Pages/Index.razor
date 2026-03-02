@@ -14,7 +14,7 @@
 @inject IJSRuntime JS
 @implements IDisposable
 
-<PageTitle>Sort Algorithm Visualization</PageTitle>
+<PageTitle>Sorting Playground</PageTitle>
 
 <div class="visualization-page"
      style="--sidebar-width: @(_sidebarCollapsed ? "40" : _sidebarWidth)px; user-select: @(_isResizing ? "none" : "auto");"
@@ -22,12 +22,9 @@
      @onmouseup="OnMouseUp"
      @onmousemove:preventDefault="@_isResizing">
     <div class="header">
-        @* ☰ ハンバーガーボタン (PC: パネル折りたたみ, モバイル: オーバーレイ表示) *@
         <button class="header__hamburger" @onclick="HandleHamburgerClick" title="@GetHamburgerTitle()">☰</button>
 
-        <h1 class="header__title">
-            The Sort Playground
-        </h1>
+        <h1 class="header__title">Sorting Playground</h1>
 
         <div class="header__actions">
             <button class="header__icon-btn" @onclick='() => NavigationManager.NavigateTo("tutorial")' title="Tutorial">
