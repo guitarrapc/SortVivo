@@ -63,15 +63,22 @@
 }
 
 .tutorial-title {
-  position: absolute;
-  left: 50%;
-  transform: translateX(-50%);
-  margin: 0;
-  font-size: 2.25rem;
-  font-weight: 400;
-  color: var(--text-primary);
-  white-space: nowrap;
-  pointer-events: none;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* PC: サイドバー幅を考慮してタイトルを右側エリアの中央に配置 */
+@media (min-width: 1280px) {
+    .tutorial-title {
+        left: calc(280px + (100% - 280px) / 2);
+    }
 }
 
 .tutorial-title__algo {
