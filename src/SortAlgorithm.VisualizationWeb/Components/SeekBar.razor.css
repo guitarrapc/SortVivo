@@ -1,0 +1,54 @@
+/* ─── SeekBar ─────────────────────────────────────────────────────────── */
+
+.seek-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.seek-slider-container {
+    flex: 1;
+    position: relative;
+    height: 8px;
+    background-color: #4A4A4A;
+    border-radius: 4px;
+    cursor: pointer;
+}
+
+.seek-progress {
+    height: 100%;
+    background-color: var(--color-accent);
+    border-radius: 4px;
+    position: relative;
+}
+
+.seek-handle {
+    position: absolute;
+    right: -10px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 20px;
+    height: 20px;
+    background-color: var(--text-primary);
+    border-radius: 50%;
+    cursor: grab;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+    .seek-handle:active {
+        cursor: grabbing;
+    }
+
+.time-display {
+    font-family: 'Courier New', monospace;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    white-space: nowrap;
+}
+
+/* ─── スマホ ──────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+    .seek-bar {
+        padding: 6px 8px;
+    }
+}

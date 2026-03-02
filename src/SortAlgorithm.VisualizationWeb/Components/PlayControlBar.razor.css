@@ -1,0 +1,179 @@
+/* ─── PlayControlBar ──────────────────────────────────────────────────── */
+
+.play-control-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 0;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.play-control-info {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    width: 100%;
+}
+
+.play-control-buttons {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+}
+
+.play-control-btn {
+    flex: 1;
+    max-width: 180px;
+    height: 60px;
+    padding: 0;
+    border: 1px solid;
+    border-radius: 8px;
+    font-size: 1.6rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background-color 0.2s, border-color 0.2s, opacity 0.15s;
+}
+
+    .play-control-btn svg {
+        width: 28px;
+        height: 28px;
+        display: block;
+    }
+
+    .play-control-btn:hover:not(:disabled) {
+        /* ボタンごとの色変化のみ */
+    }
+
+    .play-control-btn:active:not(:disabled) {
+        /* ボタンごとの色変化のみ */
+    }
+
+    .play-control-btn:disabled,
+    .play-control-btn:disabled:hover {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+.btn-play {
+    background-color: rgba(59, 130, 246, 0.2);
+    color: #60a5fa;
+    border-color: rgba(59, 130, 246, 0.5);
+}
+
+    .btn-play:hover:not(:disabled) {
+        background-color: rgba(59, 130, 246, 0.35);
+        border-color: #3b82f6;
+    }
+
+    .btn-play:active:not(:disabled) {
+        background-color: rgba(59, 130, 246, 0.5);
+        border-color: #2563eb;
+    }
+
+.btn-pause {
+    background-color: rgba(168, 85, 247, 0.2);
+    color: #c084fc;
+    border-color: rgba(168, 85, 247, 0.5);
+}
+
+    .btn-pause:hover:not(:disabled) {
+        background-color: rgba(168, 85, 247, 0.35);
+        border-color: #a855f7;
+    }
+
+    .btn-pause:active:not(:disabled) {
+        background-color: rgba(168, 85, 247, 0.5);
+        border-color: #9333ea;
+    }
+
+.btn-stop {
+    background-color: rgba(239, 68, 68, 0.2);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.5);
+}
+
+    .btn-stop:hover:not(:disabled) {
+        background-color: rgba(239, 68, 68, 0.35);
+        border-color: #ef4444;
+    }
+
+    .btn-stop:active:not(:disabled) {
+        background-color: rgba(239, 68, 68, 0.5);
+        border-color: #dc2626;
+    }
+
+.btn-sound-on {
+    background-color: var(--bg-button);
+    color: var(--color-sound-on);
+    border-color: var(--color-sound-border);
+}
+
+    .btn-sound-on:hover:not(:disabled) {
+        background-color: rgba(250, 189, 47, 0.35);
+        border-color: #fabd2f;
+    }
+
+    .btn-sound-on:active:not(:disabled) {
+        background-color: rgba(250, 189, 47, 0.5);
+        border-color: #d39d26;
+    }
+
+.btn-sound-off {
+    background-color: rgba(107, 114, 128, 0.2);
+    color: #9ca3af;
+    border-color: rgba(107, 114, 128, 0.5);
+}
+
+    .btn-sound-off:hover:not(:disabled) {
+        background-color: rgba(107, 114, 128, 0.35);
+        border-color: #6b7280;
+    }
+
+    .btn-sound-off:active:not(:disabled) {
+        background-color: rgba(107, 114, 128, 0.5);
+        border-color: #4b5563;
+    }
+
+.play-control-status {
+    font-size: 0.9rem;
+    color: #F59E0B;
+    font-weight: 500;
+    text-align: center;
+    min-height: 1.35rem;
+    display: block;
+}
+
+.play-control-array-size {
+    font-size: 0.85rem;
+    color: #60a5fa;
+    font-family: 'Courier New', monospace;
+    background: #1e2a3a;
+    padding: 0.25rem 0.5rem;
+    border-radius: 4px;
+    font-weight: 500;
+}
+
+/* ─── タブレット ──────────────────────────────────────────────────────── */
+@media (min-width: 768px) and (max-width: 1279px) {
+    .play-control-btn {
+        height: 40px;
+        max-width: 100px;
+        font-size: 1.2rem;
+    }
+}
+
+/* ─── スマホ ──────────────────────────────────────────────────────────── */
+@media (max-width: 767px) {
+    .play-control-btn {
+        height: 40px;
+        max-width: 100px;
+        font-size: 1.2rem;
+    }
+}
