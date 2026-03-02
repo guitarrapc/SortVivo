@@ -23,9 +23,7 @@
      @onmousemove:preventDefault="@_isResizing">
     <div class="header">
         @* ☰ ハンバーガーボタン (PC: パネル折りたたみ, モバイル: オーバーレイ表示) *@
-        <button class="header__hamburger"
-                @onclick="HandleHamburgerClick"
-                title="@GetHamburgerTitle()">☰</button>
+        <button class="header__hamburger" @onclick="HandleHamburgerClick" title="@GetHamburgerTitle()">☰</button>
 
         <h1 class="header__title">
             The Sort Playground
