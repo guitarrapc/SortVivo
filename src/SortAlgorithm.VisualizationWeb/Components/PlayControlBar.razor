@@ -53,7 +53,13 @@
         </button>
     </div>
 
-    <span class="play-control-status">@StatusText</span>
+    <div class="play-control-info">
+        @if (ArraySize > 0)
+        {
+            <span class="play-control-array-size">n=@ArraySize</span>
+        }
+        <span class="play-control-status">@StatusText</span>
+    </div>
 </div>
 
 @code {
@@ -74,6 +80,9 @@
 
     [Parameter]
     public required string StatusText { get; set; }
+
+    [Parameter]
+    public int ArraySize { get; set; }
 
     [Parameter]
     public EventCallback OnTogglePlayPause { get; set; }

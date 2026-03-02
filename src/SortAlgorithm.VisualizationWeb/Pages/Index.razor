@@ -85,6 +85,7 @@
                         SoundEnabled="@GetSoundEnabled()"
                         SoundDisabled="@(ComparisonMode.State.Instances.Count > 1)"
                         StatusText="@GetComparisonStatusText()"
+                        ArraySize="@GetArraySize()"
                         OnTogglePlayPause="HandleTogglePlayPause"
                         OnStop="HandleReset"
                         OnToggleSound="HandleToggleSound" />
@@ -616,6 +617,13 @@ private VisualizationMode SelectedVisualizationMode
         if (ComparisonMode.State.AllCompleted) return "✅ All Completed!";
         var completedCount = ComparisonMode.State.Instances.Count(x => x.State.IsSortCompleted);
         return $"{completedCount}/{ComparisonMode.State.Instances.Count} completed";
+    }
+
+    private int GetArraySize()
+    {
+        if (ComparisonMode.State.Instances.Count > 0)
+            return ComparisonMode.State.Instances[0].State.MainArray.Length;
+        return Playback.State.MainArray.Length;
     }
 
     private void HandleToggleSound()

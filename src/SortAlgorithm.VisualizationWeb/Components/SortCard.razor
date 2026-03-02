@@ -27,10 +27,6 @@
         }
         <div class="sort-card__header-right">
             <span class="complexity-badge">@Complexity</span>
-            @if (State.MainArray.Length > 0)
-            {
-                <span class="array-size-badge">n=@State.MainArray.Length</span>
-            }
             @if (ShowRemoveButton)
             {
                 <button class="btn-remove-grid"
