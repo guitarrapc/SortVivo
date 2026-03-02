@@ -702,6 +702,24 @@ details[open] .qap__advanced-summary::before {
 }
 
 /* =============================================
+   タブレット (768px〜1279px): TutorialPage スクロール有効化
+   html/body/#app はコンポーネントスコープ外のため app.css で制御
+   ============================================= */
+@media (min-width: 768px) and (max-width: 1279px) {
+  html:has(.tutorial-page),
+  html:has(.tutorial-page) body {
+    height: auto;
+    min-height: 100%;
+    overflow: auto;
+  }
+
+  html:has(.tutorial-page) #app {
+    height: auto;
+    min-height: 100vh;
+  }
+}
+
+/* =============================================
    スマホ (〜767px)
    ============================================= */
 @media (max-width: 767px) {
