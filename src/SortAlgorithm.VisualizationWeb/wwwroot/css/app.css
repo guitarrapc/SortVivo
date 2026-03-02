@@ -177,18 +177,18 @@ html, body {
 
 
 /* =============================================
-   タブレット (768px〜1279px): TutorialPage スクロール有効化
+   タブレット (768px〜1279px): スクロール有効化
    html/body/#app はコンポーネントスコープ外のため app.css で制御
    ============================================= */
 @media (min-width: 768px) and (max-width: 1279px) {
-  html:has(.tutorial-page),
-  html:has(.tutorial-page) body {
+  /* TutorialPage + Index（タブレットは全ページスクロール可能） */
+  html, body {
     height: auto;
     min-height: 100%;
     overflow: auto;
   }
 
-  html:has(.tutorial-page) #app {
+  #app {
     height: auto;
     min-height: 100vh;
   }

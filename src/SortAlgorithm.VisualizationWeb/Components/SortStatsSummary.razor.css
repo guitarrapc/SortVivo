@@ -143,20 +143,23 @@
 /* タブレット（768px〜1279px） */
 @media (max-width: 1279px) {
     .sort-stats-summary {
-        padding: 8px;
+        padding: 6px 8px;
     }
 
+    /* 4列 → 2列（2行表示）で高さを確保 */
     .sss__compact {
-        gap: 4px;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 6px;
     }
 
     .sort-stats-summary--full .sss__compact {
-        grid-template-columns: repeat(3, 1fr);
+        grid-template-columns: repeat(4, 1fr);
     }
 
     .stat-mini {
-        padding: 5px 6px;
-        min-height: 48px;
+        padding: 6px 8px;
+        gap: 3px;
+        min-height: 50px;
     }
 
     .stat-mini .value {
@@ -164,32 +167,33 @@
     }
 
     .stat-mini .label {
-        font-size: 0.62rem;
+        font-size: 0.65rem;
     }
 }
 
 /* スマホ（〜767px） */
 @media (max-width: 767px) {
     .sort-stats-summary {
-        padding: 6px;
+        padding: 4px;
     }
 
     .sss__compact {
         grid-template-columns: repeat(2, 1fr);
-        gap: 4px;
+        gap: 3px;
     }
 
     .stat-mini {
-        padding: 4px 4px;
-        gap: 2px;
-        min-height: 44px;
+        padding: 3px 3px;
+        gap: 1px;
+        min-height: 36px;
     }
 
     .stat-mini .label {
-        font-size: 0.58rem;
+        font-size: 0.52rem;
+        letter-spacing: 0.02em;
     }
 
     .stat-mini .value {
-        font-size: 0.8rem;
+        font-size: 0.72rem;
     }
 }
