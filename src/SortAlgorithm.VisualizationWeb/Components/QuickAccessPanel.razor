@@ -141,14 +141,24 @@
                     var algoAlreadyPresent = ComparisonMode.State.Instances.Any(i => i.AlgorithmName == SelectedAlgorithm);
                     var atMaxAndNotPresent = instanceCount >= ComparisonState.MaxComparisons && !algoAlreadyPresent;
                     var addDisabled = atMaxAndNotPresent || ComparisonMode.IsAddingAlgorithm;
+                    var buttonTitle = ComparisonMode.IsAddingAlgorithm 
+                        ? "Processing..." 
+                        : atMaxAndNotPresent 
+                            ? $"Maximum {ComparisonState.MaxComparisons} algorithms reached. Remove one to add a new algorithm." 
+                            : algoAlreadyPresent 
+                                ? "Regenerate array and re-run all algorithms" 
+                                : "Add this algorithm to comparison";
                 }
                 <div class="qap__item">
                     <button class="primary qap__btn-full"
                             @onclick="() => OnAddAndGenerate.InvokeAsync()"
-                            disabled="@addDisabled">
+                            disabled="@addDisabled"
+                            title="@buttonTitle">
                         @(ComparisonMode.IsAddingAlgorithm ? "Processing..." : "Add & Generate")
                     </button>
-                    <span class="qap__count">(@instanceCount / @ComparisonState.MaxComparisons)</span>
+                    <span class="qap__count @(instanceCount >= ComparisonState.MaxComparisons ? "qap__count--max" : "")">
+                        (@instanceCount / @ComparisonState.MaxComparisons)
+                    </span>
                 </div>
 
                 <div class="qap__item">

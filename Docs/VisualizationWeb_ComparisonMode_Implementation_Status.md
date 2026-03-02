@@ -5,7 +5,7 @@
 **目的:** 複数のソートアルゴリズムを同時実行し、パフォーマンスと動作を視覚的に比較できる機能
 
 **主要機能:**
-- 複数アルゴリズムの並列可視化（1-9個）
+- 複数アルゴリズムの並列可視化（1-6個）
 - 統一された配列条件（同じサイズ・パターン）
 - 同期された再生制御（Play/Pause/Reset/Speed）
 - グリッドレイアウト表示
@@ -38,7 +38,7 @@ namespace SortAlgorithm.VisualizationWeb.Models;
 public class ComparisonState
 {
     /// <summary>
-    /// 比較中のアルゴリズムリスト（1-9個）
+    /// 比較中のアルゴリズムリスト（1-6個）
     /// </summary>
     public List<AlgorithmComparisonItem> Items { get; set; } = new();
     
@@ -55,7 +55,7 @@ public class ComparisonState
     /// <summary>
     /// 最大比較可能数
     /// </summary>
-    public const int MaxComparisons = 9;
+    public const int MaxComparisons = 6;
     
     /// <summary>
     /// グリッド列数を計算
@@ -70,9 +70,6 @@ public class ComparisonState
             4 => 2,
             5 => 3,
             6 => 3,
-            7 => 3,
-            8 => 3,
-            9 => 3,
             _ => 1
         };
     }

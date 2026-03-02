@@ -6,7 +6,7 @@
 public class ComparisonState
 {
     /// <summary>
-    /// 比較中のアルゴリズムリスト（1-9個）
+    /// 比較中のアルゴリズムリスト（1-6個）
     /// </summary>
     public List<ComparisonInstance> Instances { get; set; } = new();
     
@@ -33,7 +33,7 @@ public class ComparisonState
     /// <summary>
     /// 最大比較可能数
     /// </summary>
-    public const int MaxComparisons = 9;
+    public const int MaxComparisons = 6;
 
     /// <summary>
     /// 比較モードでのアルゴリズム数に応じた最大配列サイズ。
@@ -41,15 +41,13 @@ public class ComparisonState
     /// アルゴリズム数が増えると総メモリ消費が線形に増加し WASM の OOM を引き起こす。
     /// - N=1:   制限なし (int.MaxValue)
     /// - N=2:   4096
-    /// - N=3-6: 2048
-    /// - N≥7:   1024
+    /// - N≥3:   2048
     /// </summary>
     public static int MaxComparisonElements(int instanceCount) => instanceCount switch
     {
         <= 1 => int.MaxValue,
         <= 2 => 4096,
-        <= 6 => 2048,
-        _    => 1024,
+        _    => 2048,
     };
     
     /// <summary>

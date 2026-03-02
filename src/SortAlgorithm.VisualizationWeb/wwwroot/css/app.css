@@ -441,6 +441,11 @@ html, body {
     color: #888;
 }
 
+.qap__count--max {
+    color: #f59e0b;
+    font-weight: 600;
+}
+
 .qap__complexity {
     font-size: 0.9rem;
     font-family: 'Courier New', monospace;
