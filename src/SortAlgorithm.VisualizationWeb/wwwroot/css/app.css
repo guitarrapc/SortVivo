@@ -1393,6 +1393,7 @@ fieldset.controls-fieldset[disabled] * {
     align-items: center;
     justify-content: center;
     padding: 1rem;
+    overflow: scroll;
 }
 
 /* モーダル本体 */
@@ -1401,7 +1402,7 @@ fieldset.controls-fieldset[disabled] * {
     border: 1px solid #333;
     border-radius: 10px;
     width: min(680px, 100%);
-    max-height: 85vh;
+    max-height: 90vh;
     display: flex;
     flex-direction: column;
     box-shadow: 0 8px 32px rgba(0, 0, 0, 0.6);
@@ -1490,6 +1491,8 @@ fieldset.controls-fieldset[disabled] * {
 
 /* カードリスト（スクロール領域） */
 .cst-card-list {
+    flex: 1;
+    min-height: 0;
     overflow-y: auto;
     padding: 0.75rem;
     display: flex;
@@ -1502,7 +1505,6 @@ fieldset.controls-fieldset[disabled] * {
     background: #252525;
     border: 1px solid #333;
     border-radius: 7px;
-    overflow: hidden;
 }
 
 .cst-card--done {
@@ -1572,6 +1574,7 @@ fieldset.controls-fieldset[disabled] * {
     display: flex;
     flex-direction: column;
     gap: 0.35rem;
+    min-height: 100px;
 }
 
 .cst-metric-row {
@@ -2354,7 +2357,72 @@ fieldset.controls-fieldset[disabled] * {
         max-height: 100vh;
         border-radius: 0;
     }
+
+    /* ComparisonStatsTable: モバイルはフルスクリーン表示 */
+    .cst-overlay {
+        padding: 0;
+    }
+
+    .cst-dialog {
+        width: 100vw;
+        height: 100vh;
+        max-height: 100vh;
+        border-radius: 0;
+    }
+
+    /* モバイル: カードのレイアウト調整 */
+    .cst-card-header {
+        padding: 0.5rem;
+        gap: 0.4rem;
+        font-size: 0.9em;
+    }
+
+    .cst-rank {
+        font-size: 1em;
+    }
+
+    .cst-algo-name {
+        font-size: 0.9em;
+    }
+
+    .cst-complexity {
+        font-size: 0.75em;
+    }
+
+    .cst-exec-time {
+        font-size: 0.75em;
+    }
+
+    .cst-status {
+        font-size: 0.75em;
+    }
+
+    /* モバイル: メトリクス行のレイアウト調整 */
+    .cst-metrics {
+        padding: 0.5rem;
+        gap: 0.4rem;
+    }
+
+    .cst-metric-row {
+        grid-template-columns: 4.5rem 1fr 5.5rem;
+        gap: 0.35rem;
+        font-size: 0.9em;
+    }
+
+    .cst-metric-label {
+        font-size: 0.75em;
+    }
+
+    .cst-metric-value {
+        font-size: 0.75em;
+    }
+
+    .cst-bar-track {
+        height: 6px;
+    }
 }
+
+
 
 
 
