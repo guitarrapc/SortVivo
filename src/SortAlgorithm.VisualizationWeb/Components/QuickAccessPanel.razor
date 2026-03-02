@@ -149,15 +149,19 @@
                                 ? "Regenerate array and re-run all algorithms" 
                                 : "Add this algorithm to comparison";
                 }
-                <div class="qap__item">
+                <div class="qap__item qap__item--action-group">
                     <button class="primary qap__btn-full"
                             @onclick="() => OnAddAndGenerate.InvokeAsync()"
                             disabled="@addDisabled"
                             title="@buttonTitle">
                         @(ComparisonMode.IsAddingAlgorithm ? "Processing..." : algoAlreadyPresent ? "Regenerate" : "Add & Generate")
                     </button>
+                </div>
+
+                <div class="qap__item qap__item--status">
+                    <span class="qap__count-label">Algorithms:</span>
                     <span class="qap__count @(instanceCount >= ComparisonState.MaxComparisons ? "qap__count--max" : "")">
-                        (@instanceCount / @ComparisonState.MaxComparisons)
+                        @instanceCount / @ComparisonState.MaxComparisons
                     </span>
                 </div>
 
