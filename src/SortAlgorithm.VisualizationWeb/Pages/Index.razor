@@ -486,6 +486,7 @@ private VisualizationMode SelectedVisualizationMode
             }
             ComparisonMode.SetSpeedForAll(Playback.OperationsPerFrame, Playback.SpeedMultiplier);
             ComparisonMode.SetAutoResetForAll(Playback.AutoReset);
+            ApplySavedSoundSettings();
         }
         catch (Exception ex)
         {
@@ -512,6 +513,7 @@ private VisualizationMode SelectedVisualizationMode
         {
             await ComparisonMode.ReplaceAlgorithmAsync(index, algoName, metadata);
             ComparisonMode.SetSpeedForAll(Playback.OperationsPerFrame, Playback.SpeedMultiplier);
+            ApplySavedSoundSettings();
         }
         finally
         {
@@ -534,6 +536,7 @@ private VisualizationMode SelectedVisualizationMode
         ComparisonMode.RemoveAlgorithm(index);
 
         DebugSettings.Log($"[Index] After removal, instances count: {ComparisonMode.State.Instances.Count}");
+        ApplySavedSoundSettings();
         StateHasChanged();
     }
 
@@ -634,11 +637,41 @@ private VisualizationMode SelectedVisualizationMode
     private void HandleToggleSound()
     {
         if (ComparisonMode.State.Instances.Count == 1)
+        {
+            // N=1: ComparisonModeのインスタンスとグローバルPlayback両方を更新
             ComparisonMode.ToggleSound();
+            // グローバルPlaybackにも同期（localStorageへの保存用）
+            Playback.SoundEnabled = ComparisonMode.SoundEnabled;
+        }
         else
+        {
             Playback.SoundEnabled = !Playback.SoundEnabled;
+        }
         _preferencesDirty = true;
         StateHasChanged();
+    }
+
+    /// <summary>
+    /// N=1 の場合、localStorage から読み込んだサウンド設定を適用する。
+    /// N>=2 の場合は全インスタンスのサウンドを明示的にオフにする。
+    /// </summary>
+    private void ApplySavedSoundSettings()
+    {
+        if (ComparisonMode.State.Instances.Count == 1)
+        {
+            // N=1: localStorageから読み込んだ設定を適用
+            var instance = ComparisonMode.State.Instances[0];
+            instance.Playback.SoundEnabled = Playback.SoundEnabled;
+            instance.Playback.SoundVolume = Playback.SoundVolume;
+        }
+        else if (ComparisonMode.State.Instances.Count > 1)
+        {
+            // N>=2: 全インスタンスのサウンドを強制的にオフにする
+            foreach (var instance in ComparisonMode.State.Instances)
+            {
+                instance.Playback.SoundEnabled = false;
+            }
+        }
     }
 
     // サイドバー折りたたみ状態変更（設定保存もトリガー）
