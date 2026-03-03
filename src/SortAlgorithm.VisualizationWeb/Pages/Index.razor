@@ -101,10 +101,10 @@
             }
             @if (n == 0)
             {
-                @* N=0: 初期空状態 *@
+                @* N=0: 初期空状態（アルゴリズム情報は表示しない） *@
                 <SortCard State="Playback.State"
-                          AlgorithmName="@SelectedAlgorithm"
-                          Complexity="@GetSelectedAlgorithmComplexity()"
+                          AlgorithmName=""
+                          Complexity=""
                           VisualizationMode="@SelectedVisualizationMode"
                           GridColumnCount="1"
                           CardSize="StatsCardSize.Full"
