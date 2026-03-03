@@ -1,0 +1,373 @@
+@using SortAlgorithm.VisualizationWeb.Models
+@using SortAlgorithm.VisualizationWeb.Services
+@inject AlgorithmRegistry AlgorithmRegistry
+@inject ArrayPatternRegistry ArrayPatternRegistry
+
+<div class="qap">
+    <div class="qap__content">
+
+        @* ── Current Algorithm 説明カード ── *@
+        @{
+            var currentAlgo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
+            var howItWorks = GetHowItWorksDescription(currentAlgo?.TutorialDescription ?? "");
+        }
+        @if (!string.IsNullOrEmpty(howItWorks))
+        {
+            <div class="algorithm-description-card">
+                <span class="algorithm-description-card__label">CURRENT ALGORITHM</span>
+                <h2 class="algorithm-description-card__title">@SelectedAlgorithm</h2>
+                <p class="algorithm-description-card__text">@howItWorks</p>
+            </div>
+        }
+
+        <fieldset class="controls-fieldset" disabled="@IsLoading">
+
+            @* ── Sort Setup ── *@
+            <div class="ui-card @(_sortSetupCollapsed ? "ui-card--collapsed" : "")">
+                <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleSortSetup">
+                    Sort Setup
+                    <span class="ui-card__toggle-icon @(_sortSetupCollapsed ? "ui-card__toggle-icon--collapsed" : "")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </span>
+                </button>
+                <div class="ui-card__body @(_sortSetupCollapsed ? "ui-card__body--collapsed" : "")">
+
+                    <div class="qap__item">
+                        <div class="qap__label-row">
+                            <div class="qap__label-group">
+                                <span class="stat-label">Algorithm</span>
+                                <a href="tutorial/@Uri.EscapeDataString(SelectedAlgorithm)" class="qap__help-link" title="Learn about this algorithm">?</a>
+                            </div>
+                            <span class="stat-value qap__complexity">@GetComplexity()</span>
+                        </div>
+                        <select value="@SelectedAlgorithm"
+                                @onchange="e => HandleAlgorithmChange((string)e.Value!)">
+                            @foreach (var group in GetAlgorithmsByCategory())
+                            {
+                                <optgroup label="@group.Key">
+                                    @foreach (var algo in group)
+                                    {
+                                        <option value="@algo.Name">@algo.Name</option>
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="qap__item">
+                        <span class="stat-label">Array Size @GetArraySizeLabel()</span>
+                        <select value="@Math.Min(ArraySize, GetEffectiveMaxSize())"
+                                @onchange="e => HandleArraySizeChange(int.Parse((string)e.Value!))">
+                            @foreach (var size in GetFilteredSizes())
+                            {
+                                <option value="@size">@size @(IsRecommendedSize(size) ? "★" : "")</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="qap__item">
+                        <span class="stat-label">Scramble Pattern</span>
+                        <select value="@SelectedPatternName"
+                                @onchange="e => HandlePatternChange((string)e.Value!)">
+                            @foreach (var group in GetPatternsByCategory())
+                            {
+                                <optgroup label="@group.Key">
+                                    @foreach (var pattern in group)
+                                    {
+                                        <option value="@pattern.Name">@pattern.Name</option>
+                                    }
+                                </optgroup>
+                            }
+                        </select>
+                    </div>
+
+                    @{
+                        var instanceCount = ComparisonMode.State.Instances.Count;
+                        var algoAlreadyPresent = ComparisonMode.State.Instances.Any(i => i.AlgorithmName == SelectedAlgorithm);
+                        var atMaxAndNotPresent = instanceCount >= ComparisonState.MaxComparisons && !algoAlreadyPresent;
+                        var addDisabled = atMaxAndNotPresent || ComparisonMode.IsAddingAlgorithm;
+                        var buttonTitle = ComparisonMode.IsAddingAlgorithm
+                            ? "Processing..."
+                            : atMaxAndNotPresent
+                                ? $"Maximum {ComparisonState.MaxComparisons} algorithms reached. Remove one to add a new algorithm."
+                                : algoAlreadyPresent
+                                    ? "Regenerate array and re-run all algorithms"
+                                    : "Add this algorithm to comparison";
+                    }
+                    <div class="qap__item qap__item--action-group">
+                        <button class="primary qap__btn-full"
+                                @onclick="() => OnAddAndGenerate.InvokeAsync()"
+                                disabled="@addDisabled"
+                                title="@buttonTitle">
+                            @(ComparisonMode.IsAddingAlgorithm ? "Processing..." : algoAlreadyPresent ? "Regenerate" : "Add & Generate")
+                        </button>
+                    </div>
+
+                    <div class="qap__item qap__item--status">
+                        <span class="qap__count-label">Algorithms:</span>
+                        <span class="qap__count @(instanceCount >= ComparisonState.MaxComparisons ? "qap__count--max" : "")">
+                            @instanceCount / @ComparisonState.MaxComparisons
+                        </span>
+                    </div>
+
+                </div>
+            </div>
+
+            @* ── Appearance ── *@
+            <div class="ui-card @(_appearanceCollapsed ? "ui-card--collapsed" : "")">
+                <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleAppearance">
+                    Appearance
+                    <span class="ui-card__toggle-icon @(_appearanceCollapsed ? "ui-card__toggle-icon--collapsed" : "")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </span>
+                </button>
+                <div class="ui-card__body @(_appearanceCollapsed ? "ui-card__body--collapsed" : "")">
+
+                    <div class="qap__item">
+                        <span class="stat-label">Visualization Mode</span>
+                        <select value="@SelectedVisualizationMode"
+                                @onchange="e => HandleVisualizationModeChange((string)e.Value!)">
+                            <option value="@VisualizationMode.BarChart">Bar Chart</option>
+                            <option value="@VisualizationMode.Circular">Circular</option>
+                            <option value="@VisualizationMode.Spiral">Spiral</option>
+                            <option value="@VisualizationMode.DotPlot">Dot Plot</option>
+                            <option value="@VisualizationMode.PictureRow">Picture Row</option>
+                            <option value="@VisualizationMode.PictureColumn">Picture Column</option>
+                            <option value="@VisualizationMode.PictureBlock">Picture Block</option>
+                        </select>
+                    </div>
+
+                </div>
+            </div>
+
+            @* ── Speed ── *@
+            <div class="ui-card @(_speedCollapsed ? "ui-card--collapsed" : "")">
+                <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleSpeed">
+                    Speed
+                    <span class="ui-card__toggle-icon @(_speedCollapsed ? "ui-card__toggle-icon--collapsed" : "")">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                            <polyline points="6 9 12 15 18 9"></polyline>
+                        </svg>
+                    </span>
+                </button>
+                <div class="ui-card__body @(_speedCollapsed ? "ui-card__body--collapsed" : "")">
+
+                    <div class="qap__item qap__item--vertical">
+                        <div class="qap__slider-header">
+                            <span class="stat-label">Ops Per Frame</span>
+                            <span class="stat-value qap__slider-value">
+                                @Playback.OperationsPerFrame
+                                <span class="qap__fps">ops/frame</span>
+                            </span>
+                        </div>
+                        <input type="range" min="1" max="1000"
+                               @bind="Playback.OperationsPerFrame"
+                               @bind:after="HandleSpeedChanged" />
+                    </div>
+
+                    <div class="qap__item qap__item--vertical">
+                        <div class="qap__slider-header">
+                            <span class="stat-label">Speed</span>
+                            <span class="stat-value qap__slider-value">
+                                @Playback.SpeedMultiplier.ToString("F1")x
+                                <span class="qap__fps">(@EffectiveFPS FPS)</span>
+                            </span>
+                        </div>
+                        <input type="range" min="0.5" max="100" step="0.5"
+                               @bind="Playback.SpeedMultiplier"
+                               @bind:after="HandleSpeedChanged" />
+                    </div>
+
+                </div>
+            </div>
+
+        </fieldset>
+
+    </div>
+</div>
+
+@code {
+    // ── Quick Access 状態（@bind で Index.razor と同期） ──────────────────────
+    [Parameter, EditorRequired] public string SelectedAlgorithm { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SelectedAlgorithmChanged { get; set; }
+
+    [Parameter, EditorRequired] public int ArraySize { get; set; }
+    [Parameter] public EventCallback<int> ArraySizeChanged { get; set; }
+
+    [Parameter, EditorRequired] public string SelectedPatternName { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SelectedPatternNameChanged { get; set; }
+
+    [Parameter, EditorRequired] public VisualizationMode SelectedVisualizationMode { get; set; }
+    [Parameter] public EventCallback<VisualizationMode> SelectedVisualizationModeChanged { get; set; }
+
+
+    // ── コンテキスト ──────────────────────────────────────────────────────────
+    [Parameter] public bool IsLoading { get; set; }
+
+    // ── サービス（参照渡し） ──────────────────────────────────────────────────
+    [Parameter, EditorRequired] public PlaybackService Playback { get; set; } = default!;
+    [Parameter, EditorRequired] public ComparisonModeService ComparisonMode { get; set; } = default!;
+    [Parameter, EditorRequired] public RenderSettings RenderSettings { get; set; } = default!;
+    [Parameter, EditorRequired] public DebugSettings DebugSettings { get; set; } = default!;
+
+    // ── アクションコールバック ────────────────────────────────────────────────
+    [Parameter] public EventCallback OnAddAndGenerate { get; set; }
+    [Parameter] public EventCallback OnAlgorithmChanged { get; set; }
+    [Parameter] public EventCallback OnVisualizationModeChanged { get; set; }
+    [Parameter] public EventCallback OnSpeedSettingsChanged { get; set; }
+
+    // ── 内部状態 ──────────────────────────────────────────────────────────────
+    [Parameter] public string SelectedCategory { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SelectedCategoryChanged { get; set; }
+
+    [Parameter] public bool AutoSwitchToRecommendedSize { get; set; }
+    [Parameter] public EventCallback<bool> AutoSwitchToRecommendedSizeChanged { get; set; }
+
+    private static readonly int[] AvailableSizes = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
+
+    private int EffectiveFPS => (int)(60 * Playback.SpeedMultiplier);
+
+    // ── カード折りたたみ状態（タブレット・スマホのみ有効） ────────────────────
+    private bool _sortSetupCollapsed = false;
+    private bool _appearanceCollapsed = true;
+    private bool _speedCollapsed = true;
+
+    private void ToggleSortSetup() => _sortSetupCollapsed = !_sortSetupCollapsed;
+    private void ToggleAppearance() => _appearanceCollapsed = !_appearanceCollapsed;
+    private void ToggleSpeed() => _speedCollapsed = !_speedCollapsed;
+
+    // ── Algorithm 変更 ───────────────────────────────────────────────────────
+    private async Task HandleAlgorithmChange(string newValue)
+    {
+        await SelectedAlgorithmChanged.InvokeAsync(newValue);
+        var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == newValue);
+        if (algo != null)
+        {
+            if (AutoSwitchToRecommendedSize)
+                await ArraySizeChanged.InvokeAsync(algo.RecommendedSize);
+            else if (ArraySize > algo.MaxElements)
+                await ArraySizeChanged.InvokeAsync(algo.MaxElements);
+        }
+        await OnAlgorithmChanged.InvokeAsync();
+    }
+
+    // ── ArraySize 変更 ───────────────────────────────────────────────────────
+    private async Task HandleArraySizeChange(int newValue)
+    {
+        await ArraySizeChanged.InvokeAsync(newValue);
+    }
+
+    // ── Pattern 変更 ─────────────────────────────────────────────────────────
+    private async Task HandlePatternChange(string newValue)
+    {
+        await SelectedPatternNameChanged.InvokeAsync(newValue);
+    }
+
+    // ── VisualizationMode 変更 ───────────────────────────────────────────────
+    private async Task HandleVisualizationModeChange(string rawValue)
+    {
+        if (Enum.TryParse<VisualizationMode>(rawValue, out var mode))
+        {
+            await SelectedVisualizationModeChanged.InvokeAsync(mode);
+            await OnVisualizationModeChanged.InvokeAsync();
+        }
+    }
+
+    // ── Speed 変更 ───────────────────────────────────────────────────────────
+    private async Task HandleSpeedChanged()
+    {
+        await OnSpeedSettingsChanged.InvokeAsync();
+    }
+
+    // ── Comparison Mode 変更 ─────────────────────────────────────────────────
+    private int GetEffectiveMaxSize()
+    {
+        var comparisonMax = ComparisonState.MaxComparisonElements(ComparisonMode.State.Instances.Count + 1);
+        var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
+        var algoMax = algo?.MaxElements ?? int.MaxValue;
+        return Math.Min(comparisonMax, algoMax);
+    }
+
+    private IEnumerable<int> GetFilteredSizes()
+        => AvailableSizes.Where(s => s <= GetEffectiveMaxSize());
+
+    private string GetArraySizeLabel()
+    {
+        var effectiveMax = GetEffectiveMaxSize();
+        if (effectiveMax < AvailableSizes[^1])
+            return $"(Max: {effectiveMax})";
+        return GetSizeRecommendation();
+    }
+
+    private string GetSizeRecommendation()
+    {
+        var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
+        return (algo != null && algo.RecommendedSize != ArraySize)
+            ? $"(Recommended: {algo.RecommendedSize})"
+            : string.Empty;
+    }
+
+    private bool IsRecommendedSize(int size)
+    {
+        var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
+        return algo?.RecommendedSize == size;
+    }
+
+    private string GetComplexity()
+    {
+        var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
+        return algo?.TimeComplexity ?? "Unknown";
+    }
+
+    private IEnumerable<IGrouping<string, AlgorithmMetadata>> GetAlgorithmsByCategory()
+    {
+        var source = string.IsNullOrEmpty(SelectedCategory)
+            ? AlgorithmRegistry.GetAllAlgorithms()
+            : AlgorithmRegistry.GetByCategory(SelectedCategory);
+
+        var categoryOrder = source
+            .Select((a, i) => new { a.Category, i })
+            .GroupBy(x => x.Category)
+            .ToDictionary(g => g.Key, g => g.Min(x => x.i));
+
+        return source.GroupBy(a => a.Category).OrderBy(g => categoryOrder[g.Key]);
+    }
+
+    private IEnumerable<IGrouping<string, ArrayPatternMetadata>> GetPatternsByCategory()
+    {
+        var all = ArrayPatternRegistry.GetAllPatterns();
+
+        var categoryOrder = all
+            .Select((p, i) => new { p.Category, i })
+            .GroupBy(x => x.Category)
+            .ToDictionary(g => g.Key, g => g.Min(x => x.i));
+
+        return all.GroupBy(p => p.Category).OrderBy(g => categoryOrder[g.Key]);
+    }
+
+    /// <summary>
+    /// TutorialDescriptionから"How it works:"部分を抽出
+    /// </summary>
+    private static string GetHowItWorksDescription(string tutorialDescription)
+    {
+        if (string.IsNullOrWhiteSpace(tutorialDescription))
+            return string.Empty;
+
+        // "How it works:" で始まる最初のパラグラフを抽出
+        var lines = tutorialDescription.Split('\n', StringSplitOptions.TrimEntries);
+        var howItWorksIndex = Array.FindIndex(lines, l => l.StartsWith("How it works:", StringComparison.OrdinalIgnoreCase));
+
+        if (howItWorksIndex == -1)
+            return string.Empty;
+
+        // "How it works:" の後の説明文を取得（次の空行または"Key property:"まで）
+        var descriptionLine = lines[howItWorksIndex];
+        var description = descriptionLine["How it works:".Length..].Trim();
+
+        return description;
+    }
+}

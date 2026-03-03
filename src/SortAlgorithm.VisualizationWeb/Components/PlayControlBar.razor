@@ -1,0 +1,95 @@
+@using SortAlgorithm.VisualizationWeb.Models
+@using SortAlgorithm.VisualizationWeb.Services
+
+<div class="play-control-bar">
+    <div class="play-control-buttons">
+        <button class="play-control-btn @(IsPlaying ? "btn-pause" : "btn-play")"
+                @onclick="OnTogglePlayPause"
+                disabled="@PlayDisabled"
+                title="@(IsPlaying ? "Pause" : "Play")">
+            @if (IsPlaying)
+            {
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="4" width="4" height="16"></rect>
+                    <rect x="14" y="4" width="4" height="16"></rect>
+                </svg>
+            }
+            else
+            {
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                </svg>
+            }
+        </button>
+
+        <button class="play-control-btn btn-stop"
+                @onclick="OnStop"
+                disabled="@StopDisabled"
+                title="Stop">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+                <rect x="5" y="5" width="14" height="14"></rect>
+            </svg>
+        </button>
+
+        <button class="play-control-btn @(SoundEnabled ? "btn-sound-on" : "btn-sound-off")"
+                @onclick="OnToggleSound"
+                disabled="@SoundDisabled"
+                title="@(SoundDisabled ? "Sound not available in Comparison Mode" : SoundEnabled ? "Sound ON" : "Sound OFF")">
+            @if (SoundEnabled)
+            {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+                </svg>
+            }
+            else
+            {
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+                    <line x1="23" y1="9" x2="17" y2="15"></line>
+                    <line x1="17" y1="9" x2="23" y2="15"></line>
+                </svg>
+            }
+        </button>
+    </div>
+
+    <div class="play-control-info">
+        @if (ArraySize > 0)
+        {
+            <span class="play-control-array-size">n=@ArraySize</span>
+        }
+        <span class="play-control-status">@StatusText</span>
+    </div>
+</div>
+
+@code {
+    [Parameter]
+    public bool IsPlaying { get; set; }
+
+    [Parameter]
+    public bool PlayDisabled { get; set; }
+
+    [Parameter]
+    public bool StopDisabled { get; set; }
+
+    [Parameter]
+    public bool SoundEnabled { get; set; }
+
+    [Parameter]
+    public bool SoundDisabled { get; set; }
+
+    [Parameter]
+    public required string StatusText { get; set; }
+
+    [Parameter]
+    public int ArraySize { get; set; }
+
+    [Parameter]
+    public EventCallback OnTogglePlayPause { get; set; }
+
+    [Parameter]
+    public EventCallback OnStop { get; set; }
+
+    [Parameter]
+    public EventCallback OnToggleSound { get; set; }
+}

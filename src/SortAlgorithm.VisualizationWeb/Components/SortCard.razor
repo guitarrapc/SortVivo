@@ -1,0 +1,231 @@
+@using SortAlgorithm.VisualizationWeb.Models
+@using SortAlgorithm.VisualizationWeb.Services
+@inject AlgorithmRegistry AlgorithmRegistry
+@implements IDisposable
+
+<div class="sort-card @(State.IsSortCompleted ? "sort-card--completed" : "")">
+    @* カードヘッダー *@
+    <div class="sort-card__header">
+        @if (OnAlgorithmSelected.HasDelegate)
+        {
+            <select class="sort-card__algo-select"
+                    @onchange="HandleAlgorithmSelect">
+                @foreach (var group in GetAlgorithmsByCategory())
+                {
+                    <optgroup label="@group.Key">
+                        @foreach (var algo in group)
+                        {
+                            <option value="@algo.Name" selected="@(algo.Name == AlgorithmName)">@algo.Name</option>
+                        }
+                    </optgroup>
+                }
+            </select>
+        }
+        else
+        {
+            <span class="sort-card__algorithm-name">@AlgorithmName</span>
+        }
+        <div class="sort-card__header-right">
+            <span class="complexity-badge">@Complexity</span>
+            @if (ShowRemoveButton)
+            {
+                <button class="btn-remove-grid"
+                        @onclick="HandleRemove"
+                        title="Remove">
+                    ✖
+                </button>
+            }
+        </div>
+    </div>
+
+    @* 可視化エリア *@
+    <div class="sort-card__visualization">
+        @if (State.MainArray.Length == 0 && !IsPictureMode)
+        {
+            <div class="sort-card__empty">
+                <p class="sort-card__empty-icon">@ModeIcon</p>
+                <p>Click "Add &amp; Generate" to start visualization</p>
+            </div>
+        }
+        else if (VisualizationMode == VisualizationMode.BarChart)
+        {
+            <BarChartRenderer
+                State="@State"
+                Playback="@Playback"
+                GridColumnCount="@GridColumnCount"
+                OnClick="@OnVisualizationClick" />
+        }
+        else if (VisualizationMode == VisualizationMode.Circular)
+        {
+            <CircularRenderer
+                State="@State"
+                Playback="@Playback"
+                GridColumnCount="@GridColumnCount"
+                OnClick="@OnVisualizationClick" />
+        }
+        else if (VisualizationMode == VisualizationMode.Spiral)
+        {
+            <SpiralRenderer
+                State="@State"
+                Playback="@Playback"
+                GridColumnCount="@GridColumnCount"
+                OnClick="@OnVisualizationClick" />
+        }
+        else if (VisualizationMode == VisualizationMode.DotPlot)
+        {
+            <DotPlotRenderer
+                State="@State"
+                Playback="@Playback"
+                GridColumnCount="@GridColumnCount"
+                OnClick="@OnVisualizationClick" />
+        }
+        else if (VisualizationMode == VisualizationMode.PictureRow)
+        {
+            <PictureRowRenderer
+                State="@State"
+                Playback="@Playback"
+                GridColumnCount="@GridColumnCount"
+                OnClick="@OnVisualizationClick" />
+        }
+        else if (VisualizationMode == VisualizationMode.PictureColumn)
+        {
+            <PictureColumnRenderer
+                State="@State"
+                Playback="@Playback"
+                GridColumnCount="@GridColumnCount"
+                OnClick="@OnVisualizationClick" />
+        }
+        else if (VisualizationMode == VisualizationMode.PictureBlock)
+        {
+            <PictureBlockRenderer
+                State="@State"
+                Playback="@Playback"
+                GridColumnCount="@GridColumnCount"
+                OnClick="@OnVisualizationClick" />
+        }
+    </div>
+
+    @* Stats Summary *@
+    <SortStatsSummary State="@State" CardSize="@CardSize" Complexity="@Complexity" />
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public VisualizationState State { get; set; } = null!;
+
+    [Parameter, EditorRequired]
+    public string AlgorithmName { get; set; } = string.Empty;
+
+    [Parameter, EditorRequired]
+    public string Complexity { get; set; } = string.Empty;
+
+    [Parameter]
+    public VisualizationMode VisualizationMode { get; set; } = VisualizationMode.BarChart;
+
+    [Parameter]
+    public int GridColumnCount { get; set; } = 1;
+
+    [Parameter]
+    public StatsCardSize CardSize { get; set; } = StatsCardSize.Full;
+
+    /// <summary>比較モード時のみ true にする。✖ 削除ボタンを表示する。</summary>
+    [Parameter]
+    public bool ShowRemoveButton { get; set; }
+
+    [Parameter]
+    public EventCallback OnRemove { get; set; }
+
+    [Parameter]
+    public EventCallback OnVisualizationClick { get; set; }
+
+    /// <summary>カードヘッダーのアルゴリズム名セレクタで別のアルゴリズムが選ばれたとき発火する。</summary>
+    [Parameter]
+    public EventCallback<string> OnAlgorithmSelected { get; set; }
+
+    /// <summary>已に比較中の他カードのアルゴリズム名セット。ドロップダウンから除外する。</summary>
+    [Parameter]
+    public IReadOnlyList<string> ExcludeAlgorithmNames { get; set; } = [];
+
+    /// <summary>PlaybackService の購読に使用。StateChanged を受けて再描画する。</summary>
+    [Parameter]
+    public PlaybackService? Playback { get; set; }
+
+    private PlaybackService? _subscribedPlayback;
+    private int _statsFrameCounter = 0;
+    private const int StatsUpdateFrameInterval = 6; // 再生中は ~10fps でStats更新（canvas は直接購読で 60fps）
+
+    protected override void OnParametersSet()
+    {
+        if (_subscribedPlayback != Playback)
+        {
+            if (_subscribedPlayback != null)
+                _subscribedPlayback.StateChanged -= OnStateChanged;
+
+            _subscribedPlayback = Playback;
+            _statsFrameCounter = 0;
+
+            if (_subscribedPlayback != null)
+                _subscribedPlayback.StateChanged += OnStateChanged;
+        }
+    }
+
+    private void OnStateChanged()
+    {
+        // 再生中は Stats 表示を StatsUpdateFrameInterval フレームに 1 回だけ更新する。
+        // canvas の描画は各レンダラーが PlaybackService.StateChanged を直接購読して行うため
+        // ここでは Blazor の仮想 DOM 再描画をスロットルするだけでよい。
+        if (State?.PlaybackState == PlaybackState.Playing)
+        {
+            _statsFrameCounter++;
+            if (_statsFrameCounter % StatsUpdateFrameInterval != 0)
+                return;
+        }
+        else
+        {
+            _statsFrameCounter = 0;
+        }
+        InvokeAsync(StateHasChanged);
+    }
+
+    private bool IsPictureMode =>
+        VisualizationMode is VisualizationMode.PictureRow
+                          or VisualizationMode.PictureColumn
+                          or VisualizationMode.PictureBlock;
+
+    private string ModeIcon => VisualizationMode switch
+    {
+        VisualizationMode.Circular => "⭕",
+        VisualizationMode.Spiral   => "🌀",
+        VisualizationMode.DotPlot  => "🔵",
+        _                          => "📊",
+    };
+
+    private async Task HandleRemove()
+    {
+        if (OnRemove.HasDelegate)
+            await OnRemove.InvokeAsync();
+    }
+
+    private async Task HandleAlgorithmSelect(ChangeEventArgs e)
+    {
+        var selected = e.Value?.ToString();
+        if (!string.IsNullOrEmpty(selected) && selected != AlgorithmName && OnAlgorithmSelected.HasDelegate)
+            await OnAlgorithmSelected.InvokeAsync(selected);
+    }
+
+    private IEnumerable<IGrouping<string, AlgorithmMetadata>> GetAlgorithmsByCategory()
+    {
+        var all = AlgorithmRegistry.GetAllAlgorithms()
+            .Where(a => !ExcludeAlgorithmNames.Contains(a.Name));
+        var order = all.Select((a, i) => new { a.Category, i })
+            .GroupBy(x => x.Category)
+            .ToDictionary(g => g.Key, g => g.Min(x => x.i));
+        return all.GroupBy(a => a.Category).OrderBy(g => order[g.Key]);
+    }
+
+    public void Dispose()
+    {
+        if (_subscribedPlayback != null)
+            _subscribedPlayback.StateChanged -= OnStateChanged;
+    }
+}

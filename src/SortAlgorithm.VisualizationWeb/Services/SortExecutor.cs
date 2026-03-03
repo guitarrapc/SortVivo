@@ -8,7 +8,7 @@ namespace SortAlgorithm.VisualizationWeb.Services;
 /// <summary>
 /// ソート実行と操作記録を行うサービス
 /// </summary>
-public class SortExecutor
+public class SortExecutor(DebugSettings debug)
 {
     /// <summary>
     /// 適応的計測の目標合計時間（ms）。
@@ -30,8 +30,6 @@ public class SortExecutor
     /// </summary>
     public (List<SortOperation> Operations, StatisticsContext Statistics, TimeSpan ActualExecutionTime) ExecuteAndRecord(ReadOnlySpan<int> sourceArray, AlgorithmMetadata algorithm)
     {
-        var operations = new List<SortOperation>();
-
         // ArrayPoolから配列をレンタル（CompositeContext用作業配列）
         var workArray = ArrayPool<int>.Shared.Rent(sourceArray.Length);
 
@@ -76,6 +74,12 @@ public class SortExecutor
 
             // StatisticsContextを作成（正確な統計情報を記録）
             var statisticsContext = new StatisticsContext();
+            
+            // 操作リストの容量を事前設定（メモリ再割り当てを削減）
+            // O(n²)アルゴリズムの最悪ケースを想定: 比較 ~n²/2, スワップ ~n²/2 → 合計 ~n²
+            int n = sourceArray.Length;
+            int estimatedCapacity = Math.Min(n * n, 10_000_000); // 上限10M（メモリ保護）
+            var operations = new List<SortOperation>(estimatedCapacity);
             
             // VisualizationContextを使って操作を記録
             var visualizationContext = new VisualizationContext(
@@ -214,9 +218,18 @@ public class SortExecutor
             sourceArray.AsSpan(0, n).CopyTo(workArray.AsSpan(0, n));
             await Task.Yield();
 
-            // 操作記録
-            var operations = new List<SortOperation>();
+            // 操作記録の準備
             var statisticsContext = new StatisticsContext();
+            
+            // 操作リストの容量を事前設定（メモリ再割り当てを削減）
+            // O(n²)アルゴリズムの最悪ケースを想定
+            int estimatedCapacity = Math.Min(n * n, 10_000_000); // 上限10M（メモリ保護）
+            var operations = new List<SortOperation>(estimatedCapacity);
+            
+            // 記録処理時間の計測（純粋なソート時間は actualExecutionTime に既に計測済み）
+            // この時間はコールバックオーバーヘッド + List操作のコストを含む
+            var recordingStopwatch = Stopwatch.StartNew();
+            
             var visualizationContext = new VisualizationContext(
                 onCompare: (i, j, result, bufferIdI, bufferIdJ) =>
                 {
@@ -280,9 +293,20 @@ public class SortExecutor
 
             // 記録パス実行（Span はインライン式）
             algorithm.SortAction(workArray.AsSpan(0, n), compositeContext);
+            
+            recordingStopwatch.Stop();
 
             // 記録完了後に yield して UI の応答性を即座に回復
             await Task.Yield();
+
+            // デバッグログ出力
+            // actualExecutionTime: 純粋なソート実行時間（NullContextで計測）
+            // recordingStopwatch: 記録処理にかかった時間（コールバックオーバーヘッド込み）
+            debug.Log(
+                $"[SortExecutor] Array size: {n}, Operations: {operations.Count:N0}, " +
+                $"Pure sort time: {actualExecutionTime.TotalMilliseconds:F2}ms, " +
+                $"Recording time: {recordingStopwatch.ElapsedMilliseconds:N0}ms " +
+                $"(overhead: {recordingStopwatch.ElapsedMilliseconds - actualExecutionTime.TotalMilliseconds:F0}ms)");
 
             return (operations, statisticsContext, actualExecutionTime);
         }

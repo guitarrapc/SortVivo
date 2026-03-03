@@ -1,0 +1,167 @@
+@using SortAlgorithm.VisualizationWeb.Models
+@using SortAlgorithm.VisualizationWeb.Services
+@inject AlgorithmRegistry AlgorithmRegistry
+@inject IJSRuntime JS
+
+@if (IsOpen)
+{
+    @* 背景暗転: クリックで閉じる *@
+    <div class="settings-backdrop" @onclick="HandleClose"></div>
+
+    @* モーダル本体: クリックが背景に伝播しないよう stopPropagation *@
+    <div class="settings-modal" @onclick:stopPropagation>
+
+        @* ── ヘッダー ── *@
+        <div class="settings-modal__header">
+            <button class="settings-modal__close" @onclick="HandleClose" title="Close">✕</button>
+            <span class="settings-modal__title">Settings</span>
+        </div>
+
+        @* ── スクロール可能なボディ ── *@
+        <div class="settings-modal__body">
+
+            @* ────────────────────────────────────
+               🎨 Rendering
+               ──────────────────────────────────── *@
+            <section class="settings-section">
+                <h3 class="settings-section__title">🎨 Rendering</h3>
+                <div class="settings-section__body">
+
+                    <div class="settings-row settings-row--vertical">
+                        <span class="settings-label">Renderer</span>
+                        <div class="settings-segment">
+                            <button class="settings-segment__btn @(!RenderSettings.UseWebGL ? "settings-segment__btn--active" : "")"
+                                    @onclick="() => RenderSettings.UseWebGL = false">
+                                Canvas 2D
+                            </button>
+                            <button class="settings-segment__btn @(RenderSettings.UseWebGL ? "settings-segment__btn--active" : "")"
+                                    @onclick="() => RenderSettings.UseWebGL = true">
+                                WebGL
+                            </button>
+                        </div>
+                        <span class="settings-hint">WebGL is faster but may have compatibility issues.</span>
+                    </div>
+
+                </div>
+            </section>
+
+            @* ────────────────────────────────────
+               ▶ Playback
+               ──────────────────────────────────── *@
+            <section class="settings-section">
+                <h3 class="settings-section__title">▶ Playback</h3>
+                <div class="settings-section__body">
+
+                    <div class="settings-row">
+                        <span class="settings-label">Auto Reset on Complete</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="Playback.AutoReset" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-row">
+                        <span class="settings-label">Instant Mode <span class="settings-hint-inline">(No Animation)</span></span>
+                        <label class="toggle-switch">
+                            <input type="checkbox" @bind="Playback.InstantMode" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                </div>
+            </section>
+
+            @* ────────────────────────────────────
+               🔊 Sound
+               ──────────────────────────────────── *@
+            <section class="settings-section">
+                <h3 class="settings-section__title">🔊 Sound</h3>
+                <div class="settings-section__body">
+
+                    <div class="settings-row settings-row--vertical">
+                        <div class="settings-row__inline">
+                            <span class="settings-label">Volume</span>
+                            <span class="settings-value">@((int)(Playback.SoundVolume * 100))%</span>
+                        </div>
+                        <input type="range" min="0" max="1" step="0.05"
+                               @bind="Playback.SoundVolume"
+                               class="settings-slider" />
+                        @if (Playback.SpeedMultiplier > 50)
+                        {
+                            <span class="settings-warn">⚠ Muted when speed &gt; 50x</span>
+                        }
+                    </div>
+
+                </div>
+            </section>
+
+            @* ────────────────────────────────────
+               🔧 Advanced
+               ──────────────────────────────────── *@
+            <section class="settings-section">
+                <h3 class="settings-section__title">🔧 Advanced</h3>
+                <div class="settings-section__body">
+
+                    <div class="settings-row">
+                        <span class="settings-label">Auto Switch to Recommended Size</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox"
+                                   checked="@AutoSwitchToRecommendedSize"
+                                   @onchange="e => AutoSwitchToRecommendedSizeChanged.InvokeAsync((bool)e.Value!)" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                    <div class="settings-row settings-row--vertical">
+                        <span class="settings-label">Category Filter</span>
+                        <select value="@SelectedCategory"
+                                @onchange="e => SelectedCategoryChanged.InvokeAsync((string)e.Value!)">
+                            <option value="">All Categories</option>
+                            @foreach (var category in AlgorithmRegistry.GetCategories())
+                            {
+                                <option value="@category">@category</option>
+                            }
+                        </select>
+                    </div>
+
+                    <div class="settings-row">
+                        <span class="settings-label">🐛 Debug Log</span>
+                        <label class="toggle-switch">
+                            <input type="checkbox"
+                                   @bind="DebugSettings.IsEnabled"
+                                   @bind:after="HandleDebugToggleChanged" />
+                            <span class="toggle-slider"></span>
+                        </label>
+                    </div>
+
+                </div>
+            </section>
+
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public EventCallback OnClose { get; set; }
+
+    [Parameter, EditorRequired] public PlaybackService Playback { get; set; } = default!;
+    [Parameter, EditorRequired] public RenderSettings RenderSettings { get; set; } = default!;
+    [Parameter, EditorRequired] public DebugSettings DebugSettings { get; set; } = default!;
+
+    [Parameter] public bool AutoSwitchToRecommendedSize { get; set; }
+    [Parameter] public EventCallback<bool> AutoSwitchToRecommendedSizeChanged { get; set; }
+
+    [Parameter] public string SelectedCategory { get; set; } = string.Empty;
+    [Parameter] public EventCallback<string> SelectedCategoryChanged { get; set; }
+
+    private async Task HandleClose()
+    {
+        await OnClose.InvokeAsync();
+    }
+
+    private async Task HandleDebugToggleChanged()
+    {
+        await JS.InvokeVoidAsync("debugHelper.setDebugMode", DebugSettings.IsEnabled);
+    }
+}

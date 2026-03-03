@@ -97,6 +97,11 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     [Parameter]
     public int GridColumnCount { get; set; } = 1;
 
+    /// <summary>PlaybackService 直接購読で canvas を更新する。Blazor のレンダリングサイクルをバイパスする。</summary>
+    [Parameter]
+    public PlaybackService? Playback { get; set; }
+
+    private PlaybackService? _subscribedPlayback;
     private string _canvasId   = $"sortPictureRowCanvas_{Guid.NewGuid():N}";
     private string _dropZoneId = $"sortPictureRowDrop_{Guid.NewGuid():N}";
     private bool _isInitialized = false;
@@ -124,6 +129,23 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
         RenderSettings.OnChanged += OnRenderSettingsChanged;
         _imageService.OnChanged += OnImageServiceChanged;
         _dotNetRef = DotNetObjectReference.Create(this);
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_subscribedPlayback != Playback)
+        {
+            if (_subscribedPlayback != null)
+                _subscribedPlayback.StateChanged -= OnDirectStateChanged;
+            _subscribedPlayback = Playback;
+            if (_subscribedPlayback != null)
+                _subscribedPlayback.StateChanged += OnDirectStateChanged;
+        }
+    }
+
+    private void OnDirectStateChanged()
+    {
+        InvokeAsync(RenderCanvas);
     }
 
     private void OnImageServiceChanged()
@@ -184,6 +206,8 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
     protected override async Task OnParametersSetAsync()
     {
         if (!_isInitialized) return;
+        // 直接購読モード（Playback 設定済み）は OnDirectStateChanged が canvas を更新するためここはスキップ
+        if (_subscribedPlayback != null) return;
         await RenderCanvas();
     }
 
@@ -363,6 +387,8 @@ style="position: relative; width: 100%; height: 100%; align-self: stretch;">
 
     public async ValueTask DisposeAsync()
     {
+        if (_subscribedPlayback != null)
+            _subscribedPlayback.StateChanged -= OnDirectStateChanged;
         RenderSettings.OnChanged -= OnRenderSettingsChanged;
         _imageService.OnChanged -= OnImageServiceChanged;
         DebugSettings.Log($"[PictureRowRenderer] DisposeAsync called for canvas: {_canvasId}");

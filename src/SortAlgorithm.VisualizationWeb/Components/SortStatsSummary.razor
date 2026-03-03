@@ -1,0 +1,154 @@
+@using SortAlgorithm.VisualizationWeb.Models
+
+@*
+    カードサイズに応じて表示内容を切替:
+    Full  (単一モード PC)       : Actual, Comparisons, Swaps, Reads, Writes, Progress%
+    Medium (比較2〜3枚 PC)      : Actual, Comparisons, Swaps, Progress%
+    Small  (比較4枚以上 / モバイル): Actual, Cmp, Swp, %（省略形）
+*@
+<div class="sort-stats-summary sort-stats-summary--@CardSize.ToString().ToLowerInvariant()">
+
+    @* ── コンパクト行（常時表示） ── *@
+    <div class="sss__compact">
+        @if (CardSize == StatsCardSize.Small)
+        {
+            <span class="stat-mini">
+                <span class="value stat-execution-time">@((MarkupString)GetFormattedExecutionTime())</span>
+                <span class="label">Time</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@FormatCompact(State.CompareCount)</span>
+                <span class="label">Cmp</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@FormatCompact(State.SwapCount)</span>
+                <span class="label">Swp</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@GetProgressPercentage()%</span>
+                <span class="label">Progress</span>
+            </span>
+        }
+        else if (CardSize == StatsCardSize.Medium)
+        {
+            <span class="stat-mini">
+                <span class="value stat-execution-time">@((MarkupString)GetFormattedExecutionTime())</span>
+                <span class="label">Time</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@FormatCompact(State.CompareCount)</span>
+                <span class="label">Cmp</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@FormatCompact(State.SwapCount)</span>
+                <span class="label">Swp</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@GetProgressPercentage()%</span>
+                <span class="label">Progress</span>
+            </span>
+        }
+        else
+        {
+            @* Full size *@
+            <span class="stat-mini">
+                <span class="value stat-execution-time">@((MarkupString)GetFormattedExecutionTime())</span>
+                <span class="label">Time</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@State.CompareCount.ToString("N0")</span>
+                <span class="label">Comparisons</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@State.SwapCount.ToString("N0")</span>
+                <span class="label">Swaps</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@State.IndexReadCount.ToString("N0")</span>
+                <span class="label">Reads</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@State.IndexWriteCount.ToString("N0")</span>
+                <span class="label">Writes</span>
+            </span>
+            <span class="stat-mini">
+                <span class="value">@GetProgressPercentage()%</span>
+                <span class="label">Progress</span>
+            </span>
+        }
+
+    </div>
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public VisualizationState State { get; set; } = null!;
+
+    [Parameter]
+    public StatsCardSize CardSize { get; set; } = StatsCardSize.Full;
+
+    [Parameter]
+    public string? Complexity { get; set; }
+
+    private ulong _lastCompareCount;
+    private ulong _lastSwapCount;
+    private int _lastOperationIndex;
+
+    protected override bool ShouldRender()
+    {
+        var changed = _lastCompareCount != State.CompareCount
+                   || _lastSwapCount != State.SwapCount
+                   || _lastOperationIndex != State.CurrentOperationIndex;
+
+        _lastCompareCount = State.CompareCount;
+        _lastSwapCount = State.SwapCount;
+        _lastOperationIndex = State.CurrentOperationIndex;
+
+        return changed;
+    }
+
+    private int GetProgressPercentage()
+    {
+        if (State.TotalOperations == 0) return 0;
+        return (int)((State.CurrentOperationIndex / (double)State.TotalOperations) * 100);
+    }
+
+    private bool IsPlaying => State.PlaybackState == PlaybackState.Playing;
+
+    private string GetFormattedExecutionTime()
+    {
+        if (State.ActualExecutionTime == TimeSpan.Zero)
+            return "-";
+
+        if (IsPlaying)
+        {
+            var (currentNum, currentUnit) = SplitTimeAndUnit(State.EstimatedCurrentExecutionTime);
+            var (totalNum, totalUnit) = SplitTimeAndUnit(State.ActualExecutionTime);
+            return $"<span class=\"time-number\">{currentNum}</span><span class=\"time-sep\">/</span><span class=\"time-number\">{totalNum}</span><span class=\"time-unit\">{totalUnit}</span>";
+        }
+
+        var (num, unit) = SplitTimeAndUnit(State.ActualExecutionTime);
+        return $"<span class=\"time-number\">{num}</span><span class=\"time-unit\">{unit}</span>";
+    }
+
+    private static (string number, string unit) SplitTimeAndUnit(TimeSpan time)
+    {
+        if (time.TotalNanoseconds < 1000)
+            return (time.TotalNanoseconds.ToString("F2"), "ns");
+        else if (time.TotalMicroseconds < 1000)
+            return (time.TotalMicroseconds.ToString("F2"), "μs");
+        else if (time.TotalMilliseconds < 1000)
+            return (time.TotalMilliseconds.ToString("F2"), "ms");
+        else
+            return (time.TotalSeconds.ToString("F2"), "s");
+    }
+
+    private static string FormatCompact(ulong value)
+    {
+        if (value >= 1_000_000)
+            return $"{value / 1_000_000.0:F1}M";
+        if (value >= 1_000)
+            return $"{value / 1_000.0:F1}K";
+        return value.ToString();
+    }
+}

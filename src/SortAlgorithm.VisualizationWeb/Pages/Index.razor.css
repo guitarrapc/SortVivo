@@ -1,0 +1,136 @@
+/* ─── Index ページ専用スタイル ─────────────────────────────────────────── */
+
+/* ページ全体（グリッドレイアウト） */
+.visualization-page {
+    display: grid;
+    grid-template-columns: 280px 1fr;
+    grid-template-rows: auto 1fr;
+    height: 100vh;
+    gap: 10px;
+    padding: 10px;
+    background: var(--bg-main);
+    color: var(--text-primary);
+}
+
+/* ヘッダー（背景なし、直接載せる） */
+.visualization-page .header {
+    grid-column: 1 / -1;
+    padding: 12px 8px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    position: relative;
+}
+
+/* 左グループ（将来の拡張用） */
+.header__left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+    position: relative;
+    z-index: 1;
+}
+
+/* ページタイトル */
+.header__title {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    margin: 0;
+    font-size: 2.25rem;
+    font-weight: 400;
+    color: var(--text-primary);
+    white-space: nowrap;
+    pointer-events: none;
+}
+
+/* PC: タイトルを右側エリアの中央に配置 */
+@media (min-width: 1280px) {
+    .header__title {
+        left: calc(280px + (100% - 280px) / 2);
+    }
+}
+
+/* 可視化エリア（メインエリア） */
+.visualization-area {
+    grid-column: 2;
+    grid-row: 2;
+    background-color: var(--bg-panel);
+    border-radius: 8px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    overflow-y: auto;
+    min-height: 0;
+    position: relative;
+}
+
+.visualization-content {
+    flex: 1;
+    display: flex;
+    align-items: stretch;
+    justify-content: stretch;
+    background-color: #1A1A1A;
+    border-radius: 8px;
+    overflow: hidden;
+    min-height: 300px;
+}
+
+/* タブレット/モバイル: カードパネルを上段に、メインエリアを下段にシフト */
+@media (max-width: 1279px) {
+    .visualization-page {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto auto 1fr;
+    }
+
+    .visualization-area {
+        grid-column: 1;
+        grid-row: 3;
+    }
+}
+
+/* タブレット (768px〜1279px) */
+@media (min-width: 768px) and (max-width: 1279px) {
+    .visualization-page {
+        height: auto;
+        min-height: 100vh;
+        overflow-y: visible;
+    }
+
+    .visualization-area {
+        overflow-y: visible;
+        height: auto;
+    }
+
+    .header {
+        padding: 0 0.5rem;
+        gap: 0.5rem;
+    }
+
+    .header__title {
+        font-size: 1.75rem;
+    }
+}
+
+/* スマホ (〜767px) */
+@media (max-width: 767px) {
+    .visualization-page {
+        height: auto;
+        min-height: 100vh;
+    }
+
+    .visualization-area {
+        min-height: 600px;
+    }
+
+    .visualization-content {
+        min-height: 400px;
+    }
+
+    .header__title {
+        font-size: 1.2rem;
+    }
+}

@@ -5,149 +5,207 @@
 @using SortAlgorithm.VisualizationWeb.Components
 @inject SortExecutor Executor
 @inject AlgorithmRegistry AlgorithmRegistry
+@inject NavigationManager Navigation
 @implements IDisposable
 
-<PageTitle>Tutorial - Sort Algorithm</PageTitle>
+<PageTitle>Tutorial | Sorting Playground</PageTitle>
 
-<div class="tutorial-page" @onkeydown="OnKeyDown" @onkeydown:preventDefault tabindex="0" @ref="_containerRef">
+<div class="tutorial-page" @onkeydown="OnKeyDown" tabindex="0" @ref="_containerRef">
 
-    @* ─── ヘッダー ─────────────────────────────────────────────────────── *@
-    <div class="tutorial-header">
-        <a href="/" class="tutorial-back-link">← Back</a>
-        <h1 class="tutorial-title">🎓 Tutorial</h1>
-        <div class="tutorial-algo-selector">
-            <select @onchange="OnAlgorithmChanged" class="algo-select">
-                <option value="">Select Algorithm</option>
-                @foreach (var category in GetTutorialCategories())
-                {
-                    <optgroup label="@category">
-                        @foreach (var algo in GetAlgorithmsByCategory(category))
-                        {
-                            <option value="@algo.Name"
-                                    selected="@(_selectedAlgorithm?.Name == algo.Name)">
-                                @algo.Name
-                            </option>
-                        }
-                    </optgroup>
-                }
-            </select>
+<div class="header">
+        <div class="tutorial-header__left">
+            <button class="tutorial-back-btn" @onclick="NavigateToHome" title="Back to Home">
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <path d="M15.41 7.41L14 6l-6 6 6 6 1.41-1.41L10.83 12z" />
+                </svg>
+            </button>
+        </div>
+        <h1 class="tutorial-title">Tutorial</h1>
+        <div class="header__actions">
         </div>
     </div>
 
-    @* ─── コンテンツエリア ──────────────────────────────────────────────── *@
-    @if (_isLoading)
-    {
-        <div class="tutorial-loading">
-            <span class="loading-spinner">⏳</span> Computing...
-        </div>
-    }
-    else if (_selectedAlgorithm == null)
-    {
-        <div class="tutorial-empty">
-            <div class="empty-icon">🎓</div>
-            <div class="empty-text">Select an algorithm from the dropdown above.</div>
-        <div class="empty-hint">Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.</div>
-        </div>
-    }
-    else
-    {
-        @* ─── アルゴリズム説明パネル ──────────────────────────────────────── *@
-        <div class="tutorial-description-panel">
-            <div class="desc-name">@_selectedAlgorithm.Name</div>
-            <div class="desc-meta">
-                <span class="desc-badge">Time Complexity: @_selectedAlgorithm.TimeComplexity</span>
-                <span class="desc-badge">Category: @_selectedAlgorithm.Category</span>
-            </div>
-            @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
-            {
-                <div class="desc-body">@RenderDescription(_selectedAlgorithm.TutorialDescription)</div>
-            }
-        </div>
 
-        @if (_steps.Count == 0)
-        {
-            <div class="tutorial-empty">
-                <div class="empty-text">No recorded operations for this algorithm.</div>
-            </div>
-        }
-        else
-        {
-            @* ─── ナラティブパネル ────────────────────────────────────────── *@
-            <div class="tutorial-narrative-panel">
-                <div class="narrative-badge">
-                    @if (_currentStepIndex < 0)
-                    {
-                        <span>Initial State</span>
-                    }
-                    else
-                    {
-                        <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
-                    }
+    @* ─── カードパネル（PC: 左サイドバー / タブレット+スマホ: 再生コントロールバー上段） ─── *@
+    <div class="tutorial-cards-panel">
+        <fieldset class="controls-fieldset" disabled="@_isLoading">
+
+            @* ── Sort Target ── *@
+            <div class="ui-card">
+                <span class="ui-card__title">Sort Target</span>
+                <div class="qap__item">
+                    <span class="stat-label">Algorithm</span>
+                    <select value="@(_selectedAlgorithm?.Name ?? "")"
+                            @onchange="OnAlgorithmChanged">
+                        @foreach (var category in GetTutorialCategories())
+                        {
+                            <optgroup label="@category">
+                                @foreach (var algo in GetAlgorithmsByCategory(category))
+                                {
+                                    <option value="@algo.Name">@algo.Name</option>
+                                }
+                            </optgroup>
+                        }
+                    </select>
                 </div>
-                <div class="narrative-text">@GetCurrentNarrative()</div>
             </div>
 
-            @* ─── マーブルエリア ──────────────────────────────────────────── *@
-            <div class="tutorial-marble-area">
-                <MarbleRenderer
-                    Values="@GetCurrentMainArray()"
-                    HighlightIndices="@GetCurrentHighlightIndices()"
-                    HighlightType="@GetCurrentHighlightType()"
-                    Label="Main Array" />
-
-                @foreach (var bufferId in GetCurrentBufferIds())
-                {
-                    <MarbleRenderer
-                        Values="@GetCurrentBufferArray(bufferId)"
-                        HighlightIndices="@GetCurrentBufferHighlightIndices(bufferId)"
-                        HighlightType="@GetCurrentHighlightType()"
-                        Label="@($"Buffer {bufferId}")"
-                        IsBuffer="true" />
-                }
-            </div>
-
-            @* ─── コントロール ────────────────────────────────────────────── *@
-            <div class="tutorial-controls">
-                <div class="ctrl-step-counter">
-                    @if (_currentStepIndex < 0)
-                    {
-                        <span>Initial State</span>
-                    }
-                    else
-                    {
-                        <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
-                    }
-                </div>
-                <div class="ctrl-buttons">
-                    <button class="ctrl-btn" title="First (Home)"
-                            @onclick="GoToFirst" disabled="@(_currentStepIndex <= -1)">◀◀</button>
-                    <button class="ctrl-btn" title="Previous (←)"
-                            @onclick="GoToPrevious" disabled="@(_currentStepIndex <= -1)">◀</button>
-                    <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")"
-                            @onclick="ToggleAutoPlay">
-                        @(_isAutoPlaying ? "⏸" : "▶")
-                    </button>
-                    <button class="ctrl-btn" title="Next (→)"
-                            @onclick="GoToNext" disabled="@(_currentStepIndex >= _steps.Count - 1)">▶</button>
-                    <button class="ctrl-btn" title="Last (End)"
-                            @onclick="GoToLast" disabled="@(_currentStepIndex >= _steps.Count - 1)">▶▶</button>
-                </div>
-                <div class="ctrl-speed">
-                    <label>Speed:</label>
+            @* ── Speed ── *@
+            <div class="ui-card">
+                <span class="ui-card__title">Speed</span>
+                <div class="qap__item qap__item--vertical">
+                    <div class="qap__slider-header">
+                        <span class="stat-label">Interval</span>
+                        <span class="stat-value qap__slider-value">@_autoPlaySpeedMs ms</span>
+                    </div>
                     <input type="range" min="200" max="2000" step="100"
                            value="@_autoPlaySpeedMs"
                            @oninput="OnSpeedChanged"
                            @onkeydown:stopPropagation />
-                    <span class="speed-label">@_autoPlaySpeedMs ms</span>
                 </div>
             </div>
 
-            <div class="ctrl-keyboard-hint">
-                Keyboard: ← → to step / Space to play/pause / Home·End for first·last
+        </fieldset>
+    </div>
+
+    @* ─── メインエリア ────────────────────────────────────────────────────── *@
+    <div class="tutorial-main-area">
+        @{
+            bool noSteps = _selectedAlgorithm == null || _steps.Count == 0;
+        }
+
+        @* ─── 再生コントロールバー ──────────────────────────────────────── *@
+        <div class="tutorial-play-control-bar">
+            <div class="ctrl-buttons">
+                <button class="ctrl-btn" title="First (Home)" @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <rect x="4" y="4" width="2" height="16" rx="1"></rect>
+                        <polygon points="19 4 7 12 19 20 19 4"></polygon>
+                    </svg>
+                </button>
+                <button class="ctrl-btn" title="Previous (←)" @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="19 4 5 12 19 20 19 4"></polygon>
+                    </svg>
+                </button>
+                <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")" @onclick="ToggleAutoPlay" disabled="@noSteps">
+                    @if (_isAutoPlaying)
+                    {
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <rect x="6" y="4" width="4" height="16"></rect>
+                            <rect x="14" y="4" width="4" height="16"></rect>
+                        </svg>
+                    }
+                    else
+                    {
+                        <svg viewBox="0 0 24 24" fill="currentColor">
+                            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                        </svg>
+                    }
+                </button>
+                <button class="ctrl-btn" title="Next (→)" @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 4 19 12 5 20 5 4"></polygon>
+                    </svg>
+                </button>
+                <button class="ctrl-btn" title="Last (End)" @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">
+                    <svg viewBox="0 0 24 24" fill="currentColor">
+                        <polygon points="5 4 17 12 5 20 5 4"></polygon>
+                        <rect x="18" y="4" width="2" height="16" rx="1"></rect>
+                    </svg>
+                </button>
+            </div>
+            <span class="tutorial-keyboard-hint">← → Space · Home · End</span>
+        </div>
+
+
+
+        @* ─── コンテンツ ──────────────────────────────────────────────────────── *@
+        @if (_isLoading)
+        {
+            <div class="tutorial-loading">
+                <span class="loading-spinner">⏳</span> Computing...
             </div>
         }
-    }
+        else if (_selectedAlgorithm == null)
+        {
+            <div class="tutorial-empty">
+                <div class="empty-icon">🎓</div>
+                <div class="empty-text">Select an algorithm from the panel on the left.</div>
+                <div class="empty-hint">Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.</div>
+            </div>
+        }
+        else
+        {
+            @* ─── アルゴリズム説明パネル（モバイルで折りたたみ可能） ──────────────── *@
+            <div class="tutorial-description-panel">
+                <div class="tdp-header">
+                    <div class="tdp-header__left">
+                        <div class="desc-name">@_selectedAlgorithm.Name</div>
+                        <a href="@GetTryThisAlgorithmUrl()" class="tutorial-try-btn">▶ Try this</a>
+                    </div>
+                    <div class="tdp-header__right">
+                        <div class="desc-meta">
+                            <span class="desc-badge">@_selectedAlgorithm.TimeComplexity</span>
+                            <span class="desc-badge">@_selectedAlgorithm.Category</span>
+                        </div>
+                        <button class="tdp-toggle" @onclick="() => _descExpanded = !_descExpanded" title="@(_descExpanded ? "Collapse" : "Expand")">
+                            @(_descExpanded ? "▲" : "▼")
+                        </button>
+                    </div>
+                </div>
+                @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
+                {
+                    <div class="tdp-body @(_descExpanded ? "" : "tdp-body--hidden")">
+                        <div class="desc-body">@RenderDescription(_selectedAlgorithm.TutorialDescription)</div>
+                    </div>
+                }
+            </div>
+
+            @if (_steps.Count == 0)
+            {
+                <div class="tutorial-empty">
+                    <div class="empty-text">No recorded operations for this algorithm.</div>
+                </div>
+            }
+            else
+            {
+                @* ─── ナラティブパネル ────────────────────────────────────────── *@
+                <div class="tutorial-narrative-panel">
+                    <div class="narrative-badge">
+                        @if (_currentStepIndex < 0)
+                        {
+                            <span>Initial State</span>
+                        }
+                        else
+                        {
+                            <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
+                        }
+                    </div>
+                    <div class="narrative-text">@GetCurrentNarrative()</div>
+                </div>
+
+                @* ─── マーブルエリア ──────────────────────────────────────────── *@
+                <div class="tutorial-marble-area">
+                    <MarbleRenderer Values="@GetCurrentMainArray()"
+                                    HighlightIndices="@GetCurrentHighlightIndices()"
+                                    HighlightType="@GetCurrentHighlightType()"
+                                    Label="Main Array" />
+
+                    @foreach (var bufferId in GetCurrentBufferIds())
+                    {
+                        <MarbleRenderer Values="@GetCurrentBufferArray(bufferId)"
+                                        HighlightIndices="@GetCurrentBufferHighlightIndices(bufferId)"
+                                        HighlightType="@GetCurrentHighlightType()"
+                                        Label="@($"Buffer {bufferId}")"
+                                        IsBuffer="true" />
+                    }
+                </div>
+            }
+        }
+    </div>
 </div>
+
 
 @code {
     [Parameter] public string? AlgorithmName { get; set; }
@@ -163,9 +221,17 @@
     private bool _isLoading;
     private bool _isAutoPlaying;
     private int _autoPlaySpeedMs = 800;
+    private bool _descExpanded = false;
 
     private CancellationTokenSource? _autoPlayCts;
     private ElementReference _containerRef;
+
+    // ─── ナビゲーション ────────────────────────────────────────────────────
+
+    private void NavigateToHome()
+    {
+        Navigation.NavigateTo("/");
+    }
 
     // ─── ライフサイクル ────────────────────────────────────────────────────
 
@@ -393,16 +459,29 @@
             .Where(a => !a.ExcludeFromTutorial);
 
     private IEnumerable<string> GetTutorialCategories()
-        => GetTutorialAlgorithms()
+    {
+        var algorithms = GetTutorialAlgorithms();
+        var categoryOrder = algorithms
+            .Select((a, i) => new { a.Category, i })
+            .GroupBy(x => x.Category)
+            .ToDictionary(g => g.Key, g => g.Min(x => x.i));
+
+        return algorithms
             .Select(a => a.Category)
             .Distinct()
-            .OrderBy(c => c);
+            .OrderBy(c => categoryOrder[c]);
+    }
 
     private IEnumerable<AlgorithmMetadata> GetAlgorithmsByCategory(string category)
         => GetTutorialAlgorithms()
             .Where(a => a.Category == category);
 
     // ─── 説明テキストのフォーマット ────────────────────────────────────────
+
+    private string GetTryThisAlgorithmUrl()
+        => _selectedAlgorithm != null
+            ? $"/?algo={Uri.EscapeDataString(_selectedAlgorithm.Name)}"
+            : "/";
 
     private static MarkupString RenderDescription(string? text)
     {

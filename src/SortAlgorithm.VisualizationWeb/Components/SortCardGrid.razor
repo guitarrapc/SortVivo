@@ -1,0 +1,133 @@
+@using SortAlgorithm.VisualizationWeb.Models
+@using SortAlgorithm.VisualizationWeb.Services
+@inject IJSRuntime JS
+@implements IAsyncDisposable
+
+<div class="sort-card-grid-wrapper">
+    <div class="sort-card-grid"
+         id="@_gridId"
+         style="grid-template-columns: repeat(@GetGridColumns(), 1fr);">
+        @for (int i = 0; i < Instances.Count; i++)
+        {
+            var instance = Instances[i];
+            var index = i;
+
+            <SortCard
+                State="@instance.State"
+                AlgorithmName="@instance.AlgorithmName"
+                Complexity="@instance.Metadata.TimeComplexity"
+                VisualizationMode="@VisualizationMode"
+                GridColumnCount="@GetGridColumns()"
+                CardSize="@GetCardSize()"
+                ShowRemoveButton="true"
+                Playback="@instance.Playback"
+                ExcludeAlgorithmNames="@GetOtherAlgorithmNames(index)"
+                OnRemove="@(() => OnRemoveInstance(index))"
+                OnAlgorithmSelected="@(algoName => OnReplaceAlgorithm.InvokeAsync((index, algoName)))"
+                OnVisualizationClick="@OnVisualizationClick"
+                @key="instance.AlgorithmName" />
+        }
+    </div>
+
+    @* ドットインジケーター（スマホのカルーセルモード時のみ CSS で表示） *@
+    @if (Instances.Count > 1)
+    {
+        <div class="carousel-dots">
+            @for (int i = 0; i < Instances.Count; i++)
+            {
+                var dotIndex = i;
+                <button class="carousel-dot @(dotIndex == _activeCarouselIndex ? "carousel-dot--active" : "")"
+                        @onclick="() => ScrollToCard(dotIndex)"
+                        title="@Instances[dotIndex].AlgorithmName"
+                        aria-label="Go to @Instances[dotIndex].AlgorithmName"></button>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter, EditorRequired]
+    public List<ComparisonInstance> Instances { get; set; } = null!;
+
+    [Parameter]
+    public VisualizationMode VisualizationMode { get; set; } = VisualizationMode.BarChart;
+
+    [Parameter]
+    public EventCallback<int> OnRemove { get; set; }
+
+    [Parameter]
+    public EventCallback<(int index, string algoName)> OnReplaceAlgorithm { get; set; }
+
+    [Parameter]
+    public EventCallback OnVisualizationClick { get; set; }
+
+    private string _gridId = $"sort-card-grid-{Guid.NewGuid():N}";
+    private DotNetObjectReference<SortCardGrid>? _dotNetRef;
+    private int _activeCarouselIndex = 0;
+    private int _lastSetupCount = 0;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        // インスタンス数が変わった時 (= カードが追加/削除された時) に JS を再セットアップ
+        if (firstRender || _lastSetupCount != Instances.Count)
+        {
+            _dotNetRef ??= DotNetObjectReference.Create(this);
+            await JS.InvokeVoidAsync("carouselInterop.setup", _gridId, _dotNetRef);
+            _lastSetupCount = Instances.Count;
+        }
+    }
+
+    [JSInvokable]
+    public void SetActiveCarouselIndex(int index)
+    {
+        if (_activeCarouselIndex != index)
+        {
+            _activeCarouselIndex = index;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task ScrollToCard(int index)
+    {
+        _activeCarouselIndex = index;
+        await JS.InvokeVoidAsync("carouselInterop.scrollTo", _gridId, index);
+    }
+
+    private int GetGridColumns() => Instances.Count switch
+    {
+        1 => 1,
+        2 => 2,
+        3 => 2,
+        4 => 2,
+        5 => 3,
+        6 => 3,
+        _ => 1,
+    };
+
+    private StatsCardSize GetCardSize() => Instances.Count switch
+    {
+        1 => StatsCardSize.Full,
+        2 or 3 => StatsCardSize.Medium,
+        _ => StatsCardSize.Small,
+    };
+
+    private async Task OnRemoveInstance(int index)
+    {
+        if (OnRemove.HasDelegate)
+            await OnRemove.InvokeAsync(index);
+    }
+
+    /// <summary>指定インデックス以外のカードで使用中のアルゴリズム名リストを返す。</summary>
+    private IReadOnlyList<string> GetOtherAlgorithmNames(int currentIndex) =>
+        Instances
+            .Select((inst, i) => (inst, i))
+            .Where(x => x.i != currentIndex)
+            .Select(x => x.inst.AlgorithmName)
+            .ToList();
+
+    public async ValueTask DisposeAsync()
+    {
+        await JS.InvokeVoidAsync("carouselInterop.dispose", _gridId);
+        _dotNetRef?.Dispose();
+    }
+}

@@ -99,7 +99,14 @@ public class PlaybackService : IDisposable
         Stop();
         _operations = operations;
         _currentArraySize = initialArray.Length;
-        
+
+        // プールされた配列が不足している場合は返却して再レンタル
+        if (_currentArraySize > _pooledArray.Length)
+        {
+            ArrayPool<int>.Shared.Return(_pooledArray, clearArray: true);
+            _pooledArray = ArrayPool<int>.Shared.Rent(_currentArraySize);
+        }
+
         // プールされた配列の必要な部分だけを使用
         initialArray.CopyTo(_pooledArray.AsSpan(0, _currentArraySize));
         _initialArray = _pooledArray.AsSpan(0, _currentArraySize).ToArray(); // 初期状態のコピーを保持

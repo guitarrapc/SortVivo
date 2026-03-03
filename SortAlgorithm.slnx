@@ -15,11 +15,15 @@
     <File Path="Docs/VisualizationWeb_ComparisonMode_Performance.md" />
     <File Path="Docs/VisualizationWeb_ExecutionTimeVisualization.md" />
     <File Path="Docs/VisualizationWeb_Implementation_Status.md" />
+    <File Path="Docs/VisualizationWeb_LoadingState_Spec.md" />
     <File Path="Docs/VisualizationWeb_PerformanceAccuracy.md" />
     <File Path="Docs/VisualizationWeb_Performance_Analysis.md" />
+    <File Path="Docs/VisualizationWeb_PictureRow_Bug_Analysis.md" />
     <File Path="Docs/VisualizationWeb_Rendering_Performance_Improvement.md" />
     <File Path="Docs/VisualizationWeb_Sound_Spec.md" />
     <File Path="Docs/VisualizationWeb_tutorial.md" />
+    <File Path="Docs/VisualizationWeb_tutorial_phase_role_design.md" />
+    <File Path="Docs/VisualizationWeb_UIUX_Spec.md" />
   </Folder>
   <Folder Name="/sandbox/">
     <Project Path="sandbox/AntiQuickSortDemo/AntiQuickSortDemo.csproj" />
