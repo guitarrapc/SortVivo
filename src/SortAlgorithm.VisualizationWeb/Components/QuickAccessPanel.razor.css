@@ -135,6 +135,13 @@
     gap: 8px;
 }
 
+.algorithm-description-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 8px;
+}
+
 .algorithm-description-card__label {
     font-size: 0.68rem;
     font-weight: 700;
@@ -159,6 +166,30 @@
     margin: 0;
 }
 
+/* トグルボタン: PC では非表示、タブレット・スマホで表示 */
+.algorithm-description-card__toggle {
+    display: none;
+    background: rgba(142, 192, 124, 0.15);
+    border: 1px solid rgba(142, 192, 124, 0.3);
+    border-radius: 4px;
+    color: var(--color-tutorial-accent);
+    font-size: 0.7rem;
+    padding: 3px 7px;
+    cursor: pointer;
+    flex-shrink: 0;
+    transition: background 0.15s;
+}
+
+    .algorithm-description-card__toggle:hover {
+        background: rgba(142, 192, 124, 0.25);
+        border-color: var(--color-tutorial-accent);
+    }
+
+/* 折りたたみ時にボディを隠す */
+.algorithm-description-card__body--hidden {
+    display: none;
+}
+
 /* ─── タブレット/モバイル ─────────────────────────────────────────────── */
 @media (min-width: 768px) and (max-width: 1279px) {
     /* QuickAccessPanel は上段に配置 */
@@ -174,6 +205,20 @@
     .qap__content {
         gap: 8px;
     }
+
+    /* タブレット: トグルボタンを表示 */
+    .algorithm-description-card__toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+}
+
+/* PC: 折りたたみ状態に関わらずボディを常時表示 */
+@media (min-width: 1280px) {
+    .algorithm-description-card__body--hidden {
+        display: block;
+    }
 }
 
 @media (max-width: 767px) {
@@ -185,5 +230,12 @@
 
     .qap__content {
         gap: 0;
+    }
+
+    /* スマホ: トグルボタンを表示 */
+    .algorithm-description-card__toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
     }
 }

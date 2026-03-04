@@ -14,9 +14,18 @@
         @if (!string.IsNullOrEmpty(howItWorks))
         {
             <div class="algorithm-description-card">
-                <span class="algorithm-description-card__label">CURRENT ALGORITHM</span>
-                <h2 class="algorithm-description-card__title">@SelectedAlgorithm</h2>
-                <p class="algorithm-description-card__text">@howItWorks</p>
+                <div class="algorithm-description-card__header">
+                    <div>
+                        <span class="algorithm-description-card__label">CURRENT ALGORITHM</span>
+                        <h2 class="algorithm-description-card__title">@SelectedAlgorithm</h2>
+                    </div>
+                    <button class="algorithm-description-card__toggle" @onclick="() => _descriptionCollapsed = !_descriptionCollapsed" title="@(_descriptionCollapsed ? "Expand" : "Collapse")">
+                        @(_descriptionCollapsed ? "▼" : "▲")
+                    </button>
+                </div>
+                <div class="algorithm-description-card__body @(_descriptionCollapsed ? "algorithm-description-card__body--hidden" : "")">
+                    <p class="algorithm-description-card__text">@howItWorks</p>
+                </div>
             </div>
         }
 
@@ -232,6 +241,7 @@
     private int EffectiveFPS => (int)(60 * Playback.SpeedMultiplier);
 
     // ── カード折りたたみ状態（タブレット・スマホのみ有効） ────────────────────
+    private bool _descriptionCollapsed = false;
     private bool _sortSetupCollapsed = false;
     private bool _appearanceCollapsed = true;
     private bool _speedCollapsed = true;
