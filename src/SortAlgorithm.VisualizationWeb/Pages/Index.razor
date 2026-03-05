@@ -11,6 +11,7 @@
 @inject DebugSettings DebugSettings
 @inject RenderSettings RenderSettings
 @inject NavigationManager NavigationManager
+@inject NavigationStateService NavigationState
 @inject IJSRuntime JS
 @implements IDisposable
 
@@ -293,6 +294,7 @@ private VisualizationMode SelectedVisualizationMode
         var cards = ComparisonMode.State.Instances.Select(i => i.AlgorithmName).ToList();
         if (cards.Count > 0)
             url += $"&cards={Uri.EscapeDataString(string.Join("|", cards))}";
+        NavigationState.LastIndexUrl = url;
         NavigationManager.NavigateTo(url, replace: true);
     }
 

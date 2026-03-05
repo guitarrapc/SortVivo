@@ -6,6 +6,8 @@
 @inject SortExecutor Executor
 @inject AlgorithmRegistry AlgorithmRegistry
 @inject NavigationManager Navigation
+@inject NavigationStateService NavigationState
+@inject IJSRuntime JS
 @implements IDisposable
 
 <PageTitle>Tutorial | Sorting Playground</PageTitle>
@@ -228,9 +230,9 @@
 
     // ─── ナビゲーション ────────────────────────────────────────────────────
 
-    private void NavigateToHome()
+    private async Task NavigateToHome()
     {
-        Navigation.NavigateTo("/");
+        await JS.InvokeVoidAsync("history.back");
     }
 
     // ─── ライフサイクル ────────────────────────────────────────────────────
@@ -480,7 +482,7 @@
 
     private string GetTryThisAlgorithmUrl()
         => _selectedAlgorithm != null
-            ? $"/?algo={Uri.EscapeDataString(_selectedAlgorithm.Name)}"
+            ? NavigationState.BuildIndexUrlWithAlgorithm(_selectedAlgorithm.Name)
             : "/";
 
     private static MarkupString RenderDescription(string? text)
