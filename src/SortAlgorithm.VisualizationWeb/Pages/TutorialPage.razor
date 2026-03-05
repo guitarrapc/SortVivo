@@ -193,6 +193,7 @@
                     <MarbleRenderer Values="@GetCurrentMainArray()"
                                     HighlightIndices="@GetCurrentHighlightIndices()"
                                     HighlightType="@GetCurrentHighlightType()"
+                                    MaxValue="@_maxValue"
                                     Label="Main Array" />
 
                     @foreach (var bufferId in GetCurrentBufferIds())
@@ -200,6 +201,7 @@
                         <MarbleRenderer Values="@GetCurrentBufferArray(bufferId)"
                                         HighlightIndices="@GetCurrentBufferHighlightIndices(bufferId)"
                                         HighlightType="@GetCurrentHighlightType()"
+                                        MaxValue="@_maxValue"
                                         Label="@($"Buffer {bufferId}")"
                                         IsBuffer="true" />
                     }
@@ -226,6 +228,7 @@
     private int _autoPlaySpeedMs = 800;
     private bool _descExpanded = false;
 
+    private int _maxValue = 9;
     private CancellationTokenSource? _autoPlayCts;
     private ElementReference _containerRef;
 
@@ -288,6 +291,7 @@
         try
         {
             var tutorialArray = GetTutorialArrayFor(algo);
+            _maxValue = tutorialArray.Length > 0 ? tutorialArray.Max() : 9;
             var (operations, _, _) = await Executor.ExecuteAndRecordAsync(tutorialArray, algo);
             _steps = TutorialStepBuilder.Build(tutorialArray, operations);
         }
