@@ -50,6 +50,8 @@
     --color-tutorial-bg-end: rgba(104, 157, 106, 0.15);
     --color-tutorial-accent: #8ec07c;
     --color-tutorial-text: #bdae93;
+    /* レイアウト */
+    --page-max-width: 1920px;
     /* 廃止される旧カラー変数（後方互換性のため一時的に保持） */
     --bg-dark: var(--bg-main);
     --text-light: var(--text-primary);

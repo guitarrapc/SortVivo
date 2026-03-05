@@ -9,6 +9,9 @@
     background: var(--bg-main);
     color: var(--text-primary);
     outline: none;
+    width: 100%;
+    max-width: var(--page-max-width);
+    margin: 0 auto;
 }
 
     /* ─── ヘッダー（背景なし、直接載せる） ────────────────────────────────── */

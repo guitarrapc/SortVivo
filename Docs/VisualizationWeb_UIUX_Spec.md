@@ -710,6 +710,22 @@ Inter は Google Fonts から読み込む（`wght@300;400;500;600;700`、`displa
 @media (min-width: 1280px) { /* PC */ }
 ```
 
+**最大幅制限:** ページコンテナ（`.visualization-page`, `.tutorial-page`）に以下の 3 プロパティをセットで指定する。
+
+```css
+width: 100%;
+max-width: var(--page-max-width); /* 1920px */
+margin: 0 auto;
+```
+
+| プロパティ | 役割 |
+|---|---|
+| `width: 100%` | 親（`#app`: `display:flex; flex-direction:column`）の幅いっぱいに伸ばす。`margin: auto` を設定すると flex の `align-self: stretch` が無効になりコンテンツ幅まで縮むため、明示的に指定が必要。 |
+| `max-width: 1920px` | FHD（1920px）まではフル幅を維持し、2K・4K など 1920px を超える画面でのみ幅を抑制する。 |
+| `margin: 0 auto` | `max-width` が効いた場合に左右の余白を均等にして中央寄せにする。 |
+
+CSS 変数 `--page-max-width: 1920px`（`app.css` の `:root`）で一元管理。値を変更すればメインページ・チュートリアルページ両方に反映される。
+
 ### 14.4 Grid レイアウト
 
 ```css
