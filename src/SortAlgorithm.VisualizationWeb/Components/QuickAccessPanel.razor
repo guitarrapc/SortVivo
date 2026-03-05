@@ -236,7 +236,7 @@
     [Parameter] public bool AutoSwitchToRecommendedSize { get; set; }
     [Parameter] public EventCallback<bool> AutoSwitchToRecommendedSizeChanged { get; set; }
 
-    private static readonly int[] AvailableSizes = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096];
+    private static readonly int[] AvailableSizes = [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192];
 
     private int EffectiveFPS => (int)(60 * Playback.SpeedMultiplier);
 

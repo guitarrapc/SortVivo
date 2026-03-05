@@ -247,7 +247,7 @@ void main() { outColor = vec4(v_rgb, 1.0); }`;
   ]), gl.STATIC_DRAW);
 
   // Instance VBO: 動的 (バーごとのデータ)
-  const INIT_CAP = 4096 * INST_STRIDE;
+  const INIT_CAP = 8192 * INST_STRIDE;
   instanceData = new Float32Array(INIT_CAP);
   instanceVBOCap = INIT_CAP;
   instanceVBO = gl.createBuffer();

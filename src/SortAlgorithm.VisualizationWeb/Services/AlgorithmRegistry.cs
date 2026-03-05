@@ -28,8 +28,8 @@ public class AlgorithmRegistry
     {
         // 最大サイズは全て16384、推奨サイズは計算量に応じて設定
         const int MAX_SIZE_N2 = 2048;
-        const int MAX_SIZE_NLOGN15 = 4096;
-        const int MAX_SIZE_NLOGN = 4096;
+        const int MAX_SIZE_NLOGN15 = 8192;
+        const int MAX_SIZE_NLOGN = 8192;
         const int MAX_SIZE_JOKE = 16;
         const int MAX_SIZE_JOKE_BOGO = 8;
 

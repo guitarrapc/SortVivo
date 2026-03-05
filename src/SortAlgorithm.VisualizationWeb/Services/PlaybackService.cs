@@ -33,7 +33,7 @@ public class PlaybackService : IDisposable
     // 累積統計（各操作インデックスでの統計値）
     private CumulativeStats[] _cumulativeStats = [];
 
-    private const int MAX_ARRAY_SIZE = 4096; // 最大配列サイズ
+    private const int MAX_ARRAY_SIZE = 8192; // 最大配列サイズ
 
     // 完了ハイライト用のタイマー
     private CancellationTokenSource? _completionHighlightCts;

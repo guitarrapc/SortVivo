@@ -288,7 +288,7 @@ void main() { outColor = vec4(v_rgb, 1.0); }`;
   const aPos = gl.getAttribLocation(program, 'a_pos');
   const aRGB = gl.getAttribLocation(program, 'a_rgb');
 
-  const INIT_CAP = 4096 * POINT_STRIDE;
+  const INIT_CAP = 8192 * POINT_STRIDE;
   pointData = new Float32Array(INIT_CAP);
   pointVBOCap = INIT_CAP;
   pointVBO = gl.createBuffer();
