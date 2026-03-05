@@ -67,7 +67,17 @@
                 string bgColor = isEmpty ? "transparent" : GetValueColor(value);
                 string outlineClass = highlighted ? $"marble-outline-{HighlightType.ToString().ToLowerInvariant()}" : "";
                 string marbleClass = $"marble {outlineClass}".Trim();
-                <div class="marble-slot">
+                bool isSwapTarget = HighlightType == OperationType.Swap
+                    && HighlightIndices.Length == 2 && highlighted;
+                string slotClass = isSwapTarget ? "marble-slot marble-swapping" : "marble-slot";
+                string slotStyle = "";
+                if (isSwapTarget)
+                {
+                    int otherIdx = HighlightIndices[0] == idx ? HighlightIndices[1] : HighlightIndices[0];
+                    slotStyle = $"--slide-offset: {otherIdx - idx}";
+                }
+                <div @key="@(isSwapTarget ? (object)$"s{StepIndex}-{idx}" : idx)"
+                     class="@slotClass" style="@slotStyle">
                     <div class="@marbleClass" style="background: @bgColor;">
                         @(isEmpty ? "" : value.ToString())
                     </div>
@@ -99,6 +109,9 @@
 
     /// <summary>Compare 操作の比較結果（正: Index1 > Index2、負: Index1 &lt; Index2、null: Compare 以外）</summary>
     [Parameter] public int? CompareResult { get; set; }
+
+    /// <summary>現在のステップインデックス（Swap アニメーション再トリガー用）</summary>
+    [Parameter] public int StepIndex { get; set; } = -1;
 
     private readonly string _arrowMarkerId = $"ah-{Guid.NewGuid().ToString("N")[..8]}";
 
