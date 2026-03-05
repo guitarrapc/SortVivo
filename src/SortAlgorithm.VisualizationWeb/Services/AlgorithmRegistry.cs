@@ -282,6 +282,17 @@ public class AlgorithmRegistry
                 - Swap: rotation swaps fire only inside MergeInPlace when a block of right-run elements must be moved left past a block of left-run elements
                 - End of pass: watch the merge width double each pass — 16 → 32 → 64 → … — until a single pass covers the whole array
                 """);
+        Add("SymMerge sort", "Merge Sorts", "O(n log² n)", MAX_SIZE_NLOGN, 1024, (arr, ctx) => SymMergeSort.Sort(arr, ctx),
+            tutorialDescription: """
+                How it works: Bottom-up in-place stable sort that replaces Rotate merge sort's repeated small rotations with SymMerge: one symmetric binary search finds the optimal split point, one rotation bridges the two runs, and two recursive calls finish each half.
+
+                Key property: The symmetric binary search costs only O(log n) comparisons per recursive call, and by the recurrence T(n) = 2T(n/2) + O(log n) each merge requires only O(n) total comparisons — reducing the overall sort from O(n log² n) to O(n log n) comparisons, while element moves remain O(n log² n).
+
+                Watch for:
+                - Compare: the binary search tests s[p−c] ≥ s[c] at the symmetric mirror position; the split found is optimal, so exactly one rotation and no redundant scans are needed
+                - Swap: a single rotation — implemented via 3-reversal — moves all misplaced elements into position at once, rather than the many small rotations that Rotate merge sort performs
+                - End of merge: two recursive SymMerge calls handle the two resulting subproblems on each half of the range, halving the problem at each level until the base case is reached
+                """);
         Add("Timsort", "Merge Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => TimSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Scans the input for naturally ordered runs, uses Insertion sort to extend any run shorter than a minimum length (minrun), then merges runs from a stack using a strategy that keeps stack heights balanced.
