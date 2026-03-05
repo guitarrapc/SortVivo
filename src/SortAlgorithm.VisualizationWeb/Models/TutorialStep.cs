@@ -27,6 +27,12 @@ public record TutorialStep
     /// <summary>Compare 操作の比較結果（正: 左 > 右、負: 左 &lt; 右、0: 等しい、null: Compare 以外）</summary>
     public int? CompareResult { get; init; }
 
+    /// <summary>IndexWrite 操作の移動元インデックス（値が直前にあった位置、見つからない場合 -1、Write 以外は null）</summary>
+    public int? WriteSourceIndex { get; init; }
+
+    /// <summary>IndexWrite 操作で上書きされる前の値（Write 以外は null）</summary>
+    public int? WritePreviousValue { get; init; }
+
     /// <summary>この操作を日本語で説明するナラティブテキスト</summary>
     public string Narrative { get; init; } = string.Empty;
 }

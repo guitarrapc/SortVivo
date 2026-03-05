@@ -194,6 +194,8 @@
                                     HighlightIndices="@GetCurrentHighlightIndices()"
                                     HighlightType="@GetCurrentHighlightType()"
                                     CompareResult="@GetCurrentCompareResult()"
+                                    WriteSourceIndex="@GetCurrentWriteSourceIndex()"
+                                    WritePreviousValue="@GetCurrentWritePreviousValue()"
                                     MaxValue="@_maxValue"
                                     StepIndex="@_currentStepIndex"
                                     Label="Main Array" />
@@ -456,6 +458,12 @@
 
     private int? GetCurrentCompareResult()
         => _currentStepIndex < 0 ? null : _steps[_currentStepIndex].CompareResult;
+
+    private int? GetCurrentWriteSourceIndex()
+        => _currentStepIndex < 0 ? null : _steps[_currentStepIndex].WriteSourceIndex;
+
+    private int? GetCurrentWritePreviousValue()
+        => _currentStepIndex < 0 ? null : _steps[_currentStepIndex].WritePreviousValue;
 
     private string GetCurrentNarrative()
         => _currentStepIndex < 0

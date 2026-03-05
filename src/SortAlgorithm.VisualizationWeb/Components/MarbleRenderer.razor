@@ -56,6 +56,31 @@
                           font-weight="bold" fill="#A855F7" opacity="0.9">@symbol</text>
                 </svg>
             }
+            else if (HighlightType == OperationType.IndexWrite && HighlightIndices.Length == 1 && WriteSourceIndex.HasValue && WriteSourceIndex.Value >= 0)
+            {
+                var srcIdx = WriteSourceIndex.Value;
+                var dstIdx = HighlightIndices[0];
+                var unit = 100;
+                var viewW = Values.Length * unit;
+                var viewH = 48;
+                var srcX = srcIdx * unit + unit / 2;
+                var dstX = dstIdx * unit + unit / 2;
+                var midX = (srcX + dstX) / 2;
+                var startY = viewH - 2;
+                var ctrlY = 8;
+
+                <svg class="marble-write-arrow" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMid meet">
+                    <defs>
+                        <marker id="@_writeArrowMarkerId" markerWidth="10" markerHeight="7"
+                                refX="9" refY="3.5" orient="auto">
+                            <polygon points="0 0, 10 3.5, 0 7" fill="#F97316" />
+                        </marker>
+                    </defs>
+                    <path d="@($"M {srcX},{startY} Q {midX},{ctrlY} {dstX},{startY}")"
+                          stroke="#F97316" stroke-width="2.5" fill="none" stroke-linecap="round"
+                          marker-end="@($"url(#{_writeArrowMarkerId})")" opacity="0.85" />
+                </svg>
+            }
         </div>
         <div class="marble-row">
             @for (int i = 0; i < Values.Length; i++)
@@ -83,6 +108,10 @@
                     <div class="@marbleClass" style="background: @bgColor;">
                         @(isEmpty ? "" : value.ToString())
                     </div>
+                    @if (IsWriteTarget(idx))
+                    {
+                        <div class="marble-ghost">@WritePreviousValue → @value</div>
+                    }
                     <div class="marble-index">@idx</div>
                 </div>
             }
@@ -115,7 +144,14 @@
     /// <summary>現在のステップインデックス（Swap アニメーション再トリガー用）</summary>
     [Parameter] public int StepIndex { get; set; } = -1;
 
+    /// <summary>IndexWrite 操作の移動元インデックス（null: Write 以外）</summary>
+    [Parameter] public int? WriteSourceIndex { get; set; }
+
+    /// <summary>IndexWrite 操作で上書きされる前の値（null: Write 以外）</summary>
+    [Parameter] public int? WritePreviousValue { get; set; }
+
     private readonly string _arrowMarkerId = $"ah-{Guid.NewGuid().ToString("N")[..8]}";
+    private readonly string _writeArrowMarkerId = $"wh-{Guid.NewGuid().ToString("N")[..8]}";
 
     private HashSet<int> HighlightSet => [.. HighlightIndices];
 
@@ -126,6 +162,14 @@
         var b = HighlightIndices[1];
         return a < b ? (a, b) : (b, a);
     }
+
+    /// <summary>指定インデックスが Write 操作の書き込み先で、かつ値が変化したか</summary>
+    private bool IsWriteTarget(int idx)
+        => HighlightType == OperationType.IndexWrite
+        && HighlightIndices.Length == 1
+        && HighlightIndices[0] == idx
+        && WritePreviousValue.HasValue
+        && WritePreviousValue.Value != Values[idx];
 
     /// <summary>
     /// 値に応じたHSLカラーを計算する。

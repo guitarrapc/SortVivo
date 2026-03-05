@@ -10,6 +10,8 @@ public static class TutorialStepBuilder
 {
     /// <summary>
     /// Builds a list of TutorialSteps from the initial array and a list of operations.
+    /// Detects insertion patterns (Read + shift Writes + insert Write) and groups them
+    /// into a single logical step for clarity.
     /// </summary>
     public static List<TutorialStep> Build(int[] initialArray, List<SortOperation> operations)
     {
@@ -17,35 +19,131 @@ public static class TutorialStepBuilder
         var mainArray = (int[])initialArray.Clone();
         var bufferArrays = InitializeBufferArrays(initialArray.Length, operations);
 
-        for (int opIdx = 0; opIdx < operations.Count; opIdx++)
+        int opIdx = 0;
+        while (opIdx < operations.Count)
         {
-            var op = operations[opIdx];
+            int groupEnd = TryDetectInsertionGroup(operations, opIdx, mainArray);
 
-            // Generate narrative and highlights from values before applying the operation
-            var (highlights, bufferHighlights, highlightType, compareResult, narrative) =
-                GenerateStepInfo(op, mainArray, bufferArrays);
-
-            // Apply the operation to the array state
-            ApplyOperation(op, mainArray, bufferArrays);
-
-            // Save a snapshot after applying
-            var snapshot = (int[])mainArray.Clone();
-            var bufferSnapshots = bufferArrays.ToDictionary(kv => kv.Key, kv => (int[])kv.Value.Clone());
-
-            steps.Add(new TutorialStep
+            if (groupEnd > opIdx)
             {
-                OperationIndex = opIdx,
-                ArraySnapshot = snapshot,
-                BufferSnapshots = bufferSnapshots,
-                HighlightIndices = highlights,
-                BufferHighlightIndices = bufferHighlights,
-                HighlightType = highlightType,
-                CompareResult = compareResult,
-                Narrative = narrative
-            });
+                // Grouped insertion step: Read + shifts + insert → 1 logical step
+                steps.Add(BuildGroupedInsertionStep(operations, opIdx, groupEnd, mainArray, bufferArrays));
+                opIdx = groupEnd + 1;
+            }
+            else
+            {
+                // Individual step
+                var op = operations[opIdx];
+
+                var (highlights, bufferHighlights, highlightType, compareResult, writeSourceIndex, writePreviousValue, narrative) =
+                    GenerateStepInfo(op, mainArray, bufferArrays);
+
+                ApplyOperation(op, mainArray, bufferArrays);
+
+                steps.Add(new TutorialStep
+                {
+                    OperationIndex = opIdx,
+                    ArraySnapshot = (int[])mainArray.Clone(),
+                    BufferSnapshots = bufferArrays.ToDictionary(kv => kv.Key, kv => (int[])kv.Value.Clone()),
+                    HighlightIndices = highlights,
+                    BufferHighlightIndices = bufferHighlights,
+                    HighlightType = highlightType,
+                    CompareResult = compareResult,
+                    WriteSourceIndex = writeSourceIndex,
+                    WritePreviousValue = writePreviousValue,
+                    Narrative = narrative
+                });
+                opIdx++;
+            }
         }
 
         return steps;
+    }
+
+    // ─── Insertion group detection ──────────────────────────────────────────
+
+    /// <summary>
+    /// Detects an insertion group pattern starting at <paramref name="startIdx"/>:
+    /// IndexRead followed by Compare/IndexWrite operations, ending with an IndexWrite
+    /// that writes the same value as the initial Read to a different position.
+    /// Returns the last operation index of the group, or <paramref name="startIdx"/> if no group.
+    /// </summary>
+    private static int TryDetectInsertionGroup(List<SortOperation> operations, int startIdx, int[] mainArray)
+    {
+        var firstOp = operations[startIdx];
+
+        // Must start with IndexRead on main array
+        if (firstOp.Type != OperationType.IndexRead || firstOp.BufferId1 != 0
+            || firstOp.Index1 < 0 || firstOp.Index1 >= mainArray.Length)
+            return startIdx;
+
+        int readValue = mainArray[firstOp.Index1];
+
+        for (int i = startIdx + 1; i < operations.Count; i++)
+        {
+            var op = operations[i];
+
+            // Found the final insertion write?
+            if (op.Type == OperationType.IndexWrite && op.BufferId1 == 0
+                && op.Value == readValue && op.Index1 != firstOp.Index1)
+            {
+                // Need at least: Read + 1 intermediate + Insert = 3 operations
+                return i - startIdx >= 2 ? i : startIdx;
+            }
+
+            // Allow Compare and IndexWrite (shift) in between
+            if (op.Type is not (OperationType.Compare or OperationType.IndexWrite))
+                break;
+
+            // Only main array writes
+            if (op.Type == OperationType.IndexWrite && op.BufferId1 != 0)
+                break;
+        }
+
+        return startIdx;
+    }
+
+    /// <summary>
+    /// Builds a single TutorialStep for a grouped insertion operation.
+    /// Applies all operations in [startIdx..endIdx] to mainArray and creates a snapshot.
+    /// </summary>
+    private static TutorialStep BuildGroupedInsertionStep(
+        List<SortOperation> operations, int startIdx, int endIdx,
+        int[] mainArray, Dictionary<int, int[]> bufferArrays)
+    {
+        var readOp = operations[startIdx];
+        var insertOp = operations[endIdx];
+        int readValue = mainArray[readOp.Index1];
+        int sourceIndex = readOp.Index1;
+        int destIndex = insertOp.Index1;
+
+        // Count intermediate shift writes
+        int shiftCount = 0;
+        for (int i = startIdx + 1; i < endIdx; i++)
+        {
+            if (operations[i].Type == OperationType.IndexWrite)
+                shiftCount++;
+        }
+
+        string narrative = $"Insert value {readValue}: move from index {sourceIndex} to index {destIndex}";
+        if (shiftCount > 0)
+            narrative += $" (shifting {shiftCount} element{(shiftCount != 1 ? "s" : "")} right)";
+
+        // Apply all operations in the group to advance main state
+        for (int i = startIdx; i <= endIdx; i++)
+            ApplyOperation(operations[i], mainArray, bufferArrays);
+
+        return new TutorialStep
+        {
+            OperationIndex = endIdx,
+            ArraySnapshot = (int[])mainArray.Clone(),
+            BufferSnapshots = bufferArrays.ToDictionary(kv => kv.Key, kv => (int[])kv.Value.Clone()),
+            HighlightIndices = [destIndex],
+            BufferHighlightIndices = new Dictionary<int, int[]>(),
+            HighlightType = OperationType.IndexWrite,
+            WriteSourceIndex = sourceIndex,
+            Narrative = narrative
+        };
     }
 
     // ─── Buffer initialization ──────────────────────────────────────────────
@@ -81,19 +179,19 @@ public static class TutorialStepBuilder
 
     // ─── Step info generation ──────────────────────────────────────────────
 
-    private static (int[] highlights, Dictionary<int, int[]> bufferHighlights, OperationType type, int? compareResult, string narrative)
+    private static (int[] highlights, Dictionary<int, int[]> bufferHighlights, OperationType type, int? compareResult, int? writeSourceIndex, int? writePreviousValue, string narrative)
         GenerateStepInfo(SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
         => op.Type switch
         {
             OperationType.Compare   => BuildCompareInfo(op, mainArray, bufferArrays),
             OperationType.Swap      => BuildSwapInfo(op, mainArray, bufferArrays),
             OperationType.IndexRead => BuildIndexReadInfo(op, mainArray, bufferArrays),
-            OperationType.IndexWrite => BuildIndexWriteInfo(op),
+            OperationType.IndexWrite => BuildIndexWriteInfo(op, mainArray, bufferArrays),
             OperationType.RangeCopy => BuildRangeCopyInfo(op),
-            _ => ([], new Dictionary<int, int[]>(), OperationType.Compare, null, string.Empty)
+            _ => ([], new Dictionary<int, int[]>(), OperationType.Compare, null, null, null, string.Empty)
         };
 
-    private static (int[], Dictionary<int, int[]>, OperationType, int?, string) BuildCompareInfo(
+    private static (int[], Dictionary<int, int[]>, OperationType, int?, int?, int?, string) BuildCompareInfo(
         SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
     {
         int vi = GetValue(op.BufferId1, op.Index1, mainArray, bufferArrays);
@@ -117,10 +215,10 @@ public static class TutorialStepBuilder
         AddBufferHighlight(bufHighlights, op.BufferId1, op.Index1);
         AddBufferHighlight(bufHighlights, op.BufferId2, op.Index2);
 
-        return (highlights, bufHighlights, OperationType.Compare, op.CompareResult, narrative);
+        return (highlights, bufHighlights, OperationType.Compare, op.CompareResult, null, null, narrative);
     }
 
-    private static (int[], Dictionary<int, int[]>, OperationType, int?, string) BuildSwapInfo(
+    private static (int[], Dictionary<int, int[]>, OperationType, int?, int?, int?, string) BuildSwapInfo(
         SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
     {
         int vi = GetValue(op.BufferId1, op.Index1, mainArray, bufferArrays);
@@ -133,10 +231,10 @@ public static class TutorialStepBuilder
         if (op.BufferId1 != 0)
             bufHighlights[op.BufferId1] = [op.Index1, op.Index2];
 
-        return (highlights, bufHighlights, OperationType.Swap, null, narrative);
+        return (highlights, bufHighlights, OperationType.Swap, null, null, null, narrative);
     }
 
-    private static (int[], Dictionary<int, int[]>, OperationType, int?, string) BuildIndexReadInfo(
+    private static (int[], Dictionary<int, int[]>, OperationType, int?, int?, int?, string) BuildIndexReadInfo(
         SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
     {
         int v = GetValue(op.BufferId1, op.Index1, mainArray, bufferArrays);
@@ -148,24 +246,47 @@ public static class TutorialStepBuilder
         if (op.BufferId1 != 0)
             bufHighlights[op.BufferId1] = [op.Index1];
 
-        return (highlights, bufHighlights, OperationType.IndexRead, null, narrative);
+        return (highlights, bufHighlights, OperationType.IndexRead, null, null, null, narrative);
     }
 
-    private static (int[], Dictionary<int, int[]>, OperationType, int?, string) BuildIndexWriteInfo(SortOperation op)
+    private static (int[], Dictionary<int, int[]>, OperationType, int?, int?, int?, string) BuildIndexWriteInfo(
+        SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
     {
         string loc = FormatLocation(op.BufferId1, op.Index1);
         string valStr = op.Value.HasValue ? op.Value.Value.ToString() : "?";
-        string narrative = $"Write value {valStr} to {loc}";
+
+        // Compute previous value at write destination
+        int[] destArr = GetArray(op.BufferId1, mainArray, bufferArrays);
+        int? previousValue = op.Index1 >= 0 && op.Index1 < destArr.Length ? destArr[op.Index1] : null;
+
+        // Find source: where was the written value in the same array before this write?
+        int? sourceIndex = null;
+        if (op.Value.HasValue && op.BufferId1 == 0)
+        {
+            int writeVal = op.Value.Value;
+            for (int k = 0; k < mainArray.Length; k++)
+            {
+                if (k != op.Index1 && mainArray[k] == writeVal)
+                {
+                    sourceIndex = k;
+                    break;
+                }
+            }
+        }
+
+        string narrative = sourceIndex.HasValue
+            ? $"Write value {valStr} from index {sourceIndex.Value} to {loc}"
+            : $"Write value {valStr} to {loc}";
 
         int[] highlights = op.BufferId1 == 0 ? [op.Index1] : [];
         var bufHighlights = new Dictionary<int, int[]>();
         if (op.BufferId1 != 0)
             bufHighlights[op.BufferId1] = [op.Index1];
 
-        return (highlights, bufHighlights, OperationType.IndexWrite, null, narrative);
+        return (highlights, bufHighlights, OperationType.IndexWrite, null, sourceIndex, previousValue, narrative);
     }
 
-    private static (int[], Dictionary<int, int[]>, OperationType, int?, string) BuildRangeCopyInfo(SortOperation op)
+    private static (int[], Dictionary<int, int[]>, OperationType, int?, int?, int?, string) BuildRangeCopyInfo(SortOperation op)
     {
         string srcName = op.BufferId1 == 0 ? "main array" : $"buffer {op.BufferId1}";
         string dstName = op.BufferId2 == 0 ? "main array" : $"buffer {op.BufferId2}";
@@ -192,7 +313,7 @@ public static class TutorialStepBuilder
                 bufHighlights[op.BufferId2] = destRange;
         }
 
-        return (highlights, bufHighlights, OperationType.RangeCopy, null, narrative);
+        return (highlights, bufHighlights, OperationType.RangeCopy, null, null, null, narrative);
     }
 
     // ─── Apply operation ─────────────────────────────────────────────────
