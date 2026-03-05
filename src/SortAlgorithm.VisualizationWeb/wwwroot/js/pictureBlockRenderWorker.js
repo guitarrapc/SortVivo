@@ -56,7 +56,30 @@ function calcGrid(n) {
 }
 
 /**
- * imageBitmap をキャンバス全体にスケールしてピクセルをキャッシュする。
+ * 画像のアスペクト比を維持して physW × physH キャンバス内に収まるレターボックス矩形を計算する。
+ * 画像未設定時はキャンバス全体を返す。
+ */
+function calcLetterboxPhys(physW, physH) {
+  if (!imageBitmap || imageBitmap.width <= 0 || imageBitmap.height <= 0) {
+    return { offsetX: 0, offsetY: 0, renderW: physW, renderH: physH };
+  }
+  const imgAR = imageBitmap.width / imageBitmap.height;
+  const canvasAR = physW / physH;
+  let renderW, renderH;
+  if (canvasAR > imgAR) {
+    renderH = physH;
+    renderW = Math.round(physH * imgAR);
+  } else {
+    renderW = physW;
+    renderH = Math.round(physW / imgAR);
+  }
+  const offsetX = Math.round((physW - renderW) / 2);
+  const offsetY = Math.round((physH - renderH) / 2);
+  return { offsetX, offsetY, renderW, renderH };
+}
+
+/**
+ * imageBitmap をレターボックス領域にスケールしてピクセルをキャッシュする。
  * ソート済み配列の状態でブロック i が (i%cols, floor(i/cols)) の位置に配置される。
  * setImageBitmap / resize 時に呼び出す。
  */
@@ -67,16 +90,17 @@ function buildPreScaledPixels() {
   if (!imageBitmap || imageNumBlocks <= 0 || !offscreen) return;
   const physW = offscreen.width;
   const physH = offscreen.height;
-  if (physW <= 0 || physH <= 0) return;
+  const lb = calcLetterboxPhys(physW, physH);
+  if (lb.renderW <= 0 || lb.renderH <= 0) return;
   try {
-    const tmp = new OffscreenCanvas(physW, physH);
+    const tmp = new OffscreenCanvas(lb.renderW, lb.renderH);
     const tmpCtx = tmp.getContext('2d', { alpha: false });
     tmpCtx.imageSmoothingEnabled = true;
-    tmpCtx.drawImage(imageBitmap, 0, 0, physW, physH);
-    const imgData = tmpCtx.getImageData(0, 0, physW, physH);
+    tmpCtx.drawImage(imageBitmap, 0, 0, lb.renderW, lb.renderH);
+    const imgData = tmpCtx.getImageData(0, 0, lb.renderW, lb.renderH);
     preScaledPixels = imgData.data;
-    preScaledPhysW = physW;
-    preScaledPhysH = physH;
+    preScaledPhysW = lb.renderW;
+    preScaledPhysH = lb.renderH;
   } catch (_) {
     preScaledPixels = null;
   }
@@ -91,7 +115,8 @@ function drawFast() {
   if (!preScaledPixels) return false;
   const physW = offscreen.width;
   const physH = offscreen.height;
-  if (preScaledPhysW !== physW || preScaledPhysH !== physH) {
+  const lb = calcLetterboxPhys(physW, physH);
+  if (preScaledPhysW !== lb.renderW || preScaledPhysH !== lb.renderH) {
     buildPreScaledPixels();
     if (!preScaledPixels) return false;
   }
@@ -110,8 +135,8 @@ function drawFast() {
   for (let i = 1; i < n; i++) { if (array[i] < minVal) minVal = array[i]; }
 
   const { cols, rows } = calcGrid(n);
-  const blockPhysW = physW / cols;
-  const blockPhysH = physH / rows;
+  const blockPhysW = lb.renderW / cols;
+  const blockPhysH = lb.renderH / rows;
 
   const preScaled32 = new Uint32Array(preScaledPixels.buffer);
   const out32 = new Uint32Array(out.buffer);
@@ -124,16 +149,18 @@ function drawFast() {
     const srcRow = Math.floor(blockIdx / cols);
     const srcCol = blockIdx % cols;
 
-    const dstX = Math.round(dstCol * blockPhysW);
-    const dstY = Math.round(dstRow * blockPhysH);
-    const dstW = Math.max(1, Math.round((dstCol + 1) * blockPhysW) - dstX);
-    const dstH = Math.max(1, Math.round((dstRow + 1) * blockPhysH) - dstY);
+    const dstLocalX = Math.round(dstCol * blockPhysW);
+    const dstLocalY = Math.round(dstRow * blockPhysH);
+    const dstX = lb.offsetX + dstLocalX;
+    const dstY = lb.offsetY + dstLocalY;
+    const dstW = Math.max(1, Math.round((dstCol + 1) * blockPhysW) - dstLocalX);
+    const dstH = Math.max(1, Math.round((dstRow + 1) * blockPhysH) - dstLocalY);
     const srcX = Math.round(srcCol * blockPhysW);
     const srcY = Math.round(srcRow * blockPhysH);
 
     for (let r = 0; r < dstH; r++) {
-      if (dstY + r >= physH || srcY + r >= physH) break;
-      const sBase = (srcY + r) * physW + srcX;
+      if (dstY + r >= physH || srcY + r >= lb.renderH) break;
+      const sBase = (srcY + r) * lb.renderW + srcX;
       const dBase = (dstY + r) * physW + dstX;
       out32.set(preScaled32.subarray(sBase, sBase + dstW), dBase);
     }
@@ -142,14 +169,16 @@ function drawFast() {
   ctx.putImageData(outputImageData, 0, 0);
 
   const { compareIndices, swapIndices, readIndices, writeIndices, showCompletionHighlight } = renderParams;
-  const cssW = physW / dpr;
-  const cssH = physH / dpr;
+  const cssOffsetX = lb.offsetX / dpr;
+  const cssOffsetY = lb.offsetY / dpr;
+  const cssRenderW = lb.renderW / dpr;
+  const cssRenderH = lb.renderH / dpr;
   if (showCompletionHighlight) {
     ctx.fillStyle = COLOR_SORTED;
-    ctx.fillRect(0, 0, cssW, cssH);
+    ctx.fillRect(cssOffsetX, cssOffsetY, cssRenderW, cssRenderH);
   } else {
-    const blockCssW = cssW / cols;
-    const blockCssH = cssH / rows;
+    const blockCssW = cssRenderW / cols;
+    const blockCssH = cssRenderH / rows;
     const applyOverlay = function (indices, color) {
       if (!indices || indices.length === 0) return;
       ctx.fillStyle = color;
@@ -157,10 +186,10 @@ function drawFast() {
         const idx = indices[k];
         const dRow = Math.floor(idx / cols);
         const dCol = idx % cols;
-        const dx = Math.round(dCol * blockCssW);
-        const dy = Math.round(dRow * blockCssH);
-        const dw = Math.max(1, Math.round((dCol + 1) * blockCssW) - dx);
-        const dh = Math.max(1, Math.round((dRow + 1) * blockCssH) - dy);
+        const dx = cssOffsetX + Math.round(dCol * blockCssW);
+        const dy = cssOffsetY + Math.round(dRow * blockCssH);
+        const dw = Math.max(1, Math.round((dCol + 1) * blockCssW) - Math.round(dCol * blockCssW));
+        const dh = Math.max(1, Math.round((dRow + 1) * blockCssH) - Math.round(dRow * blockCssH));
         ctx.fillRect(dx, dy, dw, dh);
       }
     };
@@ -238,6 +267,13 @@ const W = offscreen.width;
     const { cols: srcCols, rows: srcRows } = calcGrid(imageNumBlocks);
     const srcBlockW = imgW / srcCols;
     const srcBlockH = imgH / srcRows;
+    const lb = calcLetterboxPhys(W, H);
+    const cssOffsetX = lb.offsetX / dpr;
+    const cssOffsetY = lb.offsetY / dpr;
+    const cssRenderW = lb.renderW / dpr;
+    const cssRenderH = lb.renderH / dpr;
+    const blockW = cssRenderW / cols;
+    const blockH = cssRenderH / rows;
 
     // サブピクセル描画を抹消
     ctx.imageSmoothingEnabled = false;
@@ -250,10 +286,12 @@ const W = offscreen.width;
         const dstCol = i % cols;
         const srcRow = Math.floor(blockIdx / srcCols);
         const srcCol = blockIdx % srcCols;
-        const dstX = Math.round(dstCol * blockW);
-        const dstY = Math.round(dstRow * blockH);
-        const dstW = Math.max(1, Math.round((dstCol + 1) * blockW) - dstX);
-        const dstH = Math.max(1, Math.round((dstRow + 1) * blockH) - dstY);
+        const localX = Math.round(dstCol * blockW);
+        const localY = Math.round(dstRow * blockH);
+        const dstX = cssOffsetX + localX;
+        const dstY = cssOffsetY + localY;
+        const dstW = Math.max(1, Math.round((dstCol + 1) * blockW) - localX);
+        const dstH = Math.max(1, Math.round((dstRow + 1) * blockH) - localY);
         ctx.drawImage(
           imageBitmap,
           srcCol * srcBlockW, srcRow * srcBlockH, srcBlockW, srcBlockH,
@@ -261,17 +299,19 @@ const W = offscreen.width;
         );
       }
       ctx.fillStyle = COLOR_SORTED;
-      ctx.fillRect(0, 0, cssW, cssH);
+      ctx.fillRect(cssOffsetX, cssOffsetY, cssRenderW, cssRenderH);
     } else {
       for (let i = 0; i < n; i++) {
         const blockIdx = array[i] - minVal;
         if (blockIdx < 0 || blockIdx >= imageNumBlocks) continue;
         const dstRow = Math.floor(i / cols);
         const dstCol = i % cols;
-        const dstX = Math.round(dstCol * blockW);
-        const dstY = Math.round(dstRow * blockH);
-        const dstW = Math.max(1, Math.round((dstCol + 1) * blockW) - dstX);
-        const dstH = Math.max(1, Math.round((dstRow + 1) * blockH) - dstY);
+        const localX = Math.round(dstCol * blockW);
+        const localY = Math.round(dstRow * blockH);
+        const dstX = cssOffsetX + localX;
+        const dstY = cssOffsetY + localY;
+        const dstW = Math.max(1, Math.round((dstCol + 1) * blockW) - localX);
+        const dstH = Math.max(1, Math.round((dstRow + 1) * blockH) - localY);
         const srcRow = Math.floor(blockIdx / srcCols);
         const srcCol = blockIdx % srcCols;
         ctx.drawImage(

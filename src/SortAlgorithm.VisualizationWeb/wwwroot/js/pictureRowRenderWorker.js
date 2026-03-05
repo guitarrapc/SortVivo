@@ -46,6 +46,27 @@ function buildColorLUT(maxValue) {
   }
 }
 
+// 画像のアスペクト比を維持して physW × physH キャンバス内に収まるレターボックス矩形を計算する。
+// 画像未設定時はキャンバス全体を返す。
+function calcLetterboxPhys(physW, physH) {
+  if (!imageBitmap || imageBitmap.width <= 0 || imageBitmap.height <= 0) {
+    return { offsetX: 0, offsetY: 0, renderW: physW, renderH: physH };
+  }
+  const imgAR = imageBitmap.width / imageBitmap.height;
+  const canvasAR = physW / physH;
+  let renderW, renderH;
+  if (canvasAR > imgAR) {
+    renderH = physH;
+    renderW = Math.round(physH * imgAR);
+  } else {
+    renderW = physW;
+    renderH = Math.round(physW / imgAR);
+  }
+  const offsetX = Math.round((physW - renderW) / 2);
+  const offsetY = Math.round((physH - renderH) / 2);
+  return { offsetX, offsetY, renderW, renderH };
+}
+
 // imageBitmap をキャンバス物理幅に事前スケールし、行ピクセルをキャッシュする。
 // setImageBitmap / resize 時に呼び出すことで draw() の高速パスが有効になる。
 function buildPreScaledPixels() {
@@ -54,17 +75,19 @@ function buildPreScaledPixels() {
   preScaledPhysW = 0;
   if (!imageBitmap || imageNumRows <= 0 || !offscreen) return;
   const physW = offscreen.width;
-  if (physW <= 0) return;
+  const physH = offscreen.height;
+  const lb = calcLetterboxPhys(physW, physH);
+  if (lb.renderW <= 0) return;
   try {
-    // imageBitmap を physW × imageNumRows の一時 OffscreenCanvas に描画して行データを抽出
-    const tmp = new OffscreenCanvas(physW, imageNumRows);
+    // imageBitmap を lb.renderW × imageNumRows の一時 OffscreenCanvas に描画して行データを抽出
+    const tmp = new OffscreenCanvas(lb.renderW, imageNumRows);
     const tmpCtx = tmp.getContext('2d', { alpha: false });
     tmpCtx.imageSmoothingEnabled = true;
-    tmpCtx.drawImage(imageBitmap, 0, 0, physW, imageNumRows);
-    const imgData = tmpCtx.getImageData(0, 0, physW, imageNumRows);
+    tmpCtx.drawImage(imageBitmap, 0, 0, lb.renderW, imageNumRows);
+    const imgData = tmpCtx.getImageData(0, 0, lb.renderW, imageNumRows);
     preScaledPixels = imgData.data; // Uint8ClampedArray: row0_pixels, row1_pixels, ...
     preScaledNumRows = imageNumRows;
-    preScaledPhysW = physW;
+    preScaledPhysW = lb.renderW;
   } catch (_) {
     preScaledPixels = null;
   }
@@ -78,8 +101,9 @@ function drawFast() {
   if (!preScaledPixels) return false;
   const physW = offscreen.width;
   const physH = offscreen.height;
-  // キャンバスサイズが変わっていたらキャッシュを再構築
-  if (preScaledPhysW !== physW) {
+  const lb = calcLetterboxPhys(physW, physH);
+  // キャンバスサイズまたはレターボックスが変わっていたらキャッシュを再構築
+  if (preScaledPhysW !== lb.renderW) {
     buildPreScaledPixels();
     if (!preScaledPixels) return false;
   }
@@ -94,7 +118,8 @@ function drawFast() {
   }
 
   const out = outputImageData.data;
-  const stride = physW * 4;
+  const srcStride = lb.renderW * 4;  // 事前スケール済みピクセルの行幅（レターボックス幅）
+  const dstStride = physW * 4;       // 出力バッファの行幅（キャンバス全幅）
 
   // 背景色 #1A1A1A で初期化（RGBA リトルエンディアン: R=0x1A,G=0x1A,B=0x1A,A=0xFF）
   new Uint32Array(out.buffer).fill(0xFF1A1A1A);
@@ -103,26 +128,27 @@ function drawFast() {
   let minVal = array[0];
   for (let i = 1; i < n; i++) { if (array[i] < minVal) minVal = array[i]; }
 
-  const rowH_phys = physH / n;
+  const rowH_phys = lb.renderH / n;
 
-  // 逆引きマップ構築: 各物理ピクセル行に「最後に書き込む配列インデックス」を記録
-  // これにより O(physH) の memcpy で正確なレンダリングが可能になる
+  // 逆引きマップ構築
   const rowMap = rowMappingBuffer;
   rowMap.fill(-1);
   for (let i = 0; i < n; i++) {
-    const dstY = Math.round(i * rowH_phys);
-    const dstH = Math.max(1, Math.round((i + 1) * rowH_phys) - dstY);
-    const end = Math.min(dstY + dstH, physH);
+    const dstY = lb.offsetY + Math.round(i * rowH_phys);
+    const dstH = Math.max(1, Math.round((i + 1) * rowH_phys) - Math.round(i * rowH_phys));
+    const end = Math.min(dstY + dstH, lb.offsetY + lb.renderH);
     for (let r = dstY; r < end; r++) rowMap[r] = i;
   }
 
-  // 各物理行に対応する事前スケール済みピクセルをコピー（TypedArray.set = 内部 memcpy）
-  for (let py = 0; py < physH; py++) {
+  // 各物理行の対応するレターボックス領域にピクセルをコピー
+  for (let py = lb.offsetY; py < lb.offsetY + lb.renderH; py++) {
     const i = rowMap[py];
     if (i < 0) continue;
     const rowIdx = array[i] - minVal;
     if (rowIdx < 0 || rowIdx >= preScaledNumRows) continue;
-    out.set(preScaledPixels.subarray(rowIdx * stride, rowIdx * stride + stride), py * stride);
+    const srcOff = rowIdx * srcStride;
+    const dstOff = py * dstStride + lb.offsetX * 4;
+    out.set(preScaledPixels.subarray(srcOff, srcOff + srcStride), dstOff);
   }
 
   // 物理ピクセル座標で一括転送（putImageData は ctx.scale 変換を無視する）
@@ -130,21 +156,23 @@ function drawFast() {
 
   // ハイライトオーバーレイを CSS 座標系で描画（ctx.scale(dpr,dpr) が有効）
   const { compareIndices, swapIndices, readIndices, writeIndices, showCompletionHighlight } = renderParams;
-  const cssW = physW / dpr;
-  const cssH = physH / dpr;
+  const cssOffsetX = lb.offsetX / dpr;
+  const cssOffsetY = lb.offsetY / dpr;
+  const cssRenderW = lb.renderW / dpr;
+  const cssRenderH = lb.renderH / dpr;
   if (showCompletionHighlight) {
     ctx.fillStyle = COLOR_SORTED;
-    ctx.fillRect(0, 0, cssW, cssH);
+    ctx.fillRect(cssOffsetX, cssOffsetY, cssRenderW, cssRenderH);
   } else {
-    const rowH_css = cssH / n;
+    const rowH_css = cssRenderH / n;
     const applyOverlay = function (indices, color) {
       if (!indices || indices.length === 0) return;
       ctx.fillStyle = color;
       for (let k = 0; k < indices.length; k++) {
         const idx = indices[k];
-        const dy = Math.round(idx * rowH_css);
-        const dh = Math.max(1, Math.round((idx + 1) * rowH_css) - dy);
-        ctx.fillRect(0, dy, cssW, dh);
+        const dy = cssOffsetY + Math.round(idx * rowH_css);
+        const dh = Math.max(1, Math.round((idx + 1) * rowH_css) - Math.round(idx * rowH_css));
+        ctx.fillRect(cssOffsetX, dy, cssRenderW, dh);
       }
     };
     applyOverlay(swapIndices, OVERLAY_SWAP);
@@ -214,6 +242,12 @@ ctx.fillRect(0, 0, cssW, cssH);
     const imgW = imageBitmap.width;
     const imgH = imageBitmap.height;
     const srcRowH = imgH / imageNumRows;
+    const lb = calcLetterboxPhys(W, H);
+    const cssOffsetX = lb.offsetX / dpr;
+    const cssOffsetY = lb.offsetY / dpr;
+    const cssRenderW = lb.renderW / dpr;
+    const cssRenderH = lb.renderH / dpr;
+    const rowH = cssRenderH / n;
 
     // サブピクセル描画を抑制（アンチエイリアス無効で画質向上・高速化）
     ctx.imageSmoothingEnabled = false;
@@ -227,25 +261,24 @@ ctx.fillRect(0, 0, cssW, cssH);
         const rowIdx = array[i] - minVal;
         if (rowIdx < 0 || rowIdx >= imageNumRows) continue;
         const srcY = rowIdx * srcRowH;
-        // Math.round で整数ピクセル境界に正規化（隙間/わしかまり防止）
-        const dstY = Math.round(i * rowH);
-        const dstH = Math.max(1, Math.round((i + 1) * rowH) - dstY);
-        ctx.drawImage(imageBitmap, 0, srcY, imgW, srcRowH, 0, dstY, cssW, dstH);
+        const localY = Math.round(i * rowH);
+        const dstY = cssOffsetY + localY;
+        const dstH = Math.max(1, Math.round((i + 1) * rowH) - localY);
+        ctx.drawImage(imageBitmap, 0, srcY, imgW, srcRowH, cssOffsetX, dstY, cssRenderW, dstH);
       }
       ctx.fillStyle = COLOR_SORTED;
-      ctx.fillRect(0, 0, cssW, cssH);
+      ctx.fillRect(cssOffsetX, cssOffsetY, cssRenderW, cssRenderH);
     } else {
       for (let i = 0; i < n; i++) {
         const rowIdx = array[i] - minVal;
         if (rowIdx < 0 || rowIdx >= imageNumRows) continue;
         const srcY = rowIdx * srcRowH;
-
-        // Math.round で整数ピクセル境界に正規化
-        const dstY = Math.round(i * rowH);
-        const dstH = Math.max(1, Math.round((i + 1) * rowH) - dstY);
+        const localY = Math.round(i * rowH);
+        const dstY = cssOffsetY + localY;
+        const dstH = Math.max(1, Math.round((i + 1) * rowH) - localY);
 
         // 画像行を描画
-        ctx.drawImage(imageBitmap, 0, srcY, imgW, srcRowH, 0, dstY, cssW, dstH);
+        ctx.drawImage(imageBitmap, 0, srcY, imgW, srcRowH, cssOffsetX, dstY, cssRenderW, dstH);
 
         // ハイライトオーバーレイ
         let overlay = null;
@@ -256,7 +289,7 @@ ctx.fillRect(0, 0, cssW, cssH);
 
         if (overlay) {
           ctx.fillStyle = overlay;
-          ctx.fillRect(0, dstY, cssW, dstH);
+          ctx.fillRect(cssOffsetX, dstY, cssRenderW, dstH);
         }
       }
     }

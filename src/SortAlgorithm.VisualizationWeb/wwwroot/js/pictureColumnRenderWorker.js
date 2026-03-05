@@ -46,6 +46,27 @@ function buildColorLUT(maxValue) {
   }
 }
 
+// 画像のアスペクト比を維持して physW × physH キャンバス内に収まるレターボックス矩形を計算する。
+// 画像未設定時はキャンバス全体を返す。
+function calcLetterboxPhys(physW, physH) {
+  if (!imageBitmap || imageBitmap.width <= 0 || imageBitmap.height <= 0) {
+    return { offsetX: 0, offsetY: 0, renderW: physW, renderH: physH };
+  }
+  const imgAR = imageBitmap.width / imageBitmap.height;
+  const canvasAR = physW / physH;
+  let renderW, renderH;
+  if (canvasAR > imgAR) {
+    renderH = physH;
+    renderW = Math.round(physH * imgAR);
+  } else {
+    renderW = physW;
+    renderH = Math.round(physW / imgAR);
+  }
+  const offsetX = Math.round((physW - renderW) / 2);
+  const offsetY = Math.round((physH - renderH) / 2);
+  return { offsetX, offsetY, renderW, renderH };
+}
+
 // imageBitmap をキャンバス物理高さに事前スケールし、列ピクセルをキャッシュする。
 // setImageBitmap / resize 時に呼び出すことで draw() の高速パスが有効になる。
 function buildPreScaledPixels() {
@@ -53,19 +74,21 @@ function buildPreScaledPixels() {
   preScaledNumCols = 0;
   preScaledPhysH = 0;
   if (!imageBitmap || imageNumCols <= 0 || !offscreen) return;
+  const physW = offscreen.width;
   const physH = offscreen.height;
-  if (physH <= 0) return;
+  const lb = calcLetterboxPhys(physW, physH);
+  if (lb.renderH <= 0) return;
   try {
-    // imageBitmap を imageNumCols × physH の一時 OffscreenCanvas に描画して列データを抽出
+    // imageBitmap を imageNumCols × lb.renderH の一時 OffscreenCanvas に描画して列データを抽出
     // 各ソース列が 1px 幅になることで列ピクセルを効率的にキャッシュできる
-    const tmp = new OffscreenCanvas(imageNumCols, physH);
+    const tmp = new OffscreenCanvas(imageNumCols, lb.renderH);
     const tmpCtx = tmp.getContext('2d', { alpha: false });
     tmpCtx.imageSmoothingEnabled = true;
-    tmpCtx.drawImage(imageBitmap, 0, 0, imageNumCols, physH);
-    const imgData = tmpCtx.getImageData(0, 0, imageNumCols, physH);
+    tmpCtx.drawImage(imageBitmap, 0, 0, imageNumCols, lb.renderH);
+    const imgData = tmpCtx.getImageData(0, 0, imageNumCols, lb.renderH);
     preScaledPixels = imgData.data; // Uint8ClampedArray: row0_col0..colN, row1_col0..colN, ...
     preScaledNumCols = imageNumCols;
-    preScaledPhysH = physH;
+    preScaledPhysH = lb.renderH;
   } catch (_) {
     preScaledPixels = null;
   }
@@ -78,7 +101,8 @@ function drawFast() {
   if (!preScaledPixels) return false;
   const physW = offscreen.width;
   const physH = offscreen.height;
-  if (preScaledPhysH !== physH) {
+  const lb = calcLetterboxPhys(physW, physH);
+  if (preScaledPhysH !== lb.renderH) {
     buildPreScaledPixels();
     if (!preScaledPixels) return false;
   }
@@ -97,15 +121,15 @@ function drawFast() {
   let minVal = array[0];
   for (let i = 1; i < n; i++) { if (array[i] < minVal) minVal = array[i]; }
 
-  const colW_phys = physW / n;
+  const colW_phys = lb.renderW / n;
 
   // 逆引きマップ構築: 各物理列に「最後に書き込む配列インデックス」を記録
   const colMap = colMappingBuffer;
   colMap.fill(-1);
   for (let i = 0; i < n; i++) {
-    const dstX = Math.round(i * colW_phys);
-    const dstW = Math.max(1, Math.round((i + 1) * colW_phys) - dstX);
-    const end = Math.min(dstX + dstW, physW);
+    const dstX = lb.offsetX + Math.round(i * colW_phys);
+    const dstW = Math.max(1, Math.round((i + 1) * colW_phys) - Math.round(i * colW_phys));
+    const end = Math.min(dstX + dstW, lb.offsetX + lb.renderW);
     for (let c = dstX; c < end; c++) colMap[c] = i;
   }
 
@@ -114,10 +138,10 @@ function drawFast() {
   const preScaled32 = new Uint32Array(preScaledPixels.buffer);
   const out32 = new Uint32Array(out.buffer);
 
-  for (let py = 0; py < physH; py++) {
-    const srcBase = py * preScaledNumCols; // この行の先頭インデックス（Uint32）
+  for (let py = lb.offsetY; py < lb.offsetY + lb.renderH; py++) {
+    const srcBase = (py - lb.offsetY) * preScaledNumCols; // この行の先頭インデックス（Uint32）
     const dstBase = py * physW;
-    for (let px = 0; px < physW; px++) {
+    for (let px = lb.offsetX; px < lb.offsetX + lb.renderW; px++) {
       const i = colMap[px];
       if (i < 0) continue;
       const colIdx = array[i] - minVal;
@@ -129,21 +153,23 @@ function drawFast() {
   ctx.putImageData(outputImageData, 0, 0);
 
   const { compareIndices, swapIndices, readIndices, writeIndices, showCompletionHighlight } = renderParams;
-  const cssW = physW / dpr;
-  const cssH = physH / dpr;
+  const cssOffsetX = lb.offsetX / dpr;
+  const cssOffsetY = lb.offsetY / dpr;
+  const cssRenderW = lb.renderW / dpr;
+  const cssRenderH = lb.renderH / dpr;
   if (showCompletionHighlight) {
     ctx.fillStyle = COLOR_SORTED;
-    ctx.fillRect(0, 0, cssW, cssH);
+    ctx.fillRect(cssOffsetX, cssOffsetY, cssRenderW, cssRenderH);
   } else {
-    const colW_css = cssW / n;
+    const colW_css = cssRenderW / n;
     const applyOverlay = function (indices, color) {
       if (!indices || indices.length === 0) return;
       ctx.fillStyle = color;
       for (let k = 0; k < indices.length; k++) {
         const idx = indices[k];
-        const dx = Math.round(idx * colW_css);
-        const dw = Math.max(1, Math.round((idx + 1) * colW_css) - dx);
-        ctx.fillRect(dx, 0, dw, cssH);
+        const dx = cssOffsetX + Math.round(idx * colW_css);
+        const dw = Math.max(1, Math.round((idx + 1) * colW_css) - Math.round(idx * colW_css));
+        ctx.fillRect(dx, cssOffsetY, dw, cssRenderH);
       }
     };
     applyOverlay(swapIndices, OVERLAY_SWAP);
@@ -213,6 +239,12 @@ const W = offscreen.width;
     const imgW = imageBitmap.width;
     const imgH = imageBitmap.height;
     const srcColW = imgW / imageNumCols;
+    const lb = calcLetterboxPhys(W, H);
+    const cssOffsetX = lb.offsetX / dpr;
+    const cssOffsetY = lb.offsetY / dpr;
+    const cssRenderW = lb.renderW / dpr;
+    const cssRenderH = lb.renderH / dpr;
+    const colW = cssRenderW / n;
 
     // サブピクセル描画を抑制
     ctx.imageSmoothingEnabled = false;
@@ -226,22 +258,24 @@ const W = offscreen.width;
         const colIdx = array[i] - minVal;
         if (colIdx < 0 || colIdx >= imageNumCols) continue;
         const srcX = colIdx * srcColW;
-        const dstX = Math.round(i * colW);
-        const dstW = Math.max(1, Math.round((i + 1) * colW) - dstX);
-        ctx.drawImage(imageBitmap, srcX, 0, srcColW, imgH, dstX, 0, dstW, cssH);
+        const localX = Math.round(i * colW);
+        const dstX = cssOffsetX + localX;
+        const dstW = Math.max(1, Math.round((i + 1) * colW) - localX);
+        ctx.drawImage(imageBitmap, srcX, 0, srcColW, imgH, dstX, cssOffsetY, dstW, cssRenderH);
       }
       ctx.fillStyle = COLOR_SORTED;
-      ctx.fillRect(0, 0, cssW, cssH);
+      ctx.fillRect(cssOffsetX, cssOffsetY, cssRenderW, cssRenderH);
     } else {
       for (let i = 0; i < n; i++) {
         const colIdx = array[i] - minVal;
         if (colIdx < 0 || colIdx >= imageNumCols) continue;
         const srcX = colIdx * srcColW;
-        const dstX = Math.round(i * colW);
-        const dstW = Math.max(1, Math.round((i + 1) * colW) - dstX);
+        const localX = Math.round(i * colW);
+        const dstX = cssOffsetX + localX;
+        const dstW = Math.max(1, Math.round((i + 1) * colW) - localX);
 
         // 画像列を描画
-        ctx.drawImage(imageBitmap, srcX, 0, srcColW, imgH, dstX, 0, dstW, cssH);
+        ctx.drawImage(imageBitmap, srcX, 0, srcColW, imgH, dstX, cssOffsetY, dstW, cssRenderH);
 
         // ハイライトオーバーレイ
         let overlay = null;
@@ -252,7 +286,7 @@ const W = offscreen.width;
 
         if (overlay) {
           ctx.fillStyle = overlay;
-          ctx.fillRect(dstX, 0, dstW, cssH);
+          ctx.fillRect(dstX, cssOffsetY, dstW, cssRenderH);
         }
       }
     }
