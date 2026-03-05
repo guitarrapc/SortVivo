@@ -385,6 +385,9 @@ private VisualizationMode SelectedVisualizationMode
             {
                 if (ComparisonMode.State.Instances.Count >= ComparisonState.MaxComparisons) break;
 
+                // サービスに既に存在するアルゴリズムはスキップ（SPA 内遷移で状態が残っている場合）
+                if (ComparisonMode.State.Instances.Any(i => i.AlgorithmName == algoName)) continue;
+
                 var metadata = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == algoName);
                 if (metadata == null) continue;
 
