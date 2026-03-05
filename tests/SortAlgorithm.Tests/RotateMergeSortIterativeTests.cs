@@ -188,4 +188,85 @@ public class RotateMergeSortIterativeTests
         await Assert.That(stats.IndexWriteCount).IsEqualTo(0UL);  // No writes on sorted data
         await Assert.That(stats.SwapCount).IsEqualTo(0UL);        // No rotations on sorted data
     }
+
+    [Test]
+    [Arguments(10)]
+    [Arguments(20)]
+    [Arguments(50)]
+    [Arguments(100)]
+    public async Task TheoreticalValuesReversedTest(int n)
+    {
+        var stats = new StatisticsContext();
+        var reversed = Enumerable.Range(0, n).Reverse().ToArray();
+        RotateMergeSortIterative.Sort(reversed.AsSpan(), stats);
+
+        // Bottom-up RotateMergeSortIterative on reversed data:
+        //
+        // Phase 1 (InsertionSort blocks): n ≤ 16 → single block, all work done here.
+        //   n*(n-1)/2 comparisons and writes, 0 swaps (InsertionSort uses Write, not Swap).
+        //
+        // Phase 2 (RotateMerge passes): galloping finds long blocks, then 3-reversal rotates.
+        //   3-reversal uses Swap for the general case; k==1/k==n-1 fast paths use Write.
+        //
+        // Actual observations for reversed data:
+        //   n=10:  45 comparisons (n*(n-1)/2, InsertionSort only)
+        //   n=20: 131 comparisons (~1.52 * n*log₂n)
+        //   n=50: 381 comparisons (~1.35 * n*log₂n)
+        //   n=100: 779 comparisons (~1.17 * n*log₂n)
+        var logN = Math.Log2(n);
+        var minCompares = n <= 16 ? (ulong)(n * 4.0) : (ulong)(n * logN * 0.9);
+        var maxCompares = n <= 16 ? (ulong)(n * 5.5) : (ulong)(n * logN * 2.0);
+
+        var minWrites = n <= 16 ? (ulong)(n * 4.0) : (ulong)(n * logN * 1.0);
+        var maxWrites = n <= 16 ? (ulong)(n * 6.0) : (ulong)(n * logN * 20.0);
+
+        var minSwaps = 0UL;
+        var maxSwaps = n <= 16 ? 0UL : (ulong)(n * logN * 2.0);
+
+        var minReads = (ulong)(stats.CompareCount * 1.2);
+
+        await Assert.That(stats.CompareCount).IsBetween(minCompares, maxCompares);
+        await Assert.That(stats.IndexWriteCount).IsBetween(minWrites, maxWrites);
+        await Assert.That(stats.SwapCount).IsBetween(minSwaps, maxSwaps);
+        await Assert.That(stats.IndexReadCount >= minReads).IsTrue().Because($"IndexReadCount ({stats.IndexReadCount}) should be >= {minReads}");
+    }
+
+    [Test]
+    [Arguments(10)]
+    [Arguments(20)]
+    [Arguments(50)]
+    [Arguments(100)]
+    public async Task TheoreticalValuesRandomTest(int n)
+    {
+        var stats = new StatisticsContext();
+        var random = Enumerable.Range(0, n).OrderBy(_ => Guid.NewGuid()).ToArray();
+        RotateMergeSortIterative.Sort(random.AsSpan(), stats);
+
+        // Bottom-up RotateMergeSortIterative on random data:
+        //
+        // Phase 1 (InsertionSort blocks): n ≤ 16 → single block, variance depends on order.
+        // Phase 2 (RotateMerge passes): galloping reduces work on partially ordered blocks.
+        //
+        // Actual observations over 5 random runs:
+        //   n=10:   15–28 comparisons (InsertionSort only, varies with order)
+        //   n=20:   94–119 comparisons (~1.1–1.4 * n*log₂n)
+        //   n=50:  315–372 comparisons (~1.1–1.3 * n*log₂n)
+        //   n=100: 805–883 comparisons (~1.2–1.3 * n*log₂n)
+        var logN = Math.Log2(n);
+        var minCompares = n <= 16 ? (ulong)(n * 1.5) : (ulong)(n * logN * 0.7);
+        var maxCompares = n <= 16 ? (ulong)(n * 4.8) : (ulong)(n * logN * 2.0);
+
+        var minWrites = n <= 16 ? (ulong)(n * 0.9) : (ulong)(n * logN * 0.5);
+        var maxWrites = n <= 16 ? (ulong)(n * 4.8) : (ulong)(n * logN * 15.0);
+
+        var minSwaps = 0UL;
+        var maxSwaps = n <= 16 ? 0UL : (ulong)(n * logN * 2.0);
+
+        var minReads = (ulong)(stats.CompareCount * 1.2);
+
+        await Assert.That(stats.CompareCount).IsBetween(minCompares, maxCompares);
+        await Assert.That(stats.IndexWriteCount).IsBetween(minWrites, maxWrites);
+        await Assert.That(stats.SwapCount).IsBetween(minSwaps, maxSwaps);
+        await Assert.That(stats.IndexReadCount >= minReads).IsTrue().Because($"IndexReadCount ({stats.IndexReadCount}) should be >= {minReads}");
+    }
 }
