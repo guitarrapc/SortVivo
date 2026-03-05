@@ -631,7 +631,7 @@ private VisualizationMode SelectedVisualizationMode
         return Playback.State.MainArray.Length;
     }
 
-    private void HandleToggleSound()
+    private async Task HandleToggleSound()
     {
         if (ComparisonMode.State.Instances.Count == 1)
         {
@@ -639,6 +639,11 @@ private VisualizationMode SelectedVisualizationMode
             ComparisonMode.ToggleSound();
             // グローバルPlaybackにも同期（localStorageへの保存用）
             Playback.SoundEnabled = ComparisonMode.SoundEnabled;
+            // サウンドON時にAudioContextを初期化（ブラウザAutoplay Policy対応）
+            if (ComparisonMode.SoundEnabled)
+            {
+                await ComparisonMode.State.Instances[0].Playback.InitSoundAsync();
+            }
         }
         else
         {
