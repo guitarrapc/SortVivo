@@ -60,11 +60,11 @@
                         <span class="stat-label">Interval</span>
                         <span class="stat-value qap__slider-value">@_autoPlaySpeedMs ms</span>
                     </div>
-                    <input type="range" min="200" max="2000" step="100"
+                    <input type="range" min="100" max="2000" step="100"
                            value="@_autoPlaySpeedMs"
                            @oninput="OnSpeedChanged"
                            @onkeydown:stopPropagation
-                           style="@RangeTrackStyle(_autoPlaySpeedMs, 200, 2000)" />
+                           style="@RangeTrackStyle(_autoPlaySpeedMs, 100, 2000)" />
                 </div>
             </div>
 
