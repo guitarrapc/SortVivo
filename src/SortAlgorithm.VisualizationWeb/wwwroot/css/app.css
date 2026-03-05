@@ -467,6 +467,16 @@ input[type="range"] {
     z-index: 9999;
 }
 
+.loading-screen.fade-out {
+    animation: loading-fade-out 0.4s ease-out forwards;
+    pointer-events: none;
+}
+
+@keyframes loading-fade-out {
+    0%   { opacity: 1; }
+    100% { opacity: 0; }
+}
+
 /* Animated sorting bars */
 .loading-bars {
     display: flex;

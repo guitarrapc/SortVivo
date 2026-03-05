@@ -12,6 +12,7 @@
     <link rel="icon" type="image/png" href="favicon.png" />
     <link href="SortAlgorithm.VisualizationWeb.styles.css" rel="stylesheet" />
     <script type="importmap"></script>
+    <script src="js/loadingHelper.js"></script>
     <script src="js/debugHelper.js"></script>
     <script src="js/playbackHelper.js"></script>
     <script src="js/soundEngine.js"></script>
@@ -30,34 +31,34 @@
 </head>
 
 <body>
-    <div id="app">
-        <div class="loading-screen">
-            <div class="loading-bars">
-                <div class="loading-bar" style="--h:30%;--i:0"></div>
-                <div class="loading-bar" style="--h:50%;--i:1"></div>
-                <div class="loading-bar" style="--h:15%;--i:2"></div>
-                <div class="loading-bar" style="--h:80%;--i:3"></div>
-                <div class="loading-bar" style="--h:45%;--i:4"></div>
-                <div class="loading-bar" style="--h:95%;--i:5"></div>
-                <div class="loading-bar" style="--h:25%;--i:6"></div>
-                <div class="loading-bar" style="--h:60%;--i:7"></div>
-                <div class="loading-bar" style="--h:70%;--i:8"></div>
-                <div class="loading-bar" style="--h:40%;--i:9"></div>
-                <div class="loading-bar" style="--h:85%;--i:10"></div>
-                <div class="loading-bar" style="--h:20%;--i:11"></div>
-                <div class="loading-bar" style="--h:55%;--i:12"></div>
-                <div class="loading-bar" style="--h:75%;--i:13"></div>
-                <div class="loading-bar" style="--h:35%;--i:14"></div>
-                <div class="loading-bar" style="--h:90%;--i:15"></div>
-                <div class="loading-bar" style="--h:10%;--i:16"></div>
-                <div class="loading-bar" style="--h:65%;--i:17"></div>
-            </div>
-            <div class="loading-title">Sorting Playground</div>
-            <div class="loading-progress-track">
-                <div class="loading-progress-fill"></div>
-            </div>
-            <div class="loading-progress-text"></div>
+    <div id="app"></div>
+
+    <div class="loading-screen">
+        <div class="loading-bars">
+            <div class="loading-bar" style="--h:30%;--i:0"></div>
+            <div class="loading-bar" style="--h:50%;--i:1"></div>
+            <div class="loading-bar" style="--h:15%;--i:2"></div>
+            <div class="loading-bar" style="--h:80%;--i:3"></div>
+            <div class="loading-bar" style="--h:45%;--i:4"></div>
+            <div class="loading-bar" style="--h:95%;--i:5"></div>
+            <div class="loading-bar" style="--h:25%;--i:6"></div>
+            <div class="loading-bar" style="--h:60%;--i:7"></div>
+            <div class="loading-bar" style="--h:70%;--i:8"></div>
+            <div class="loading-bar" style="--h:40%;--i:9"></div>
+            <div class="loading-bar" style="--h:85%;--i:10"></div>
+            <div class="loading-bar" style="--h:20%;--i:11"></div>
+            <div class="loading-bar" style="--h:55%;--i:12"></div>
+            <div class="loading-bar" style="--h:75%;--i:13"></div>
+            <div class="loading-bar" style="--h:35%;--i:14"></div>
+            <div class="loading-bar" style="--h:90%;--i:15"></div>
+            <div class="loading-bar" style="--h:10%;--i:16"></div>
+            <div class="loading-bar" style="--h:65%;--i:17"></div>
         </div>
+        <div class="loading-title">Sorting Playground</div>
+        <div class="loading-progress-track">
+            <div class="loading-progress-fill"></div>
+        </div>
+        <div class="loading-progress-text"></div>
     </div>
 
     <div id="blazor-error-ui">
