@@ -164,6 +164,7 @@ html, body {
 .qap__item--vertical input[type="range"] {
     width: 100%;
     margin-top: 4px;
+    transition: background 0.1s linear;
 }
 
 .qap__slider-header {

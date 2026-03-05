@@ -85,6 +85,7 @@
                         </div>
                         <input type="range" min="0" max="1" step="0.05"
                                @bind="Playback.SoundVolume"
+                               @bind:event="oninput"
                                class="settings-slider"
                                style="@RangeTrackStyle(Playback.SoundVolume, 0, 1)" />
                     </div>
