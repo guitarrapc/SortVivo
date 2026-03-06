@@ -86,11 +86,18 @@ public static class CycleSort
 
         for (var cycleStart = 0; cycleStart < span.Length - 1; cycleStart++)
         {
+            context.OnPhase(SortPhase.CycleSortCycle, cycleStart, span.Length - 1);
+            context.OnRole(cycleStart, BUFFER_MAIN, RoleType.LeftPointer);
+
             var item = s.Read(cycleStart);
             var pos = FindPosition(ref s, item, cycleStart);
 
             // If the item is already in the correct position, skip
-            if (pos == cycleStart) continue;
+            if (pos == cycleStart)
+            {
+                context.OnRole(cycleStart, BUFFER_MAIN, RoleType.None);
+                continue;
+            }
 
             // Skip duplicates
             pos = SkipDuplicates(ref s, item, pos);
@@ -110,6 +117,8 @@ public static class CycleSort
                 s.Write(pos, item);
                 item = temp;
             }
+
+            context.OnRole(cycleStart, BUFFER_MAIN, RoleType.None);
         }
     }
 

@@ -10,6 +10,9 @@
 ///   <listheader><term>Phase</term><description>param1 / param2 / param3</description></listheader>
 ///   <item><term>BubblePass</term><description>pass (current pass number) / totalPasses (total passes) / boundary (right boundary position)</description></item>
 ///   <item><term>SelectionFindMin</term><description>i (sorted boundary) / last (last index)</description></item>
+///   <item><term>DoubleSelectionFindMinMax</term><description>left (left boundary) / right (right boundary)</description></item>
+///   <item><term>CycleSortCycle</term><description>cycleStart (cycle start index) / last (last index)</description></item>
+///   <item><term>PancakeFindMax</term><description>first (head index) / currentSize (current subarray last index, inclusive)</description></item>
 ///   <item><term>CocktailForwardPass</term><description>pass (current pass number) / min (left boundary) / max (right boundary)</description></item>
 ///   <item><term>CocktailBackwardPass</term><description>pass (current pass number) / min (left boundary) / max (right boundary)</description></item>
 ///   <item><term>CombGapPass</term><description>gap (current gap value) / len (array length)</description></item>
@@ -70,4 +73,22 @@ public enum SortPhase
     /// param1=pass (current pass number, 1-based)
     /// </summary>
     OddEvenEvenPhase,
+
+    /// <summary>
+    /// Double Selection Sort simultaneous min/max search.
+    /// param1=left (left boundary index), param2=right (right boundary index)
+    /// </summary>
+    DoubleSelectionFindMinMax,
+
+    /// <summary>
+    /// Cycle Sort cycle processing.
+    /// param1=cycleStart (cycle start index), param2=last (array last index)
+    /// </summary>
+    CycleSortCycle,
+
+    /// <summary>
+    /// Pancake Sort max element search.
+    /// param1=first (head index), param2=currentSize-1 (current subarray last index, inclusive)
+    /// </summary>
+    PancakeFindMax,
 }

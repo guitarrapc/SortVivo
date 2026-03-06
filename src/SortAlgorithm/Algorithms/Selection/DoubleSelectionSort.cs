@@ -142,21 +142,36 @@ public static class DoubleSelectionSort
 
         while (left < right)
         {
+            s.Context.OnPhase(SortPhase.DoubleSelectionFindMinMax, left, right);
+            s.Context.OnRole(left, BUFFER_MAIN, RoleType.LeftPointer);
+            s.Context.OnRole(right, BUFFER_MAIN, RoleType.RightPointer);
+
             var min = left;
             var max = left;
+            s.Context.OnRole(min, BUFFER_MAIN, RoleType.CurrentMin);
 
             // Find both minimum and maximum in the unsorted region [left..right]
             for (var i = left + 1; i <= right; i++)
             {
                 if (s.Compare(i, min) < 0)
                 {
+                    if (min != max) s.Context.OnRole(min, BUFFER_MAIN, RoleType.None);
                     min = i;
+                    s.Context.OnRole(min, BUFFER_MAIN, RoleType.CurrentMin);
                 }
                 if (s.Compare(i, max) > 0)
                 {
+                    if (max != min) s.Context.OnRole(max, BUFFER_MAIN, RoleType.None);
                     max = i;
+                    s.Context.OnRole(max, BUFFER_MAIN, RoleType.CurrentMax);
                 }
             }
+
+            // Clear all roles before swaps
+            s.Context.OnRole(left, BUFFER_MAIN, RoleType.None);
+            s.Context.OnRole(right, BUFFER_MAIN, RoleType.None);
+            if (min != left && min != right) s.Context.OnRole(min, BUFFER_MAIN, RoleType.None);
+            if (max != left && max != right && max != min) s.Context.OnRole(max, BUFFER_MAIN, RoleType.None);
 
             // Swap operations with careful index tracking
             // When max is at left boundary, swap it to right first

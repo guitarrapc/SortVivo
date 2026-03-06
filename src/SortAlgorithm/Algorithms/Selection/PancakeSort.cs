@@ -130,7 +130,20 @@ public static class PancakeSort
     {
         for (var currentSize = last; currentSize > first; currentSize--)
         {
-            var maxIndex = MaxIndex(s, first, currentSize);
+            // Find max in [first..currentSize-1] with CurrentMax role tracking
+            s.Context.OnPhase(SortPhase.PancakeFindMax, first, currentSize - 1);
+            var maxIndex = first;
+            s.Context.OnRole(maxIndex, BUFFER_MAIN, RoleType.CurrentMax);
+            for (var i = first + 1; i < currentSize; i++)
+            {
+                if (s.Compare(i, maxIndex) > 0)
+                {
+                    s.Context.OnRole(maxIndex, BUFFER_MAIN, RoleType.None);
+                    maxIndex = i;
+                    s.Context.OnRole(maxIndex, BUFFER_MAIN, RoleType.CurrentMax);
+                }
+            }
+            s.Context.OnRole(maxIndex, BUFFER_MAIN, RoleType.None);
 
             // Max element is already at the end
             if (maxIndex == currentSize - 1)

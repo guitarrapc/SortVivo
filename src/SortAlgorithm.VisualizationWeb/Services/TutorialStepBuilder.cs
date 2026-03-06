@@ -270,14 +270,17 @@ public static class TutorialStepBuilder
     private static string BuildPhaseText(SortAlgorithm.Contexts.SortPhase phase, int p1, int p2, int p3)
         => phase switch
         {
-            SortAlgorithm.Contexts.SortPhase.BubblePass           => $"Pass {p1}/{p2}: bubbling max to position {p3}",
-            SortAlgorithm.Contexts.SortPhase.SelectionFindMin     => $"Find minimum in [{p1}..{p2}]",
-            SortAlgorithm.Contexts.SortPhase.CocktailForwardPass  => $"Pass {p1} forward →: bubbling max through [{p2}..{p3}]",
-            SortAlgorithm.Contexts.SortPhase.CocktailBackwardPass => $"Pass {p1} backward ←: bubbling min through [{p2}..{p3}]",
-            SortAlgorithm.Contexts.SortPhase.CombGapPass          => $"Gap {p1}: comparing elements {p1} apart ({p2} total)",
-            SortAlgorithm.Contexts.SortPhase.CombBubblePass       => $"Bubble phase (gap=1): range [0..{p1}]",
-            SortAlgorithm.Contexts.SortPhase.OddEvenOddPhase      => $"Pass {p1} odd-even: pairs (0,1), (2,3), ...",
-            SortAlgorithm.Contexts.SortPhase.OddEvenEvenPhase     => $"Pass {p1} even-odd: pairs (1,2), (3,4), ...",
+            SortAlgorithm.Contexts.SortPhase.BubblePass                => $"Pass {p1}/{p2}: bubbling max to position {p3}",
+            SortAlgorithm.Contexts.SortPhase.SelectionFindMin          => $"Find minimum in [{p1}..{p2}]",
+            SortAlgorithm.Contexts.SortPhase.CocktailForwardPass       => $"Pass {p1} forward →: bubbling max through [{p2}..{p3}]",
+            SortAlgorithm.Contexts.SortPhase.CocktailBackwardPass      => $"Pass {p1} backward ←: bubbling min through [{p2}..{p3}]",
+            SortAlgorithm.Contexts.SortPhase.CombGapPass               => $"Gap {p1}: comparing elements {p1} apart ({p2} total)",
+            SortAlgorithm.Contexts.SortPhase.CombBubblePass            => $"Bubble phase (gap=1): range [0..{p1}]",
+            SortAlgorithm.Contexts.SortPhase.OddEvenOddPhase           => $"Pass {p1} odd-even: pairs (0,1), (2,3), ...",
+            SortAlgorithm.Contexts.SortPhase.OddEvenEvenPhase          => $"Pass {p1} even-odd: pairs (1,2), (3,4), ...",
+            SortAlgorithm.Contexts.SortPhase.DoubleSelectionFindMinMax => $"Find min & max in [{p1}..{p2}]",
+            SortAlgorithm.Contexts.SortPhase.CycleSortCycle            => $"Cycle from index {p1} (range [0..{p2}])",
+            SortAlgorithm.Contexts.SortPhase.PancakeFindMax            => $"Find max in [{p1}..{p2}]",
             _ => string.Empty,
         };
 
