@@ -114,7 +114,7 @@ public static class QuickSortDualPivot
 
     // Threshold for switching to insertion sort (Yaroslavskiy 2009)
     // Arrays smaller than this size are sorted using insertion sort
-    private const int TINY_SIZE = 17;
+    private const int InsertionSortThreshold = 17;
 
     // Threshold for equal elements optimization (Yaroslavskiy 2009)
     // When center region is larger than (length - DIST_SIZE) and pivots are different,
@@ -218,7 +218,7 @@ public static class QuickSortDualPivot
             int length = right - left + 1;
 
             // For tiny arrays, use insertion sort (Yaroslavskiy 2009 optimization)
-            if (length < TINY_SIZE)
+            if (length < InsertionSortThreshold)
             {
                 InsertionSort.SortCore(s, left, right + 1);
                 return;
