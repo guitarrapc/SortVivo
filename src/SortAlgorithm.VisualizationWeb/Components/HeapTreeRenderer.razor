@@ -1,0 +1,187 @@
+@using SortAlgorithm.VisualizationWeb.Models
+
+<div class="heap-tree-container">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <div class="heap-tree-label">@Label</div>
+    }
+
+    @if (HeapBoundary > 0)
+    {
+        var depth = GetTreeDepth();
+        var viewW = 800;
+        var viewH = Math.Max(120, (depth + 1) * 90);
+        var nodeR = 21;
+
+        <svg class="heap-tree-svg" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <filter id="@_glowFilterId" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+            </defs>
+
+            @* ─── Edges (drawn first, behind nodes) ─── *@
+            @for (int i = 0; i < HeapBoundary; i++)
+            {
+                int leftChild = 2 * i + 1;
+                int rightChild = 2 * i + 2;
+                var (px, py) = GetNodePosition(i, depth, viewW, viewH, nodeR);
+
+                if (leftChild < HeapBoundary)
+                {
+                    var (cx, cy) = GetNodePosition(leftChild, depth, viewW, viewH, nodeR);
+                    bool edgeHighlighted = HighlightSet.Contains(i) && HighlightSet.Contains(leftChild);
+                    <line x1="@px" y1="@py" x2="@cx" y2="@cy"
+                          stroke="@(edgeHighlighted ? GetHighlightColor() : "rgba(255,255,255,0.25)")"
+                          stroke-width="@(edgeHighlighted ? "2.5" : "1.5")"
+                          opacity="@(edgeHighlighted ? "0.7" : "1")" />
+                }
+                if (rightChild < HeapBoundary)
+                {
+                    var (cx, cy) = GetNodePosition(rightChild, depth, viewW, viewH, nodeR);
+                    bool edgeHighlighted = HighlightSet.Contains(i) && HighlightSet.Contains(rightChild);
+                    <line x1="@px" y1="@py" x2="@cx" y2="@cy"
+                          stroke="@(edgeHighlighted ? GetHighlightColor() : "rgba(255,255,255,0.25)")"
+                          stroke-width="@(edgeHighlighted ? "2.5" : "1.5")"
+                          opacity="@(edgeHighlighted ? "0.7" : "1")" />
+                }
+            }
+
+            @* ─── Nodes ─── *@
+            @for (int i = 0; i < HeapBoundary; i++)
+            {
+                var idx = i;
+                var value = Values[idx];
+                var (nx, ny) = GetNodePosition(idx, depth, viewW, viewH, nodeR);
+                bool highlighted = HighlightSet.Contains(idx);
+                string bgColor = GetValueColor(value);
+
+                <g class="@(highlighted ? "heap-node heap-node--highlighted" : "heap-node")">
+                    @if (highlighted)
+                    {
+                        <circle cx="@nx" cy="@ny" r="@(nodeR + 5)"
+                                fill="none"
+                                stroke="@GetHighlightColor()"
+                                stroke-width="2.5"
+                                opacity="0.5"
+                                filter="@($"url(#{_glowFilterId})")" />
+                    }
+                    <circle cx="@nx" cy="@ny" r="@nodeR"
+                            fill="@bgColor"
+                            stroke="@(highlighted ? GetHighlightColor() : "rgba(255,255,255,0.15)")"
+                            stroke-width="@(highlighted ? "3" : "1.5")" />
+                    <text x="@nx" y="@(ny + 1)" text-anchor="middle" dominant-baseline="central"
+                          fill="white" font-size="14" font-weight="700">@value</text>
+                </g>
+            }
+        </svg>
+
+        @* ─── Sorted region indicator ─── *@
+        @if (HeapBoundary < Values.Length)
+        {
+            <div class="heap-sorted-region">
+                <span class="heap-sorted-label">Sorted:</span>
+                <div class="heap-sorted-values">
+                    @for (int i = HeapBoundary; i < Values.Length; i++)
+                    {
+                        var value = Values[i];
+                        <span class="heap-sorted-marble" style="background: @GetValueColor(value);">@value</span>
+                    }
+                </div>
+            </div>
+        }
+    }
+    else
+    {
+        <div class="heap-tree-empty">No heap data</div>
+    }
+</div>
+
+@code {
+    /// <summary>表示する配列の値（ArraySnapshot 全体）</summary>
+    [Parameter] public int[] Values { get; set; } = [];
+
+    /// <summary>ヒープ境界。0 ≤ i &lt; HeapBoundary がヒープ内ノード</summary>
+    [Parameter] public int HeapBoundary { get; set; }
+
+    /// <summary>ハイライト対象のインデックス</summary>
+    [Parameter] public int[] HighlightIndices { get; set; } = [];
+
+    /// <summary>ハイライトの種類</summary>
+    [Parameter] public OperationType HighlightType { get; set; }
+
+    /// <summary>行ラベル</summary>
+    [Parameter] public string Label { get; set; } = string.Empty;
+
+    /// <summary>配列内の最大値（HSLグラデーション計算に使用）</summary>
+    [Parameter] public int MaxValue { get; set; } = 9;
+
+    /// <summary>現在のステップインデックス（アニメーション再トリガー用）</summary>
+    [Parameter] public int StepIndex { get; set; } = -1;
+
+    private readonly string _glowFilterId = $"glow-{Guid.NewGuid().ToString("N")[..8]}";
+
+    private HashSet<int> HighlightSet => [.. HighlightIndices];
+
+    /// <summary>ヒープの深さ（0-indexed）を計算</summary>
+    private int GetTreeDepth()
+    {
+        if (HeapBoundary <= 0) return 0;
+        int d = 0;
+        int count = HeapBoundary;
+        while (count > 1)
+        {
+            count >>= 1;
+            d++;
+        }
+        return d;
+    }
+
+    /// <summary>ノードの SVG 座標を計算</summary>
+    private (double X, double Y) GetNodePosition(int index, int depth, int viewW, int viewH, int nodeR)
+    {
+        // Calculate level and position within level
+        int level = 0;
+        int temp = index + 1;
+        while (temp > 1) { temp >>= 1; level++; }
+        int posInLevel = index - ((1 << level) - 1);
+        int nodesAtLevel = 1 << level;
+
+        // Horizontal: evenly distribute nodes at each level
+        double x = (posInLevel + 0.5) * viewW / nodesAtLevel;
+
+        // Vertical: evenly distribute levels with padding
+        double topPad = nodeR + 8;
+        double bottomPad = nodeR + 8;
+        double availH = viewH - topPad - bottomPad;
+        double y = depth == 0
+            ? viewH / 2.0
+            : topPad + level * (availH / depth);
+
+        return (x, y);
+    }
+
+    /// <summary>ハイライト色を取得</summary>
+    private string GetHighlightColor() => HighlightType switch
+    {
+        OperationType.Compare => "#A855F7",
+        OperationType.Swap => "#EF4444",
+        OperationType.IndexRead => "#FBBF24",
+        OperationType.IndexWrite => "#F97316",
+        OperationType.RangeCopy => "#F97316",
+        _ => "#A855F7"
+    };
+
+    /// <summary>値に応じた HSL カラーを計算（マーブルと同じ）</summary>
+    private string GetValueColor(int value)
+    {
+        if (MaxValue <= 1) return "hsl(210, 75%, 42%)";
+        var ratio = (double)(value - 1) / (MaxValue - 1);
+        var hue = (int)(210 * (1.0 - ratio));
+        return $"hsl({hue}, 75%, 42%)";
+    }
+}

@@ -14,10 +14,29 @@ public static class TutorialStepBuilder
     /// into a single logical step for clarity.
     /// </summary>
     public static List<TutorialStep> Build(int[] initialArray, List<SortOperation> operations)
+        => Build(initialArray, operations, TutorialVisualizationHint.None);
+
+    /// <summary>
+    /// Builds a list of TutorialSteps with optional visualization hint support.
+    /// When <paramref name="hint"/> is <see cref="TutorialVisualizationHint.HeapTree"/>,
+    /// tracks the heap boundary for heap tree rendering.
+    /// </summary>
+    public static List<TutorialStep> Build(int[] initialArray, List<SortOperation> operations, TutorialVisualizationHint hint)
     {
         var steps = new List<TutorialStep>(operations.Count);
         var mainArray = (int[])initialArray.Clone();
         var bufferArrays = InitializeBufferArrays(initialArray.Length, operations);
+
+        // Heap boundary tracking for HeapTree visualization
+        // HeapSort uses two extraction patterns:
+        //   BottomupHeapSort: Swap(0, i) — root swapped with last heap element
+        //   HeapSort:         Read(0) + Read(i) + sift-down + Write(i, max) — root value written to end
+        // We track both patterns to detect when the boundary shrinks.
+        var trackHeap = hint == TutorialVisualizationHint.HeapTree;
+        int heapBoundary = trackHeap ? initialArray.Length : 0;
+        bool heapBuildDone = false;
+        // For HeapSort's Read+Write pattern: track the last Read(0) value
+        int? pendingRootValue = null;
 
         int opIdx = 0;
         while (opIdx < operations.Count)
@@ -27,13 +46,48 @@ public static class TutorialStepBuilder
             if (groupEnd > opIdx)
             {
                 // Grouped insertion step: Read + shifts + insert → 1 logical step
-                steps.Add(BuildGroupedInsertionStep(operations, opIdx, groupEnd, mainArray, bufferArrays));
+                var step = BuildGroupedInsertionStep(operations, opIdx, groupEnd, mainArray, bufferArrays);
+                if (trackHeap) step = step with { HeapBoundary = heapBoundary };
+                steps.Add(step);
                 opIdx = groupEnd + 1;
             }
             else
             {
                 // Individual step
                 var op = operations[opIdx];
+
+                // Track heap boundary: detect extraction events
+                if (trackHeap && op.BufferId1 == 0)
+                {
+                    // Pattern 1: Swap(0, i) — BottomupHeapSort extraction
+                    if (op.Type == OperationType.Swap)
+                    {
+                        if (!heapBuildDone && (op.Index1 == 0 || op.Index2 == 0))
+                            heapBuildDone = true;
+
+                        if (heapBuildDone)
+                        {
+                            int rootIdx = Math.Min(op.Index1, op.Index2);
+                            int lastIdx = Math.Max(op.Index1, op.Index2);
+                            if (rootIdx == 0 && lastIdx == heapBoundary - 1)
+                                heapBoundary--;
+                        }
+                    }
+                    // Pattern 2: Read(0) then Write(heapBoundary-1, rootValue) — HeapSort extraction
+                    else if (op.Type == OperationType.IndexRead && op.Index1 == 0)
+                    {
+                        if (!heapBuildDone)
+                            heapBuildDone = true;
+                        pendingRootValue = mainArray[0];
+                    }
+                    else if (op.Type == OperationType.IndexWrite && heapBuildDone
+                        && pendingRootValue.HasValue && op.Value == pendingRootValue
+                        && op.Index1 == heapBoundary - 1)
+                    {
+                        heapBoundary--;
+                        pendingRootValue = null;
+                    }
+                }
 
                 var (highlights, bufferHighlights, highlightType, compareResult, writeSourceIndex, writePreviousValue, narrative) =
                     GenerateStepInfo(op, mainArray, bufferArrays);
@@ -51,7 +105,8 @@ public static class TutorialStepBuilder
                     CompareResult = compareResult,
                     WriteSourceIndex = writeSourceIndex,
                     WritePreviousValue = writePreviousValue,
-                    Narrative = narrative
+                    Narrative = narrative,
+                    HeapBoundary = trackHeap ? heapBoundary : null
                 });
                 opIdx++;
             }

@@ -33,6 +33,12 @@ public record TutorialStep
     /// <summary>IndexWrite 操作で上書きされる前の値（Write 以外は null）</summary>
     public int? WritePreviousValue { get; init; }
 
+    /// <summary>
+    /// ヒープ木表示用のヒープ境界。0 ≤ i &lt; HeapBoundary がヒープ内のノード。
+    /// Heap Sort 以外では null。抽出フェーズで Swap のたびに 1 減少する。
+    /// </summary>
+    public int? HeapBoundary { get; init; }
+
     /// <summary>この操作を日本語で説明するナラティブテキスト</summary>
     public string Narrative { get; init; } = string.Empty;
 }

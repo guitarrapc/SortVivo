@@ -403,6 +403,161 @@ tutorialDescription: """
     """
 ```
 
+#### ヒープ木表示（Heap Sort 専用ビジュアライゼーション）
+
+Heap Sort カテゴリのアルゴリズム（Heapsort / Bottom-up heapsort）では、マーブル表示に加えて**ヒープ木表示**に切り替え可能とする。配列を二分ヒープの木構造として SVG で描画し、ヒープ構築・抽出の過程を直感的に示す。
+
+##### 対象アルゴリズム
+
+| アルゴリズム | ヒープ木表示 | 備考 |
+|---|---|---|
+| Heapsort | ✅ | 標準二分ヒープ（子: `2i+1`, `2i+2`） |
+| Bottom-up heapsort | ✅ | 同上 |
+| Ternary heapsort | ❌（将来対応） | 三分木（子: `3i+1`, `3i+2`, `3i+3`）で専用レイアウトが必要 |
+| Weak heapsort | ❌（将来対応） | reverse-bit で木構造が動的に変化する |
+| Smoothsort | ❌（将来対応） | Leonardo ヒープの森で標準二分ヒープと構造が異なる |
+
+##### ヒープ木のレイアウト
+
+配列インデックスからヒープの親子関係を計算し、SVG で二分木を描画する。
+
+```
+配列: [9, 7, 8, 1, 5, 2, 4, 3]
+ヒープ境界: 8（全要素がヒープ内）
+
+            (9)              ← arr[0] (root)
+           /   \
+         (7)   (8)           ← arr[1], arr[2]
+        / \    / \
+      (1) (5)(2) (4)         ← arr[3]~arr[6]
+      /
+    (3)                      ← arr[7]
+
+抽出後: ヒープ境界 = 7
+配列: [8, 7, 4, 1, 5, 2, 3, |9]
+                              ↑ ソート済み（木から除外、薄く表示）
+            (8)
+           /   \
+         (7)   (4)
+        / \    /
+      (1) (5)(2)
+      /
+    (3)
+```
+
+- **親子関係**: `parent(i) = (i-1) / 2`、`left(i) = 2i+1`、`right(i) = 2i+2`
+- **ヒープ境界**: `HeapBoundary` で指定。`0 ≤ i < HeapBoundary` がヒープ内のノード
+- **ソート済み領域**: `HeapBoundary ≤ i < n` のノードは描画しない（マーブル行にのみ表示）
+
+##### ノードの描画仕様
+
+- **形状**: 直径 42px（PC）/ 36px（タブレット）/ 28px（スマホ）の円形
+- **背景色**: マーブルと同じ HSL カラーグラデーション（値ベース）
+- **数値表示**: 中央に白文字で値を表示
+- **ハイライト**: マーブルと同じアウトラインリング + グロー（Compare: 紫、Swap: 赤、Write: 橙）
+- **エッジ（辺）**: 親→子の直線、色 `rgba(255, 255, 255, 0.3)`、幅 1.5px
+  - ハイライト対象の辺: 操作色と同色、幅 2.5px、不透明度 0.7
+
+##### ノード配置の計算
+
+SVG viewBox ベースの座標計算でレスポンシブ対応。
+
+- **レベル間隔**: viewBox 高さを `depth + 1` 等分
+- **水平配置**: レベル `d` のノード数は最大 `2^d`。各ノードの水平位置はレベル内の位置に基づいて等間隔配置
+- **座標計算**:
+  ```
+  depth = floor(log₂(heapBoundary))
+  nodeY(level) = (level + 0.5) × (viewH / (depth + 1))
+  nodeX(level, posInLevel) = (posInLevel + 0.5) × (viewW / nodesAtLevel)
+  ```
+
+##### ヒープ境界の追跡
+
+`TutorialStep` に `HeapBoundary`（`int?`）を追加する。
+
+- **初期状態**: `null`（ヒープ木表示対象外）
+- **ヒープ構築フェーズ**: `HeapBoundary = n`（全要素がヒープ内）
+- **抽出フェーズ**: Swap 操作で root と末尾を交換するたびに `HeapBoundary` が 1 減少
+
+`TutorialStepBuilder` がアルゴリズムの `TutorialVisualizationHint == HeapTree` のとき、ヒープ境界を自動追跡する。
+
+**追跡ロジック**:
+1. 最初の Swap 操作（index1=0 を含む）が現れるまでは `HeapBoundary = n`（構築フェーズ）
+2. Swap で `index1 == 0`（root）かつ `index2 == heapBoundary - 1` のとき、`heapBoundary--`
+3. 全ステップに `HeapBoundary` を記録
+
+##### 切り替え UI
+
+```
+[🔵 Marble]  [🌳 Heap Tree]     ← セグメントボタン
+```
+
+- **表示条件**: `AlgorithmMetadata.TutorialVisualizationHint == HeapTree` のときのみ表示
+- **デフォルト**: Heap Tree（教育目的では木表示が主役）
+- **切り替え**: マーブル表示と木表示を排他的に切り替え（同時表示はしない）
+- **状態保持**: アルゴリズム切り替え時にリセット（デフォルトに戻る）
+
+##### `TutorialVisualizationHint` enum
+
+```csharp
+/// <summary>
+/// チュートリアルで利用可能な追加ビジュアライゼーションのヒント。
+/// アルゴリズムごとに設定し、木表示などの代替表現を有効化する。
+/// </summary>
+public enum TutorialVisualizationHint
+{
+    /// <summary>追加表示なし（マーブルのみ）</summary>
+    None,
+    /// <summary>ヒープ木表示（二分ヒープを SVG ツリーで描画）</summary>
+    HeapTree,
+}
+```
+
+`AlgorithmMetadata` に追加:
+
+```csharp
+/// <summary>チュートリアルで利用可能な追加ビジュアライゼーション</summary>
+public TutorialVisualizationHint TutorialVisualizationHint { get; init; } = TutorialVisualizationHint.None;
+```
+
+##### データフロー
+
+```
+AlgorithmMetadata.TutorialVisualizationHint == HeapTree
+    ↓
+TutorialStepBuilder.Build(initialArray, operations, hint)
+    ↓ ヒープ境界を自動追跡
+TutorialStep.HeapBoundary = 8, 7, 6, ...
+    ↓
+TutorialPage: ユーザーがトグルで表示切替
+    ↓
+HeapTreeRenderer.razor
+    ├ Values = step.ArraySnapshot
+    ├ HeapBoundary = step.HeapBoundary
+    ├ HighlightIndices / HighlightType
+    └ SVG で二分木を描画
+```
+
+##### アーキテクチャへの影響
+
+```
+Models/
+  TutorialVisualizationHint.cs   ← 新規: enum 定義
+  TutorialStep.cs                ← 変更: HeapBoundary プロパティ追加
+  AlgorithmMetadata.cs           ← 変更: TutorialVisualizationHint プロパティ追加
+
+Components/
+  HeapTreeRenderer.razor         ← 新規: ヒープ木 SVG 描画コンポーネント
+
+Services/
+  TutorialStepBuilder.cs         ← 変更: HeapBoundary 追跡ロジック追加
+  AlgorithmRegistry.cs           ← 変更: Heapsort / Bottom-up heapsort に HeapTree 設定
+
+Pages/
+  TutorialPage.razor             ← 変更: トグル UI + HeapTreeRenderer 呼び出し
+  TutorialPage.razor.css         ← 変更: トグル + ヒープ木スタイル追加
+```
+
 #### アーキテクチャへの影響（新規ファイル）
 
 ```
@@ -411,6 +566,7 @@ Pages/
 
 Components/
   MarbleRenderer.razor         ← マーブル描画コンポーネント
+  HeapTreeRenderer.razor       ← ヒープ木描画コンポーネント（Heap Sort 用）
   TutorialAlgorithmPanel.razor ← 説明パネル（上部）
   TutorialNarrativePanel.razor ← ステップ説明テキスト（中部）
   TutorialControls.razor       ← ナビゲーションボタン群
@@ -420,6 +576,7 @@ Services/
 
 Models/
   TutorialStep.cs              ← TutorialStep レコード定義
+  TutorialVisualizationHint.cs ← チュートリアル追加表示ヒント
 ```
 
 既存の `SortExecutor`・`AlgorithmRegistry`・`PlaybackService` はそのまま再利用する。

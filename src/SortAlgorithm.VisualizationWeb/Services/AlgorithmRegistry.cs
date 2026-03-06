@@ -341,7 +341,8 @@ public class AlgorithmRegistry
                 - Compare: during sift-down, the current node is compared against its two children; the larger child is promoted if it beats the parent
                 - Swap: the root swaps with the last unsorted element to extract the maximum; sift-down then swaps the demoted root downward until the heap property is restored
                 - End of phase: a heap-build phase first heapifies the entire array from the bottom up; the extraction phase then begins, growing the sorted region at the right one element per step
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.HeapTree);
         Add("Ternary heapsort", "Heap Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => TernaryHeapSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Same build-then-extract structure as Heapsort but uses a ternary heap where each node has up to three children; sift-down promotes the largest of the three children if it beats the current node.
@@ -363,7 +364,8 @@ public class AlgorithmRegistry
                 - Compare: no comparisons are made during the initial blind descent to the leaf; comparisons only occur during the upward walk to locate the correct insertion point for the displaced root
                 - Swap: once the correct level is found on the way up, the element is placed there with fewer total swaps than a standard top-down sift-down would require
                 - End of extraction: the pattern is identical to Heapsort — the sorted right region grows one element per step, but each step completes with fewer comparisons
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.HeapTree);
         Add("Weak heapSort", "Heap Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => WeakHeapSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Builds a weak heap — a relaxed binary tree where each node only needs to dominate its right subtree — tracked with one reverse-bit per node, then merges sub-heaps to extract elements in sorted order.
@@ -707,7 +709,8 @@ public class AlgorithmRegistry
 
     private void Add(string name, string category, string complexity, int maxElements, int recommendedSize,
         Action<Span<int>, ISortContext> sortAction, string description = "", string tutorialDescription = "",
-        TutorialArrayType tutorialArrayType = TutorialArrayType.Default, bool excludeFromTutorial = false)
+        TutorialArrayType tutorialArrayType = TutorialArrayType.Default, bool excludeFromTutorial = false,
+        TutorialVisualizationHint tutorialVisualizationHint = TutorialVisualizationHint.None)
     {
         _algorithms.Add(new AlgorithmMetadata
         {
@@ -720,7 +723,8 @@ public class AlgorithmRegistry
             Description = description,
             TutorialDescription = tutorialDescription,
             TutorialArrayType = tutorialArrayType,
-            ExcludeFromTutorial = excludeFromTutorial
+            ExcludeFromTutorial = excludeFromTutorial,
+            TutorialVisualizationHint = tutorialVisualizationHint
         });
     }
 }

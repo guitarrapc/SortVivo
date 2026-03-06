@@ -43,4 +43,10 @@ public record AlgorithmMetadata
     /// デフォルト配列でも専用配列でも教育的に表示できないアルゴリズムに設定する。
     /// </summary>
     public bool ExcludeFromTutorial { get; init; } = false;
+
+    /// <summary>
+    /// チュートリアルで利用可能な追加ビジュアライゼーション。
+    /// ヒープ木表示など、マーブル以外の代替表現を有効化する。
+    /// </summary>
+    public TutorialVisualizationHint TutorialVisualizationHint { get; init; } = TutorialVisualizationHint.None;
 }
