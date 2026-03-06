@@ -188,24 +188,58 @@
                     <div class="narrative-text">@GetCurrentNarrative()</div>
                 </div>
 
-                @* ─── 表示切替トグル（ヒープ木対応アルゴリズムのみ） ──────────── *@
+                @* ─── 表示切替トグル（ヒープ木・BST・バケット対応アルゴリズムのみ） ──────────── *@
                 @if (HasAlternateView())
                 {
                     <div class="tutorial-view-toggle">
-                        <button class="toggle-btn @(_showTreeView ? "" : "toggle-btn--active")" @onclick="() => _showTreeView = false">
+                        <button class="toggle-btn @(!_showTreeView && !_showBucketView ? "toggle-btn--active" : "")"
+                                @onclick="() => { _showTreeView = false; _showBucketView = false; }">
                             <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><circle cx="10" cy="10" r="7" /></svg>
                             Marble
                         </button>
-                        <button class="toggle-btn @(_showTreeView ? "toggle-btn--active" : "")" @onclick="() => _showTreeView = true">
-                            <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M10 2 L10 8 M10 8 L4 14 M10 8 L16 14" stroke="currentColor" stroke-width="2" fill="none" /></svg>
-                            @GetTreeToggleLabel()
-                        </button>
+                        @if (HasTreeView())
+                        {
+                            <button class="toggle-btn @(_showTreeView ? "toggle-btn--active" : "")"
+                                    @onclick="() => { _showTreeView = true; _showBucketView = false; }">
+                                <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M10 2 L10 8 M10 8 L4 14 M10 8 L16 14" stroke="currentColor" stroke-width="2" fill="none" /></svg>
+                                @GetTreeToggleLabel()
+                            </button>
+                        }
+                        @if (HasBucketView())
+                        {
+                            <button class="toggle-btn @(_showBucketView ? "toggle-btn--active" : "")"
+                                    @onclick="() => { _showBucketView = true; _showTreeView = false; }">
+                                <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                                    <rect x="2" y="8" width="4" height="10" rx="1" />
+                                    <rect x="8" y="5" width="4" height="13" rx="1" />
+                                    <rect x="14" y="11" width="4" height="7" rx="1" />
+                                </svg>
+                                Buckets
+                            </button>
+                        }
                     </div>
                 }
 
                 @* ─── ビジュアライゼーションエリア ──────────────────────────────── *@
                 <div class="tutorial-marble-area">
-                    @if (_showTreeView && HasAlternateView())
+                    @if (_showBucketView && HasBucketView())
+                    {
+                        @* Distribution view: Main Array マーブル + バケット表示（temp buffer は非表示） *@
+                        <MarbleRenderer Values="@GetCurrentMainArray()"
+                                        HighlightIndices="@GetCurrentHighlightIndices()"
+                                        HighlightType="@GetCurrentHighlightType()"
+                                        CompareResult="@GetCurrentCompareResult()"
+                                        WriteSourceIndex="@GetCurrentWriteSourceIndex()"
+                                        WritePreviousValue="@GetCurrentWritePreviousValue()"
+                                        MaxValue="@_maxValue"
+                                        StepIndex="@_currentStepIndex"
+                                        Label="Main Array" />
+                        <DistributionBucketRenderer Snapshot="@GetCurrentDistribution()"
+                                                    MaxValue="@_maxValue"
+                                                    StepIndex="@_currentStepIndex"
+                                                    Label="Buckets" />
+                    }
+                    else if (_showTreeView && HasTreeView())
                     {
                         @if (IsBstView())
                         {
@@ -240,16 +274,19 @@
                                         Label="Main Array" />
                     }
 
-                    @foreach (var bufferId in GetCurrentBufferIds())
+                    @if (!_showBucketView)
                     {
-                        <MarbleRenderer Values="@GetCurrentBufferArray(bufferId)"
-                                        HighlightIndices="@GetCurrentBufferHighlightIndices(bufferId)"
-                                        HighlightType="@GetCurrentHighlightType()"
-                                        CompareResult="@GetCurrentCompareResult()"
-                                        MaxValue="@_maxValue"
-                                        StepIndex="@_currentStepIndex"
-                                        Label="@($"Buffer {bufferId}")"
-                                        IsBuffer="true" />
+                        @foreach (var bufferId in GetCurrentBufferIds())
+                        {
+                            <MarbleRenderer Values="@GetCurrentBufferArray(bufferId)"
+                                            HighlightIndices="@GetCurrentBufferHighlightIndices(bufferId)"
+                                            HighlightType="@GetCurrentHighlightType()"
+                                            CompareResult="@GetCurrentCompareResult()"
+                                            MaxValue="@_maxValue"
+                                            StepIndex="@_currentStepIndex"
+                                            Label="@($"Buffer {bufferId}")"
+                                            IsBuffer="true" />
+                        }
                     }
                 </div>
             }
@@ -287,6 +324,7 @@
     private CancellationTokenSource? _autoPlayCts;
     private ElementReference _containerRef;
     private bool _showTreeView = true;  // デフォルトは木表示（ヒープ木対応アルゴリズムのみ）
+    private bool _showBucketView = true; // デフォルトはバケット表示（Distribution 対応アルゴリズムのみ）
 
     // ─── ナビゲーション ────────────────────────────────────────────────────
 
@@ -350,7 +388,8 @@
             _maxValue = tutorialArray.Length > 0 ? tutorialArray.Max() : 9;
             var (operations, _, _) = await Executor.ExecuteAndRecordAsync(tutorialArray, algo);
             _steps = TutorialStepBuilder.Build(tutorialArray, operations, algo.TutorialVisualizationHint);
-            _showTreeView = algo.TutorialVisualizationHint != TutorialVisualizationHint.None;
+            _showTreeView = HasTreeView();
+            _showBucketView = HasBucketView();
         }
         finally
         {
@@ -517,6 +556,18 @@
     private bool HasAlternateView()
         => _selectedAlgorithm?.TutorialVisualizationHint != TutorialVisualizationHint.None;
 
+    private bool HasTreeView()
+        => _selectedAlgorithm?.TutorialVisualizationHint is
+            TutorialVisualizationHint.HeapTree or
+            TutorialVisualizationHint.TernaryHeapTree or
+            TutorialVisualizationHint.WeakHeapTree or
+            TutorialVisualizationHint.BstTree or
+            TutorialVisualizationHint.AvlTree;
+
+    private bool HasBucketView()
+        => _selectedAlgorithm?.TutorialVisualizationHint is
+            TutorialVisualizationHint.ValueBucket;
+
     private bool IsBstView()
         => _selectedAlgorithm?.TutorialVisualizationHint is
             TutorialVisualizationHint.BstTree or
@@ -541,6 +592,32 @@
     private BstSnapshot? GetCurrentBst()
         => _currentStepIndex < 0 ? new BstSnapshot { Size = 0, Root = -1 }
             : _steps[_currentStepIndex].Bst;
+
+    private DistributionSnapshot? GetCurrentDistribution()
+    {
+        if (_currentStepIndex < 0)
+            return BuildInitialDistributionSnapshot();
+        return _steps[_currentStepIndex].Distribution;
+    }
+
+    private DistributionSnapshot? BuildInitialDistributionSnapshot()
+    {
+        if (_selectedAlgorithm == null || !HasBucketView()) return null;
+        var arr = GetTutorialArrayFor(_selectedAlgorithm);
+        if (arr.Length == 0) return null;
+        var minVal = arr.Min();
+        var maxVal = arr.Max();
+        var bucketCount = maxVal > minVal ? maxVal - minVal + 1 : 1;
+        return new DistributionSnapshot
+        {
+            BucketCount = bucketCount,
+            BucketLabels = Enumerable.Range(minVal, bucketCount).Select(v => v.ToString()).ToArray(),
+            Buckets = Enumerable.Range(0, bucketCount).Select(_ => Array.Empty<int>()).ToArray(),
+            Phase = DistributionPhase.Scatter,
+            ActiveBucketIndex = -1,
+            ActiveElementInBucket = -1,
+        };
+    }
 
     private string GetCurrentNarrative()
         => _currentStepIndex < 0

@@ -1,0 +1,87 @@
+@using SortAlgorithm.VisualizationWeb.Models
+
+<div class="dist-bucket-view">
+    <div class="dist-label-row">
+        @if (!string.IsNullOrEmpty(Label))
+        {
+            <span class="dist-row-label">@Label</span>
+        }
+        @if (Snapshot != null)
+        {
+            <span class="dist-phase-badge dist-phase-@Snapshot.Phase.ToString().ToLowerInvariant()">
+                @Snapshot.Phase
+                @if (!string.IsNullOrEmpty(Snapshot.PassLabel))
+                {
+                    <span class="dist-pass-label">— @Snapshot.PassLabel</span>
+                }
+            </span>
+        }
+    </div>
+
+    @if (Snapshot == null || Snapshot.BucketCount == 0)
+    {
+        <div class="dist-empty">Waiting for sort to begin…</div>
+    }
+    else
+    {
+        <div class="dist-buckets">
+            @for (int b = 0; b < Snapshot.BucketCount; b++)
+            {
+                var bucketIdx = b;
+                bool isActiveBucket = Snapshot.ActiveBucketIndex == bucketIdx;
+                var elements = Snapshot.Buckets[bucketIdx];
+                string bucketActiveClass = isActiveBucket
+                    ? $" dist-bucket--active dist-bucket--{Snapshot.Phase.ToString().ToLowerInvariant()}"
+                    : "";
+
+                <div @key="bucketIdx" class="dist-bucket@(bucketActiveClass)">
+                    <div class="dist-bucket-body">
+                        @* 天辺（最後に追加）が上に来るよう逆順でレンダリング *@
+                        @for (int e = elements.Length - 1; e >= 0; e--)
+                        {
+                            var elemIdx = e;
+                            var value = elements[elemIdx];
+                            bool isActiveElem = isActiveBucket && Snapshot.ActiveElementInBucket == elemIdx;
+                            string marbleActiveClass = isActiveElem
+                                ? $" dist-marble--active dist-marble--{Snapshot.Phase.ToString().ToLowerInvariant()}"
+                                : "";
+
+                            <div @key="@($"{StepIndex}-{bucketIdx}-{elemIdx}")"
+                                 class="dist-marble@(marbleActiveClass)"
+                                 style="background: @GetValueColor(value);">
+                                @value
+                            </div>
+                        }
+                    </div>
+                    <div class="dist-bucket-label">@Snapshot.BucketLabels[bucketIdx]</div>
+                </div>
+            }
+        </div>
+    }
+</div>
+
+@code {
+    /// <summary>現在のバケット分配スナップショット（null = 初期状態）</summary>
+    [Parameter] public DistributionSnapshot? Snapshot { get; set; }
+
+    /// <summary>配列内の最大値（HSL グラデーション計算に使用）</summary>
+    [Parameter] public int MaxValue { get; set; } = 9;
+
+    /// <summary>現在のステップインデックス（@key 再トリガー用）</summary>
+    [Parameter] public int StepIndex { get; set; } = -1;
+
+    /// <summary>ラベル（例: "Buckets"）</summary>
+    [Parameter] public string Label { get; set; } = "Buckets";
+
+    /// <summary>
+    /// 値に応じた HSL カラーを計算する。MarbleRenderer と同一の計算式。
+    /// 小さい値 = 青 (hue=210) 〜 大きい値 = 赤 (hue=0) のグラデーション。
+    /// </summary>
+    private string GetValueColor(int value)
+    {
+        if (MaxValue <= 1) return "hsl(210, 75%, 42%)";
+        var ratio = (double)(value - 1) / (MaxValue - 1);
+        var hue = (int)(210 * (1.0 - ratio));
+        return $"hsl({hue}, 75%, 42%)";
+    }
+}

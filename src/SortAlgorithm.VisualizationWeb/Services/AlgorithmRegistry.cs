@@ -539,7 +539,8 @@ public class AlgorithmRegistry
                 - IndexRead: each element's value is used directly as the bucket index; the element is deposited into that bucket slot
                 - IndexWrite: elements are written into their bucket positions during the scatter phase
                 - IndexRead + IndexWrite: during the gather phase, buckets are read in value order and each element is written back to the output array
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.ValueBucket);
         Add("Bucket sort", "Distribution Sorts", "O(n)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => BucketSortInteger.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Divides the value range into a fixed number of equal-width buckets, scatters each element into its corresponding bucket, sorts each non-empty bucket independently, then concatenates all buckets in order.

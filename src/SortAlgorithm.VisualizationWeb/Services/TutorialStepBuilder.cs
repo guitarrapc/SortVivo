@@ -68,6 +68,29 @@ public static class TutorialStepBuilder
         int[] avlRotatedNodes = [];
         string? avlRotationDesc = null;
 
+        // Distribution bucket tracking for ValueBucket visualization
+        // Pigeonhole sort emits: IndexRead(main,i) + IndexWrite(temp,i,v) × n (scatter)
+        //                   then IndexRead(temp,j) + IndexWrite(main,pos,v) × n (gather).
+        // We track logical buckets (value → bucket index) by deriving bucket assignments
+        // from the value being written to temp and the minValue of the initial array.
+        var trackDistribution = hint == TutorialVisualizationHint.ValueBucket;
+        int distMinValue = 0;
+        int distBucketCount = 0;
+        string[] distBucketLabels = [];
+        List<int>[] distBuckets = [];
+        int[] distShadowTemp = [];       // shadow of temp buffer: distShadowTemp[pos] = value written there
+        DistributionPhase distPhase = DistributionPhase.Scatter;
+        int? distPendingGatherBucket = null;  // bucket index from most recent Read(temp), cleared by Write(main)
+        if (trackDistribution)
+        {
+            distMinValue = initialArray.Length > 0 ? initialArray.Min() : 0;
+            int distMaxValue = initialArray.Length > 0 ? initialArray.Max() : 0;
+            distBucketCount = distMaxValue > distMinValue ? distMaxValue - distMinValue + 1 : 1;
+            distBucketLabels = Enumerable.Range(distMinValue, distBucketCount).Select(v => v.ToString()).ToArray();
+            distBuckets = Enumerable.Range(0, distBucketCount).Select(_ => new List<int>()).ToArray();
+            distShadowTemp = new int[initialArray.Length];
+        }
+
         int opIdx = 0;
         while (opIdx < operations.Count)
         {
@@ -230,6 +253,67 @@ public static class TutorialStepBuilder
                     };
                 }
 
+                // Track Distribution state for ValueBucket visualization (Pigeonhole sort)
+                // Operations are processed BEFORE ApplyOperation so that bucket state matches the snapshot.
+                DistributionSnapshot? distSnapshot = null;
+                int distActiveBucket = -1;
+                int distActiveElement = -1;
+                if (trackDistribution)
+                {
+                    if (op.Type == OperationType.IndexWrite && op.BufferId1 == 1 && op.Value.HasValue)
+                    {
+                        // Scatter: Write(temp, pos, v) — element enters its logical bucket
+                        int v = op.Value.Value;
+                        int bIdx = v - distMinValue;
+                        if ((uint)bIdx < (uint)distBucketCount)
+                        {
+                            distBuckets[bIdx].Add(v);
+                            if (op.Index1 < distShadowTemp.Length)
+                                distShadowTemp[op.Index1] = v;
+                            distActiveBucket = bIdx;
+                            distActiveElement = distBuckets[bIdx].Count - 1;
+                            distPhase = DistributionPhase.Scatter;
+                        }
+                    }
+                    else if (op.Type == OperationType.IndexRead && op.BufferId1 == 1)
+                    {
+                        // Gather: Read(temp, j) — identify which bucket this gather is from
+                        if (op.Index1 >= 0 && op.Index1 < distShadowTemp.Length)
+                        {
+                            int v = distShadowTemp[op.Index1];
+                            int bIdx = v - distMinValue;
+                            if ((uint)bIdx < (uint)distBucketCount)
+                            {
+                                distActiveBucket = bIdx;
+                                distActiveElement = distBuckets[bIdx].Count - 1;
+                                distPendingGatherBucket = bIdx;
+                                distPhase = DistributionPhase.Gather;
+                            }
+                        }
+                    }
+                    else if (op.Type == OperationType.IndexWrite && op.BufferId1 == 0 && distPendingGatherBucket.HasValue)
+                    {
+                        // Gather: Write(main, pos, v) — element leaves its bucket
+                        int bIdx = distPendingGatherBucket.Value;
+                        if (distBuckets[bIdx].Count > 0)
+                            distBuckets[bIdx].RemoveAt(distBuckets[bIdx].Count - 1);
+                        distActiveBucket = bIdx;
+                        distActiveElement = -1;
+                        distPendingGatherBucket = null;
+                        distPhase = DistributionPhase.Gather;
+                    }
+
+                    distSnapshot = new DistributionSnapshot
+                    {
+                        BucketCount = distBucketCount,
+                        BucketLabels = distBucketLabels,
+                        Buckets = distBuckets.Select(b => b.ToArray()).ToArray(),
+                        Phase = distPhase,
+                        ActiveBucketIndex = distActiveBucket,
+                        ActiveElementInBucket = distActiveElement,
+                    };
+                }
+
                 var (highlights, bufferHighlights, highlightType, compareResult, writeSourceIndex, writePreviousValue, narrative) =
                     GenerateStepInfo(op, mainArray, bufferArrays);
 
@@ -255,6 +339,23 @@ public static class TutorialStepBuilder
                     };
                 }
 
+                // Override narrative with Distribution-specific text
+                if (distSnapshot != null)
+                {
+                    narrative = (op.Type, op.BufferId1) switch
+                    {
+                        (OperationType.IndexRead, 0) when distPhase == DistributionPhase.Scatter
+                            => $"Read value {GetValue(0, op.Index1, mainArray, bufferArrays)} from index {op.Index1}",
+                        (OperationType.IndexWrite, 1) when op.Value.HasValue && distActiveBucket >= 0
+                            => $"Scatter value {op.Value.Value} into bucket [{distBucketLabels[distActiveBucket]}]",
+                        (OperationType.IndexRead, 1) when distActiveBucket >= 0 && op.Index1 < distShadowTemp.Length
+                            => $"Pick up value {distShadowTemp[op.Index1]} from bucket [{distBucketLabels[distActiveBucket]}]",
+                        (OperationType.IndexWrite, 0) when distPhase == DistributionPhase.Gather && distActiveBucket >= 0
+                            => $"Place value {op.Value!.Value} from bucket [{distBucketLabels[distActiveBucket]}] to index {op.Index1}",
+                        _ => narrative
+                    };
+                }
+
                 ApplyOperation(op, mainArray, bufferArrays);
 
                 steps.Add(new TutorialStep
@@ -271,7 +372,8 @@ public static class TutorialStepBuilder
                     Narrative = narrative,
                     HeapBoundary = trackHeap ? heapBoundary : null,
                     WeakHeapReverseBits = trackWeakHeap ? (bool[])reverseBits.Clone() : null,
-                    Bst = bstSnapshot
+                    Bst = bstSnapshot,
+                    Distribution = distSnapshot,
                 });
                 opIdx++;
             }

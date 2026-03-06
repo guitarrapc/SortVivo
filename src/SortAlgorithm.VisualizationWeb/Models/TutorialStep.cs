@@ -52,6 +52,12 @@ public record TutorialStep
     /// </summary>
     public BstSnapshot? Bst { get; init; }
 
+    /// <summary>
+    /// Distribution Sorts チュートリアル用のバケット分配スナップショット。
+    /// TutorialVisualizationHint が ValueBucket / DigitBucketLsd / DigitBucketMsd のとき使用（他は null）。
+    /// </summary>
+    public DistributionSnapshot? Distribution { get; init; }
+
     /// <summary>この操作を日本語で説明するナラティブテキスト</summary>
     public string Narrative { get; init; } = string.Empty;
 }

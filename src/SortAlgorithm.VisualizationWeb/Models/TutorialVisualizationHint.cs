@@ -23,4 +23,11 @@ public enum TutorialVisualizationHint
 
     /// <summary>AVL 木表示（回転後の平衡 BST を描画。balance factor 付き）</summary>
     AvlTree,
+
+    /// <summary>
+    /// 値ベースのバケット分配表示。
+    /// Pigeonhole sort: 値と 1 対 1 対応する穴にマーブルが落ちる様子を描画する。
+    /// Counting sort / Bucket sort も対応予定（Phase A-3）。
+    /// </summary>
+    ValueBucket,
 }

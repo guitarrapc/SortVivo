@@ -792,6 +792,146 @@
     animation: marble-pop 0.3s ease;
 }
 
+/* ─── DistributionBucketRenderer スコープ外から指定するスタイル ──────────── */
+::deep .dist-bucket-view {
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+    width: 100%;
+}
+
+::deep .dist-label-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+::deep .dist-row-label {
+    font-size: 0.75rem;
+    color: var(--text-gray);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+::deep .dist-phase-badge {
+    font-size: 0.68rem;
+    font-weight: 600;
+    padding: 0.15rem 0.5rem;
+    border-radius: 9999px;
+    text-transform: capitalize;
+}
+
+::deep .dist-phase-scatter {
+    background: rgba(251, 191, 36, 0.15);
+    color: #FBBF24;
+    border: 1px solid rgba(251, 191, 36, 0.35);
+}
+
+::deep .dist-phase-gather {
+    background: rgba(249, 115, 22, 0.15);
+    color: #F97316;
+    border: 1px solid rgba(249, 115, 22, 0.35);
+}
+
+::deep .dist-pass-label {
+    font-weight: 400;
+    opacity: 0.8;
+}
+
+::deep .dist-empty {
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+::deep .dist-buckets {
+    display: flex;
+    gap: 6px;
+    align-items: flex-end;
+    justify-content: center;
+    flex-wrap: wrap;
+    padding: 0.25rem 0.5rem;
+}
+
+::deep .dist-bucket {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+}
+
+::deep .dist-bucket-body {
+    display: flex;
+    flex-direction: column-reverse; /* 最後に追加した要素が上（天辺）に来る */
+    align-items: center;
+    gap: 3px;
+    min-height: 56px;            /* 空バケット時も枠を確保 */
+    width: 50px;
+    padding: 4px 3px;
+    border: 1.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 4px;
+    background: rgba(255, 255, 255, 0.02);
+    transition: border-color 0.2s ease, background 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Scatter アクティブバケット: amber */
+::deep .dist-bucket--scatter .dist-bucket-body {
+    border-color: rgba(251, 191, 36, 0.55);
+    background: rgba(251, 191, 36, 0.06);
+    box-shadow: 0 0 10px rgba(251, 191, 36, 0.2);
+}
+
+/* Gather アクティブバケット: orange */
+::deep .dist-bucket--gather .dist-bucket-body {
+    border-color: rgba(249, 115, 22, 0.55);
+    background: rgba(249, 115, 22, 0.06);
+    box-shadow: 0 0 10px rgba(249, 115, 22, 0.2);
+}
+
+::deep .dist-bucket-label {
+    font-size: 0.7rem;
+    color: var(--text-secondary);
+    text-align: center;
+    min-width: 20px;
+    font-family: monospace;
+}
+
+::deep .dist-bucket--active .dist-bucket-label {
+    color: var(--text-primary);
+    font-weight: 600;
+}
+
+::deep .dist-marble {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.9rem;
+    font-weight: 700;
+    color: #ffffff;
+    border: 2.5px solid transparent;
+    flex-shrink: 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.35);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+/* Scatter でアクティブなマーブル: amber ハイライト */
+::deep .dist-marble--scatter {
+    border-color: #FBBF24;
+    box-shadow: 0 0 0 3px rgba(251, 191, 36, 0.5), 0 0 10px rgba(251, 191, 36, 0.35);
+    transform: scale(1.1);
+}
+
+/* Gather でアクティブなマーブル: orange ハイライト */
+::deep .dist-marble--gather {
+    border-color: #F97316;
+    box-shadow: 0 0 0 3px rgba(249, 115, 22, 0.5), 0 0 10px rgba(249, 115, 22, 0.35);
+    transform: scale(1.1);
+}
+
 @keyframes marble-pop {
     0% {
         transform: scale(1);
@@ -1002,6 +1142,22 @@
         font-size: 0.7rem;
     }
 
+    /* タブレット: dist-bucket を少し小さく */
+    ::deep .dist-bucket-body {
+        width: 44px;
+        min-height: 50px;
+    }
+
+    ::deep .dist-marble {
+        width: 36px;
+        height: 36px;
+        font-size: 0.82rem;
+    }
+
+    ::deep .dist-buckets {
+        gap: 4px;
+    }
+
     .tutorial-cards-panel .controls-fieldset {
         gap: 8px;
     }
@@ -1142,6 +1298,28 @@
         width: 22px;
         height: 22px;
         font-size: 0.65rem;
+    }
+
+    /* スマホ: dist-bucket をさらに小さく */
+    ::deep .dist-bucket-body {
+        width: 36px;
+        min-height: 42px;
+        padding: 3px 2px;
+    }
+
+    ::deep .dist-marble {
+        width: 30px;
+        height: 30px;
+        font-size: 0.72rem;
+        border-width: 2px;
+    }
+
+    ::deep .dist-buckets {
+        gap: 3px;
+    }
+
+    ::deep .dist-bucket-label {
+        font-size: 0.62rem;
     }
 
     .toggle-btn {
