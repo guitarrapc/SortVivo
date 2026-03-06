@@ -195,6 +195,7 @@ public static class DropMergeSort
 
         // First step: heuristically find the Longest Nondecreasing Subsequence (LNS).
         // The LNS is kept in-place at span[0..write] while dropped elements go to the dropped buffer.
+        context.OnPhase(SortPhase.DropMergeDetect);
         var droppedCount = 0;
         var droppedInRow = 0;
         var undoCount = 0;           // Track number of undo operations (backtracking due to RECENCY)
@@ -333,6 +334,7 @@ public static class DropMergeSort
         // Second step: sort the dropped elements
         if (droppedCount > 0)
         {
+            context.OnPhase(SortPhase.DropMergeSort, droppedCount);
             var droppedSpan = droppedBuffer.Slice(0, droppedCount);
             // Use SortSpan for dropped elements to track statistics correctly
             var droppedSortSpan = new SortSpan<T, TComparer, TContext>(droppedSpan, context, comparer, BUFFER_DROPPED);
@@ -340,6 +342,7 @@ public static class DropMergeSort
         }
 
         // Third step: merge span[0..write] and droppedBuffer[0..droppedCount]
+        context.OnPhase(SortPhase.DropMergeMerge, droppedCount, s.Length);
         var back = s.Length;
         var droppedIndex = droppedCount - 1;
 
