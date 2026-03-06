@@ -194,7 +194,8 @@ public static class QuickSort
         }
 
         // Recursively sort left and right partitions
-        // After partitioning: [left..j] <= pivot, [i..right] >= pivot
+        // After partitioning, elements in [left..j] are not greater than the pivot region,
+        // and elements in [i..right] are not less than the pivot region.
         if (left < j)
         {
             SortCore<T, TComparer, TContext>(s, left, j);
