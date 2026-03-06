@@ -84,6 +84,9 @@ public record TutorialStep
     public int? WriteSourceIndex { get; init; }
     public int? WritePreviousValue { get; init; }
 
+    public string Phase { get; init; } = string.Empty;
+    public Dictionary<int, RoleType> Roles { get; init; } = new();
+
     public string Narrative { get; init; } = string.Empty;
 }
 ```
@@ -100,6 +103,112 @@ public record TutorialStep
 | IndexRead | 「位置 {i} の値 {v} を読み取る」 |
 | IndexWrite | 「位置 {i} に値 {v} を書き込む」 |
 | RangeCopy | 「位置 {src}〜{src+len-1} をバッファの位置 {dst} へコピーする」 |
+
+#### フェーズ・役割マーカー（Phase / Role Tracker）
+
+アルゴリズムの意味論的なポイントを伝えるため、各ステップに**フェーズ（局面）**と**役割マーカー（Role）**を付与する。
+
+##### フェーズ（Phase）
+
+複数ステップにまたがる「今何をしているか」を1行テキストで表示する。
+
+| アルゴリズム | フェーズテキスト例 |
+|---|---|
+| Bubble Sort | 「パス 1/7：最大値を右端へバブル中」 |
+| Selection Sort | 「位置 0〜7 の最小値を探索中」 |
+| Quick Sort | 「ピボット 5 で左右に分割中」 |
+| Radix LSD | 「一の位でソート中（パス 1/2）」 |
+
+- **UI**: ナラティブパネルの**直上**に `フェーズバー` として表示（薄いグレー背景 + 小フォント）
+- **更新タイミング**: フェーズが変わったステップのみ更新。変わらないステップは前のフェーズを継続表示
+- **非設定時**: `Phase` が空文字の場合はフェーズバーを非表示
+
+`ISortContext` への追加:
+
+```csharp
+void OnPhase(string description);
+```
+
+`TutorialStepBuilder` の動作:
+- `OnPhase` が記録された操作に対応するステップへ `Phase` をセット
+- 呼び出しのないステップは直前の `Phase` 値を引き継ぐ
+
+##### 役割マーカー（Role）
+
+特定インデックスに付与する「この要素は今何者か」の情報。マーブルの**上部**に小さいラベルバッジとして表示する。
+
+```csharp
+public enum RoleType
+{
+    None,
+    Pivot,
+    CurrentMin,
+    CurrentMax,
+    LeftPointer,
+    RightPointer,
+}
+```
+
+| ロール | 対象アルゴリズム例 | バッジ色 |
+|---|---|---|
+| `Pivot` | Quick Sort のピボット | 金 `#EAB308` |
+| `CurrentMin` | Selection Sort の最小値候補 | 黄 `#FBBF24` |
+| `CurrentMax` | Bubble Sort の右端バブル要素 | 橙 `#F97316` |
+| `LeftPointer` | 2 ポインタ系の左端 | 水 `#38BDF8` |
+| `RightPointer` | 2 ポインタ系の右端 | 緑 `#4ADE80` |
+
+- **表示条件**: `TutorialStep.Roles` に含まれるインデックスのマーブルのみ表示
+- **複数ロール**: 同一インデックスに複数ロールは付与しない（最後に設定されたものを使用）
+- **ロールのクリア**: `RoleType.None` を指定すると該当インデックスのロールを削除
+
+`ISortContext` への追加:
+
+```csharp
+void OnRole(int index, int bufferId, RoleType role);
+```
+
+- `index`: ロールを付与する配列インデックス
+- `bufferId`: メイン配列（`BUFFER_MAIN`）またはバッファー ID
+- `role`: 付与するロール（`None` を指定するとロールをクリア）
+
+`TutorialStepBuilder` の動作:
+- `OnRole` が記録された操作に対応するステップへ `Roles` をセット
+- ロール情報はステップをまたいで保持（`None` で明示的にクリアするまで継続）
+
+##### データフロー
+
+```
+ISortContext（TutorialContext 実装）
+  OnPhase("パス 1/7：最大値を右端へバブル中")
+  OnRole(pivotIdx, BUFFER_MAIN, RoleType.Pivot)
+        ↓
+TutorialStepBuilder.Build(operations)
+        ↓
+TutorialStep.Phase = "パス 1/7：最大値を右端へバブル中"
+TutorialStep.Roles = { 3: Pivot }
+        ↓
+TutorialPage → TutorialNarrativePanel / MarbleRenderer
+  ├ フェーズバー（Phase テキスト）
+  └ マーブル上部ロールバッジ
+```
+
+##### アーキテクチャへの影響
+
+```
+Contexts/
+  ISortContext.cs                ← 変更: OnPhase / OnRole メソッド追加
+
+Models/
+  RoleType.cs                   ← 新規: RoleType enum 定義
+  TutorialStep.cs               ← 変更: Phase / Roles プロパティ追加
+
+Services/
+  TutorialStepBuilder.cs        ← 変更: Phase / Roles 伝播ロジック追加
+
+Components/
+  MarbleRenderer.razor          ← 変更: Roles パラメータ追加、ロールバッジ表示
+  TutorialNarrativePanel.razor  ← 変更: フェーズバー表示追加
+```
 
 #### マーブルのビジュアル仕様
 
@@ -317,6 +426,8 @@ Merge sort など補助配列が必要なアルゴリズムは、バッファー
 │  │ 隣り合う2要素を比較し、大きい方を右に移動させる操作を繰り返す。 │  │
 │  │ 時間計算量: O(n²)  空間計算量: O(1)  安定: ✓                    │  │
 │  └──────────────────────────────────────────────────────────────────┘  │
+├────────────────────────────────────────────────────────────────────────┤
+│  📍 パス 1/7：最大値を右端へバブル中（フェーズバー、Phase 非空時のみ）  │
 ├────────────────────────────────────────────────────────────────────────┤
 │  ステップ説明テキスト（中部）                                          │
 │  ┌──────────────────────────────────────────────────────────────────┐  │
@@ -878,6 +989,7 @@ Models/
   TutorialStep.cs              ← TutorialStep レコード定義
   TutorialVisualizationHint.cs ← チュートリアル追加表示ヒント
   BstSnapshot.cs               ← BST スナップショットレコード
+  RoleType.cs                  ← RoleType enum 定義（Phase / Role Tracker）
 ```
 
 既存の `SortExecutor`・`AlgorithmRegistry`・`PlaybackService` はそのまま再利用する。

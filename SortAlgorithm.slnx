@@ -22,7 +22,6 @@
     <File Path="Docs/VisualizationWeb_Rendering_Performance_Improvement.md" />
     <File Path="Docs/VisualizationWeb_Sound_Spec.md" />
     <File Path="Docs/VisualizationWeb_tutorial.md" />
-    <File Path="Docs/VisualizationWeb_tutorial_phase_role_design.md" />
     <File Path="Docs/VisualizationWeb_UIUX_Spec.md" />
   </Folder>
   <Folder Name="/sandbox/">
