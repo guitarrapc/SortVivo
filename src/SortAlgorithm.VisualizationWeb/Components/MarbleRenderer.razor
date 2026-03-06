@@ -10,17 +10,18 @@
             @if (HighlightType == OperationType.Swap && HighlightIndices.Length == 2)
             {
                 var (li, ri) = GetSortedPair();
-                var unit = 100;
-                var viewW = Values.Length * unit;
-                var viewH = 48;
-                var leftX = li * unit + unit / 2;
-                var rightX = ri * unit + unit / 2;
+                var unit = 68;         // marble_width(56) + gap(12)
+                var marbleHalf = 28;   // marble_width / 2
+                var viewW = Values.Length * unit - 12;
+                var viewH = 56;
+                var leftX = li * unit + marbleHalf;
+                var rightX = ri * unit + marbleHalf;
                 var midX = (leftX + rightX) / 2;
-                var startY = viewH - 2;
-                var ctrlY1 = 6;
-                var ctrlY2 = 22;
+                var startY = 24;       // arrow_area(56) - lift(20) - scale(4) - glow(4) - margin(4)
+                var ctrlY1 = 4;
+                var ctrlY2 = 14;
 
-                <svg class="marble-swap-arrows" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMid meet">
+                <svg class="marble-swap-arrows" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="none">
                     <defs>
                         <marker id="@_arrowMarkerId" markerWidth="10" markerHeight="7"
                                 refX="9" refY="3.5" orient="auto">
@@ -40,19 +41,20 @@
             else if (HighlightType == OperationType.Compare && HighlightIndices.Length == 2 && CompareResult.HasValue)
             {
                 var (li, ri) = GetSortedPair();
-                var unit = 100;
-                var viewW = Values.Length * unit;
-                var viewH = 48;
-                var leftX = li * unit + unit / 2;
-                var rightX = ri * unit + unit / 2;
+                var unit = 68;
+                var marbleHalf = 28;
+                var viewW = Values.Length * unit - 12;
+                var viewH = 56;
+                var leftX = li * unit + marbleHalf;
+                var rightX = ri * unit + marbleHalf;
                 var midX = (leftX + rightX) / 2;
                 // HighlightIndices[0] が元の Index1。左に来たら向きそのまま、右に来たら反転
                 var displayResult = HighlightIndices[0] <= HighlightIndices[1]
                     ? CompareResult.Value : -CompareResult.Value;
                 var symbol = displayResult > 0 ? ">" : displayResult < 0 ? "<" : "=";
 
-                <svg class="marble-compare-symbol" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMid meet">
-                    <text x="@midX" y="@(viewH - 4)" text-anchor="middle" font-size="36"
+                <svg class="marble-compare-symbol" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="none">
+                    <text x="@midX" y="22" text-anchor="middle" dominant-baseline="auto" font-size="16"
                           font-weight="bold" fill="#A855F7" opacity="0.9">@symbol</text>
                 </svg>
             }
@@ -60,16 +62,17 @@
             {
                 var srcIdx = WriteSourceIndex.Value;
                 var dstIdx = HighlightIndices[0];
-                var unit = 100;
-                var viewW = Values.Length * unit;
-                var viewH = 48;
-                var srcX = srcIdx * unit + unit / 2;
-                var dstX = dstIdx * unit + unit / 2;
+                var unit = 68;
+                var marbleHalf = 28;
+                var viewW = Values.Length * unit - 12;
+                var viewH = 56;
+                var srcX = srcIdx * unit + marbleHalf;
+                var dstX = dstIdx * unit + marbleHalf;
                 var midX = (srcX + dstX) / 2;
-                var startY = viewH - 2;
+                var startY = 24;
                 var ctrlY = 8;
 
-                <svg class="marble-write-arrow" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMid meet">
+                <svg class="marble-write-arrow" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="none">
                     <defs>
                         <marker id="@_writeArrowMarkerId" markerWidth="10" markerHeight="7"
                                 refX="9" refY="3.5" orient="auto">
