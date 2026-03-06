@@ -152,6 +152,7 @@ public static class AmericanFlagSort
         Span<int> bucketNext = stackalloc int[RadixSize];        // Current write position for each bucket
 
         // Phase 1: Count occurrences of each digit value
+        s.Context.OnPhase(SortPhase.RadixPass, digit, digit);
         // Store count for digit d in bucketCounts[d+1] (off-by-one trick for prefix sum)
         bucketCounts.Clear();
 

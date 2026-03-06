@@ -156,18 +156,21 @@ public static class CountingSort
         where TContext : ISortContext
     {
         // Count occurrences of each key
+        s.Context.OnPhase(SortPhase.DistributionCount);
         for (var i = 0; i < s.Length; i++)
         {
             countArray[keys[i] - min]++;
         }
 
         // Calculate cumulative counts (for stable sort)
+        s.Context.OnPhase(SortPhase.DistributionAccumulate);
         for (var i = 1; i < countArray.Length; i++)
         {
             countArray[i] += countArray[i - 1];
         }
 
         // Build result array in reverse order to maintain stability
+        s.Context.OnPhase(SortPhase.DistributionWrite);
         for (var i = s.Length - 1; i >= 0; i--)
         {
             var key = keys[i];
@@ -314,6 +317,7 @@ public static class CountingSortInteger
         where TContext : ISortContext
     {
         // Count occurrences
+        s.Context.OnPhase(SortPhase.DistributionCount);
         for (var i = 0; i < s.Length; i++)
         {
             var value = s.Read(i);
@@ -322,12 +326,14 @@ public static class CountingSortInteger
         }
 
         // Calculate cumulative counts (for stable sort)
+        s.Context.OnPhase(SortPhase.DistributionAccumulate);
         for (var i = 1; i < countArray.Length; i++)
         {
             countArray[i] += countArray[i - 1];
         }
 
         // Build result array in reverse order to maintain stability
+        s.Context.OnPhase(SortPhase.DistributionWrite);
         for (var i = s.Length - 1; i >= 0; i--)
         {
             var value = s.Read(i);

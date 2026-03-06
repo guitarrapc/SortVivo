@@ -184,6 +184,7 @@ public static class RadixLSD4Sort
         // Perform LSD radix sort with ping-pong buffers for values and keys
         for (int d = 0; d < digitCount; d++)
         {
+            src.Context.OnPhase(SortPhase.RadixPass, d, digitCount);
             var shift = d * RadixBits;
 
             // Clear bucket offsets

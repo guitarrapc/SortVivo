@@ -171,10 +171,11 @@ public static class PigeonholeSort
         where TContext : ISortContext
     {
         // Phase 1: Copy elements to temp and append each to the tail of its hole's linked list (O(n))
+        source.Context.OnPhase(SortPhase.DistributionCount);
         for (var i = 0; i < source.Length; i++)
         {
             temp.Write(i, source.Read(i));
-            var h = (int)(keys[i] - baseKey); // long subtraction: safe after range ≤ MaxHoleArraySize validation
+            var h = (int)(keys[i] - baseKey);
             if (holeHead[h] == -1)
                 holeHead[h] = i;
             else
@@ -184,6 +185,7 @@ public static class PigeonholeSort
         }
 
         // Phase 2: Collect elements from holes in ascending key order (O(n + k))
+        source.Context.OnPhase(SortPhase.DistributionWrite);
         var pos = 0;
         for (var h = 0; h < holeHead.Length; h++)
         {
@@ -351,6 +353,7 @@ public static class PigeonholeSortInteger
         where TContext : ISortContext
     {
         // Phase 1: Copy elements to temp and append each to the tail of its hole's linked list (O(n))
+        source.Context.OnPhase(SortPhase.DistributionCount);
         for (var i = 0; i < source.Length; i++)
         {
             var value = source.Read(i);
@@ -365,6 +368,7 @@ public static class PigeonholeSortInteger
         }
 
         // Phase 2: Collect elements from holes in ascending value order (O(n + k))
+        source.Context.OnPhase(SortPhase.DistributionWrite);
         var pos = 0;
         for (var h = 0; h < holeHead.Length; h++)
         {

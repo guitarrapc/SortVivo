@@ -154,6 +154,7 @@ public static class RadixMSD4Sort
             return;
         }
 
+        s.Context.OnPhase(SortPhase.RadixPass, digit, digit);
         var shift = digit * RadixBits;
 
         // Allocate bucket counts on stack (RadixSize+1 = 5 elements = 20 bytes)

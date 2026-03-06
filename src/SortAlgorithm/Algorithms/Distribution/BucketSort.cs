@@ -171,6 +171,7 @@ public static class BucketSort
 
         // First pass: convert keys to bucket indices and count
         // Reuse keys array to store bucket indices (eliminates division in second pass)
+        s.Context.OnPhase(SortPhase.DistributionCount);
         for (var i = 0; i < s.Length; i++)
         {
             var key = keys[i];
@@ -187,6 +188,7 @@ public static class BucketSort
         }
 
         // Calculate starting position for each bucket in the temp array
+        s.Context.OnPhase(SortPhase.DistributionAccumulate);
         var offset = 0;
         for (var i = 0; i < bucketCount; i++)
         {
@@ -195,6 +197,7 @@ public static class BucketSort
         }
 
         // Second pass: distribute elements using cached bucket indices
+        s.Context.OnPhase(SortPhase.DistributionWrite);
         for (var i = 0; i < s.Length; i++)
         {
             var bucketIndex = keys[i]; // Reuse bucket index (no division)
@@ -408,6 +411,7 @@ public static class BucketSortInteger
         }
 
         // Calculate starting position for each bucket in the temp array
+        source.Context.OnPhase(SortPhase.DistributionAccumulate);
         var offset = 0;
         for (var i = 0; i < bucketCount; i++)
         {
@@ -417,6 +421,7 @@ public static class BucketSortInteger
         }
 
         // Second pass: distribute elements using cached bucket indices
+        source.Context.OnPhase(SortPhase.DistributionWrite);
         for (var i = 0; i < source.Length; i++)
         {
             var bucketIndex = bucketIndices[i]; // Reuse cached index (no division)

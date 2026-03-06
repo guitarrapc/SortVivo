@@ -193,4 +193,80 @@ public enum SortPhase
     /// param1=remaining run count on the stack
     /// </summary>
     MergeRunCollapse,
+
+    // ── Adaptive family ──────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Drop Merge Sort: LNS (Longest Nondecreasing Subsequence) detection scan.
+    /// No parameters.
+    /// </summary>
+    DropMergeDetect,
+
+    /// <summary>
+    /// Drop Merge Sort: sorting the dropped elements.
+    /// param1=droppedCount
+    /// </summary>
+    DropMergeSort,
+
+    /// <summary>
+    /// Drop Merge Sort: merging the LNS and sorted dropped elements back.
+    /// param1=droppedCount, param2=total length
+    /// </summary>
+    DropMergeMerge,
+
+    // ── Network family ───────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Bitonic Sort level: building a bitonic sequence of size k.
+    /// param1=k (bitonic sequence size), param2=count
+    /// </summary>
+    BitonicLevel,
+
+    /// <summary>
+    /// Bitonic Sort stage: comparison-swap pass at distance j within level k.
+    /// param1=j (comparison distance), param2=k (current level), param3=count
+    /// </summary>
+    BitonicStage,
+
+    // ── Joke family ──────────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Bogo Sort shuffle attempt.
+    /// param1=attempt number (1-based)
+    /// </summary>
+    BogoShuffle,
+
+    // ── Distribution family ──────────────────────────────────────────────────
+
+    /// <summary>
+    /// Radix Sort pass over one digit position.
+    /// param1=digit (0-based, LSD: 0=least significant), param2=totalDigits
+    /// </summary>
+    RadixPass,
+
+    /// <summary>
+    /// Distribution Sort counting phase (count occurrences / build count array).
+    /// No parameters.
+    /// </summary>
+    DistributionCount,
+
+    /// <summary>
+    /// Distribution Sort accumulate phase (prefix sum / compute offsets).
+    /// No parameters.
+    /// </summary>
+    DistributionAccumulate,
+
+    /// <summary>
+    /// Distribution Sort write/collect phase (scatter to output / collect buckets).
+    /// No parameters.
+    /// </summary>
+    DistributionWrite,
+
+    // ── Partition family ─────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Quick Sort partition step: partitioning [left..right] around a pivot.
+    /// param1=left, param2=right, param3=pivotIndex
+    /// </summary>
+    QuickSortPartition,
 }

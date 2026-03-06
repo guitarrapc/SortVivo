@@ -184,8 +184,7 @@ public static class RadixMSD10Sort
             return;
         }
 
-        // Get divisor for current digit position from pre-computed table: O(1) lookup
-        // Previously: O(digit) loop with divisor *= 10
+        s.Context.OnPhase(SortPhase.RadixPass, digit, digit);
         var divisor = pow10[digit];
 
         // Separate counts and offsets for clarity

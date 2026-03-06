@@ -182,6 +182,7 @@ public static class RadixLSD10Sort
         // Perform LSD radix sort on unsigned keys
         for (int d = 0; d < digitCount; d++)
         {
+            source.Context.OnPhase(SortPhase.RadixPass, d, digitCount);
             var divisor = pow10[d];
 
             // Clear bucket counts
