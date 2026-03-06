@@ -150,6 +150,7 @@ public static class PairInsertionSort
         // Process pairs of elements
         while (i + 1 < last)
         {
+            s.Context.OnPhase(SortPhase.PairInsertionPass, i, last - 1);
             // Read the pair of elements
             var a = s.Read(i);
             var b = s.Read(i + 1);

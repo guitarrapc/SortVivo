@@ -147,6 +147,9 @@ public static class InsertionSort
     {
         for (var i = first + 1; i < last; i++)
         {
+            s.Context.OnPhase(SortPhase.InsertionPass, i, first, last - 1);
+            s.Context.OnRole(i, BUFFER_MAIN, RoleType.RightPointer);
+
             // Temporarily store the value to be inserted
             var tmp = s.Read(i);
 
@@ -173,6 +176,7 @@ public static class InsertionSort
             {
                 s.Write(j + 1, tmp);
             }
+            s.Context.OnRole(i, BUFFER_MAIN, RoleType.None);
         }
     }
 

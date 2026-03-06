@@ -178,6 +178,7 @@ public static class LibrarySort
             }
 
             // Phase 1: Initial sort
+            context.OnPhase(SortPhase.LibrarySortPhase, 1);
             var initSize = Math.Min(SmallSortThreshold, length);
             InsertionSort.SortCore(s, 0, initSize);
 
@@ -188,6 +189,7 @@ public static class LibrarySort
             var nextRebalance = initSize * RebalanceFactor;
 
             // Phase 2: Insert remaining
+            context.OnPhase(SortPhase.LibrarySortPhase, 2);
             for (var i = initSize; i < length; i++)
             {
                 if (sorted >= nextRebalance)
@@ -211,6 +213,7 @@ public static class LibrarySort
             }
 
             // Phase 3: Extract
+            context.OnPhase(SortPhase.LibrarySortPhase, 3);
             for (var i = 0; i < posCount && i < length; i++)
             {
                 var pos = positions[i];

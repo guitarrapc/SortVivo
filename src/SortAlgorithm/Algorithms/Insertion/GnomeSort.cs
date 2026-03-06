@@ -87,6 +87,7 @@ public static class GnomeSort
 
         for (var i = 0; i < s.Length; i++)
         {
+            context.OnPhase(SortPhase.GnomePass, i, s.Length - 1);
             while (i > 0 && s.Compare(i - 1, i) > 0)
             {
                 s.Swap(i - 1, i);
@@ -169,6 +170,7 @@ public static class GnomeSortNonOptimized
         var i = 0;
         while (i < s.Length)
         {
+            context.OnPhase(SortPhase.GnomePass, i, s.Length - 1);
             if (i == 0 || s.Compare(i - 1, i) <= 0)
             {
                 i++;

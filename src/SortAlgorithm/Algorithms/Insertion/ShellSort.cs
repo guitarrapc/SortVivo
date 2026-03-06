@@ -135,10 +135,14 @@ public static class ShellSortKnuth1973
         while (gapIndex >= 0 && knuthSequence[gapIndex] > length / 2)
             gapIndex--;
 
+        // Count usable gaps for display
+        int totalGaps = gapIndex + 1;
+
         // Decrease gap by moving to previous index
         for (; gapIndex >= 0; gapIndex--)
         {
             var h = knuthSequence[gapIndex];
+            s.Context.OnPhase(SortPhase.ShellGapPass, h, totalGaps - gapIndex, totalGaps);
 
             // Swap based Insertion sort with gap h.
             for (var i = first + h; i < last; i++)
@@ -285,10 +289,13 @@ public static class ShellSortSedgewick1986
         while (gapIndex >= 0 && sedgewickSequence[gapIndex] > length / 2)
             gapIndex--;
 
+        int totalGaps = gapIndex + 1;
+
         // Decrease gap by moving to previous index
         for (; gapIndex >= 0; gapIndex--)
         {
             var h = sedgewickSequence[gapIndex];
+            s.Context.OnPhase(SortPhase.ShellGapPass, h, totalGaps - gapIndex, totalGaps);
 
             // Swap based Insertion sort with gap h.
             for (var i = first + h; i < last; i++)
@@ -437,10 +444,13 @@ public static class ShellSortTokuda1992
         while (gapIndex >= 0 && tokudaSequence[gapIndex] > length / 2)
             gapIndex--;
 
+        int totalGaps = gapIndex + 1;
+
         // Decrease gap by moving to previous index
         for (; gapIndex >= 0; gapIndex--)
         {
             var h = tokudaSequence[gapIndex];
+            s.Context.OnPhase(SortPhase.ShellGapPass, h, totalGaps - gapIndex, totalGaps);
 
             // Swap based Insertion sort with gap h.
             for (int i = first + h; i < last; i++)
@@ -591,10 +601,13 @@ public static class ShellSortCiura2001
         while (gapIndex >= 0 && ciuraSequence[gapIndex] > length / 2)
             gapIndex--;
 
+        int totalGaps = gapIndex + 1;
+
         // Decrease gap by moving to previous index
         for (; gapIndex >= 0; gapIndex--)
         {
             var h = ciuraSequence[gapIndex];
+            s.Context.OnPhase(SortPhase.ShellGapPass, h, totalGaps - gapIndex, totalGaps);
 
             // Swap based Insertion sort with gap h.
             for (var i = first + h; i < last; i++)
@@ -753,10 +766,13 @@ public static class ShellSortLee2021
             gapIndex--;
         }
 
+        int totalGaps = gapIndex + 1;
+
         // Decrease gap by moving to previous index
         for (; gapIndex >= 0; gapIndex--)
         {
             var h = leeSequence[gapIndex];
+            s.Context.OnPhase(SortPhase.ShellGapPass, h, totalGaps - gapIndex, totalGaps);
 
             // Swap based Insertion sort with gap h.
             for (var i = first + h; i < last; i++)

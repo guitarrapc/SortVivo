@@ -91,4 +91,42 @@ public enum SortPhase
     /// param1=first (head index), param2=currentSize-1 (current subarray last index, inclusive)
     /// </summary>
     PancakeFindMax,
+
+    // ── Insertion family ────────────────────────────────────────────────────
+
+    /// <summary>
+    /// Insertion Sort pass: inserting element at position i into sorted region.
+    /// param1=i (element being inserted), param2=first, param3=last-1
+    /// </summary>
+    InsertionPass,
+
+    /// <summary>
+    /// Binary Insertion Sort pass: binary-search insertion of element at position i.
+    /// param1=i (element being inserted), param2=first, param3=last-1
+    /// </summary>
+    BinaryInsertionPass,
+
+    /// <summary>
+    /// Gnome Sort current position check.
+    /// param1=i (current position), param2=last-1
+    /// </summary>
+    GnomePass,
+
+    /// <summary>
+    /// Shell Sort gap pass (h-insertion sort with gap h).
+    /// param1=gap (current gap value), param2=gapIndex+1 (1-based), param3=totalGaps
+    /// </summary>
+    ShellGapPass,
+
+    /// <summary>
+    /// Pair Insertion Sort pair processing.
+    /// param1=i (first index of the pair), param2=last-1
+    /// </summary>
+    PairInsertionPass,
+
+    /// <summary>
+    /// Library Sort phase marker.
+    /// param1=phase (1=initial sort, 2=insert remaining, 3=extract)
+    /// </summary>
+    LibrarySortPhase,
 }

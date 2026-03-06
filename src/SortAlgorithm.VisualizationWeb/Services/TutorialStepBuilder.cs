@@ -281,6 +281,18 @@ public static class TutorialStepBuilder
             SortAlgorithm.Contexts.SortPhase.DoubleSelectionFindMinMax => $"Find min & max in [{p1}..{p2}]",
             SortAlgorithm.Contexts.SortPhase.CycleSortCycle            => $"Cycle from index {p1} (range [0..{p2}])",
             SortAlgorithm.Contexts.SortPhase.PancakeFindMax            => $"Find max in [{p1}..{p2}]",
+            SortAlgorithm.Contexts.SortPhase.InsertionPass             => $"Inserting [{p1}] into sorted [{p2}..{p1 - 1}]",
+            SortAlgorithm.Contexts.SortPhase.BinaryInsertionPass       => $"Binary inserting [{p1}] into sorted [{p2}..{p1 - 1}]",
+            SortAlgorithm.Contexts.SortPhase.GnomePass                 => $"Gnome at position {p1} / {p2}",
+            SortAlgorithm.Contexts.SortPhase.ShellGapPass              => $"Gap {p1}: pass {p2}/{p3} (h-insertion sort)",
+            SortAlgorithm.Contexts.SortPhase.PairInsertionPass         => $"Inserting pair at [{p1}], [{p1 + 1}] into sorted region",
+            SortAlgorithm.Contexts.SortPhase.LibrarySortPhase          => p1 switch
+            {
+                1 => "Phase 1: initial sort (insertion sort on first block)",
+                2 => "Phase 2: insert remaining elements with gaps",
+                3 => "Phase 3: extract sorted elements from auxiliary array",
+                _ => string.Empty,
+            },
             _ => string.Empty,
         };
 

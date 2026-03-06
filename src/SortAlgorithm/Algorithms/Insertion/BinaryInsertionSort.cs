@@ -144,6 +144,9 @@ public static class BinaryInsertionSort
 
         for (var i = start; i < last; i++)
         {
+            s.Context.OnPhase(SortPhase.BinaryInsertionPass, i, first, last - 1);
+            s.Context.OnRole(i, BUFFER_MAIN, RoleType.RightPointer);
+
             // Early termination: if element is already in correct position, skip everything
             // Compare indices directly to avoid reading tmp unnecessarily
             // This optimization significantly improves performance on sorted or nearly-sorted data
@@ -171,6 +174,7 @@ public static class BinaryInsertionSort
                 // Insert the element at its correct position
                 s.Write(pos, tmp);
             }
+            s.Context.OnRole(i, BUFFER_MAIN, RoleType.None);
         }
     }
 
