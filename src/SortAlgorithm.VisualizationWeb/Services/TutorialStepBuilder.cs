@@ -27,12 +27,12 @@ public static class TutorialStepBuilder
         var mainArray = (int[])initialArray.Clone();
         var bufferArrays = InitializeBufferArrays(initialArray.Length, operations);
 
-        // Heap boundary tracking for HeapTree visualization
+        // Heap boundary tracking for HeapTree / TernaryHeapTree visualization
         // HeapSort uses two extraction patterns:
         //   BottomupHeapSort: Swap(0, i) — root swapped with last heap element
-        //   HeapSort:         Read(0) + Read(i) + sift-down + Write(i, max) — root value written to end
+        //   HeapSort/TernaryHeapSort: Read(0) + Read(i) + sift-down + Write(i, max) — root value written to end
         // We track both patterns to detect when the boundary shrinks.
-        var trackHeap = hint == TutorialVisualizationHint.HeapTree;
+        var trackHeap = hint is TutorialVisualizationHint.HeapTree or TutorialVisualizationHint.TernaryHeapTree;
         int heapBoundary = trackHeap ? initialArray.Length : 0;
         bool heapBuildDone = false;
         // For HeapSort's Read+Write pattern: track the last Read(0) value

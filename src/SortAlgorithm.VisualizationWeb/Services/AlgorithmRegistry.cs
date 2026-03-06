@@ -353,7 +353,8 @@ public class AlgorithmRegistry
                 - Compare: each sift-down step compares the current node against all three children to find the largest; up to two comparisons are needed per level to identify the winner
                 - Swap: the winning child is promoted if it beats the parent; sift-down continues from that child's position but reaches the leaf level in fewer steps than a binary heap
                 - End of extraction: the sorted region at the right grows one element per extraction step, identical in structure to standard Heapsort
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.TernaryHeapTree);
         Add("Bottom-up heapSort", "Heap Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => BottomupHeapSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Modifies Heapsort's sift-down by first descending all the way to the leaf without any comparisons — always following the larger child — then walking back up to find the displaced root's correct position.

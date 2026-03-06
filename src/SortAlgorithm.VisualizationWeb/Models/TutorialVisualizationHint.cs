@@ -11,4 +11,7 @@ public enum TutorialVisualizationHint
 
     /// <summary>ヒープ木表示（二分ヒープを SVG ツリーで描画）</summary>
     HeapTree,
+
+    /// <summary>三分ヒープ木表示（三分ヒープを SVG ツリーで描画）</summary>
+    TernaryHeapTree,
 }
