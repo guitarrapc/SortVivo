@@ -1,0 +1,158 @@
+@using SortAlgorithm.VisualizationWeb.Models
+
+<div class="network-diagram-container">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <div class="network-diagram-label">@Label</div>
+    }
+
+    @if (Snapshot != null && Snapshot.WireCount > 0 && Snapshot.Comparators.Length > 0)
+    {
+        var wireCount = Snapshot.WireCount;
+        var stageCount = Snapshot.Comparators.Max(c => c.Stage) + 1;
+        var wireSpacing = 80;    // 50 → 80 に拡大（ワイヤ間隔）
+        var stageSpacing = 120;  // 80 → 120 に拡大（ステージ間隔）
+        var leftMargin = 80;     // 60 → 80 に拡大
+        var rightMargin = 100;   // 80 → 100 に拡大
+        var topMargin = 40;      // 30 → 40 に拡大
+        var bottomMargin = 30;   // 20 → 30 に拡大
+        var viewW = leftMargin + stageCount * stageSpacing + rightMargin;
+        var viewH = topMargin + (wireCount - 1) * wireSpacing + bottomMargin;
+
+        <svg class="network-diagram-svg" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMin meet">
+            <defs>
+                <filter id="@_glowFilterId" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+            </defs>
+
+            @* ─── Wires (horizontal lines) ─── *@
+            @for (int w = 0; w < wireCount; w++)
+            {
+                var y = topMargin + w * wireSpacing;
+                <line x1="@leftMargin" y1="@y" x2="@(viewW - rightMargin)" y2="@y"
+                      stroke="rgba(255, 255, 255, 0.2)" stroke-width="2" />
+
+                @* ワイヤラベル（左端：インデックス、右端：現在の値） *@
+                <g>
+                    <text x="@(leftMargin - 15)" y="@(y + 1)" text-anchor="end" dominant-baseline="central"
+                          fill="#9CA3AF" font-size="16" font-weight="600">@w</text>
+                </g>
+
+                @if (w < Snapshot.WireValues.Length)
+                {
+                    var value = Snapshot.WireValues[w];
+                    var valueColor = GetValueColor(value);
+                    <circle cx="@(viewW - rightMargin + 40)" cy="@y" r="24"
+                            fill="@valueColor"
+                            stroke="rgba(255,255,255,0.2)" stroke-width="1.5" />
+                    <g>
+                        <text x="@(viewW - rightMargin + 40)" y="@(y + 1)" text-anchor="middle" dominant-baseline="central"
+                              fill="white" font-size="16" font-weight="700">@value</text>
+                    </g>
+                }
+            }
+
+            @* ─── Stage separators (vertical dashed lines) ─── *@
+            @for (int s = 0; s <= stageCount; s++)
+            {
+                var x = leftMargin + s * stageSpacing;
+                <line x1="@x" y1="@(topMargin - 15)" x2="@x" y2="@(viewH - bottomMargin + 15)"
+                      stroke="rgba(255,255,255,0.1)" stroke-width="1.5" stroke-dasharray="5 3" />
+
+                @if (s < stageCount)
+                {
+                    <g>
+                        <text x="@(x + stageSpacing / 2)" y="@(topMargin - 20)" text-anchor="middle"
+                              fill="#6B7280" font-size="14" font-weight="600">stage @s</text>
+                    </g>
+                }
+            }
+
+            @* ─── Comparators (vertical lines with dots) ─── *@
+            @for (int i = 0; i < Snapshot.Comparators.Length; i++)
+            {
+                var comp = Snapshot.Comparators[i];
+                var x = leftMargin + comp.Stage * stageSpacing + stageSpacing / 2;
+                var y1 = topMargin + comp.Wire1 * wireSpacing;
+                var y2 = topMargin + comp.Wire2 * wireSpacing;
+                var isActive = i == Snapshot.ActiveComparatorIndex;
+                var result = i < Snapshot.ComparatorResults.Length ? Snapshot.ComparatorResults[i] : null;
+
+                string strokeColor;
+                string strokeWidth;
+                string filterAttr = "";
+
+                if (isActive)
+                {
+                    // 現在処理中
+                    bool didSwap = result == true;
+                    strokeColor = didSwap ? "#EF4444" : "#A855F7"; // 赤 or 紫
+                    strokeWidth = "4";
+                    filterAttr = $"url(#{_glowFilterId})";
+                }
+                else if (result == true)
+                {
+                    // Swap あり（処理済み）
+                    strokeColor = "#EF4444";
+                    strokeWidth = "3";
+                }
+                else if (result == false)
+                {
+                    // Swap なし（処理済み）
+                    strokeColor = "#6B7280";
+                    strokeWidth = "2.5";
+                }
+                else
+                {
+                    // 未処理
+                    strokeColor = "rgba(255, 255, 255, 0.15)";
+                    strokeWidth = "2";
+                }
+
+                <line x1="@x" y1="@y1" x2="@x" y2="@y2"
+                      stroke="@strokeColor"
+                      stroke-width="@strokeWidth"
+                      filter="@filterAttr" />
+
+                <circle cx="@x" cy="@y1" r="8"
+                        fill="@strokeColor"
+                        stroke="@strokeColor" stroke-width="1.5" />
+                <circle cx="@x" cy="@y2" r="8"
+                        fill="@strokeColor"
+                        stroke="@strokeColor" stroke-width="1.5" />
+            }
+        </svg>
+    }
+    else
+    {
+        <div class="network-diagram-empty">No network data</div>
+    }
+</div>
+
+@code {
+    /// <summary>ネットワークスナップショット</summary>
+    [Parameter] public NetworkSnapshot? Snapshot { get; set; }
+
+    /// <summary>配列内の最大値（HSLグラデーション計算に使用）</summary>
+    [Parameter] public int MaxValue { get; set; } = 9;
+
+    /// <summary>現在のステップインデックス（アニメーション再トリガー用）</summary>
+    [Parameter] public int StepIndex { get; set; } = -1;
+
+    /// <summary>行ラベル</summary>
+    [Parameter] public string Label { get; set; } = "Sorting Network";
+
+    private readonly string _glowFilterId = $"glow-{Guid.NewGuid().ToString("N")[..8]}";
+
+    /// <summary>値に基づいた HSL カラーを返す（1〜MaxValue → 水色〜ピンク）</summary>
+    private string GetValueColor(int value)
+    {
+        var hue = MaxValue > 1 ? 180 + (value - 1) * (320 - 180) / (MaxValue - 1) : 250;
+        return $"hsl({hue}, 70%, 55%)";
+    }
+}

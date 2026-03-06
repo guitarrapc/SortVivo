@@ -643,7 +643,8 @@ public class AlgorithmRegistry
                 - Compare: pairs at predetermined index positions are tested; the positions are dictated by the network topology, not by element values
                 - Swap: fires when a comparator finds elements in the wrong order for the current direction (ascending or descending sub-sequence being built or merged)
                 - End of phase: the build phase creates bitonic sub-sequences by alternating direction; the merge phase then collapses them into a single ascending sorted sequence
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.SortingNetwork);
         Add("Bitonic sort (Recursive)", "Network Sorts", "O(log²n)", MAX_SIZE_NLOGN15, 1024, (arr, ctx) => BitonicSortNonOptimized.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: The same bitonic build-then-merge structure as iterative Bitonic sort, but expressed directly as recursive calls that mirror the network's divide-and-conquer shape.
@@ -654,7 +655,8 @@ public class AlgorithmRegistry
                 - Compare: pairs at predetermined index positions are tested; identical comparator positions to the iterative version
                 - Swap: fires when a comparator finds elements in the wrong order for the current direction
                 - End of phase: the recursive call depth corresponds directly to the number of network stages; watch the build and merge phases emerge as distinct call-depth levels
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.SortingNetwork);
 
         // Tree Sorts - O(n log n) - 推奨1024
         Add("Binary tree sort (BST)", "Tree Sorts", "O(n log n)", MAX_SIZE_NLOGN15, 1024, (arr, ctx) => BinaryTreeSort.Sort(arr, ctx),

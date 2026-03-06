@@ -188,19 +188,19 @@
                     <div class="narrative-text">@GetCurrentNarrative()</div>
                 </div>
 
-                @* ─── 表示切替トグル（ヒープ木・BST・バケット対応アルゴリズムのみ） ──────────── *@
+                @* ─── 表示切替トグル（ヒープ木・BST・バケット・ネットワーク対応アルゴリズムのみ） ──────────── *@
                 @if (HasAlternateView())
                 {
                     <div class="tutorial-view-toggle">
-                        <button class="toggle-btn @(!_showTreeView && !_showBucketView ? "toggle-btn--active" : "")"
-                                @onclick="() => { _showTreeView = false; _showBucketView = false; }">
+                        <button class="toggle-btn @(!_showTreeView && !_showBucketView && !_showNetworkView ? "toggle-btn--active" : "")"
+                                @onclick="() => { _showTreeView = false; _showBucketView = false; _showNetworkView = false; }">
                             <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><circle cx="10" cy="10" r="7" /></svg>
                             Marble
                         </button>
                         @if (HasTreeView())
                         {
                             <button class="toggle-btn @(_showTreeView ? "toggle-btn--active" : "")"
-                                    @onclick="() => { _showTreeView = true; _showBucketView = false; }">
+                                    @onclick="() => { _showTreeView = true; _showBucketView = false; _showNetworkView = false; }">
                                 <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><path d="M10 2 L10 8 M10 8 L4 14 M10 8 L16 14" stroke="currentColor" stroke-width="2" fill="none" /></svg>
                                 @GetTreeToggleLabel()
                             </button>
@@ -208,7 +208,7 @@
                         @if (HasBucketView())
                         {
                             <button class="toggle-btn @(_showBucketView ? "toggle-btn--active" : "")"
-                                    @onclick="() => { _showBucketView = true; _showTreeView = false; }">
+                                    @onclick="() => { _showBucketView = true; _showTreeView = false; _showNetworkView = false; }">
                                 <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
                                     <rect x="2" y="8" width="4" height="10" rx="1" />
                                     <rect x="8" y="5" width="4" height="13" rx="1" />
@@ -217,12 +217,34 @@
                                 Buckets
                             </button>
                         }
+                        @if (HasNetworkView())
+                        {
+                            <button class="toggle-btn @(_showNetworkView ? "toggle-btn--active" : "")"
+                                    @onclick="() => { _showNetworkView = true; _showTreeView = false; _showBucketView = false; }">
+                                <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14">
+                                    <line x1="2" y1="6" x2="18" y2="6" stroke="currentColor" stroke-width="1.5" />
+                                    <line x1="2" y1="14" x2="18" y2="14" stroke="currentColor" stroke-width="1.5" />
+                                    <line x1="10" y1="6" x2="10" y2="14" stroke="currentColor" stroke-width="2" />
+                                    <circle cx="10" cy="6" r="2" />
+                                    <circle cx="10" cy="14" r="2" />
+                                </svg>
+                                Network
+                            </button>
+                        }
                     </div>
                 }
 
                 @* ─── ビジュアライゼーションエリア ──────────────────────────────── *@
                 <div class="tutorial-marble-area">
-                    @if (_showBucketView && HasBucketView())
+                    @if (_showNetworkView && HasNetworkView())
+                    {
+                        @* Network view: ソーティングネットワーク図（マーブルは表示しない） *@
+                        <NetworkDiagramRenderer Snapshot="@GetCurrentNetwork()"
+                                                MaxValue="@_maxValue"
+                                                StepIndex="@_currentStepIndex"
+                                                Label="Sorting Network" />
+                    }
+                    else if (_showBucketView && HasBucketView())
                     {
                         @* Distribution view: Main Array マーブル + バケット表示（temp buffer は非表示） *@
                         <MarbleRenderer Values="@GetCurrentMainArray()"
@@ -274,7 +296,7 @@
                                         Label="Main Array" />
                     }
 
-                    @if (!_showBucketView)
+                    @if (!_showBucketView && !_showNetworkView)
                     {
                         @foreach (var bufferId in GetCurrentBufferIds())
                         {
@@ -325,6 +347,7 @@
     private ElementReference _containerRef;
     private bool _showTreeView = true;  // デフォルトは木表示（ヒープ木対応アルゴリズムのみ）
     private bool _showBucketView = true; // デフォルトはバケット表示（Distribution 対応アルゴリズムのみ）
+    private bool _showNetworkView = true; // デフォルトはネットワーク表示（Network 対応アルゴリズムのみ）
 
     // ─── ナビゲーション ────────────────────────────────────────────────────
 
@@ -570,6 +593,10 @@
             TutorialVisualizationHint.DigitBucketLsd or
             TutorialVisualizationHint.DigitBucketMsd;
 
+    private bool HasNetworkView()
+        => _selectedAlgorithm?.TutorialVisualizationHint is
+            TutorialVisualizationHint.SortingNetwork;
+
     private bool IsBstView()
         => _selectedAlgorithm?.TutorialVisualizationHint is
             TutorialVisualizationHint.BstTree or
@@ -600,6 +627,13 @@
         if (_currentStepIndex < 0)
             return BuildInitialDistributionSnapshot();
         return _steps[_currentStepIndex].Distribution;
+    }
+
+    private NetworkSnapshot? GetCurrentNetwork()
+    {
+        if (_currentStepIndex < 0)
+            return BuildInitialNetworkSnapshot();
+        return _steps[_currentStepIndex].Network;
     }
 
     private DistributionSnapshot? BuildInitialDistributionSnapshot()
@@ -667,6 +701,24 @@
             Phase = DistributionPhase.Scatter,
             ActiveBucketIndex = -1,
             ActiveElementInBucket = -1,
+        };
+    }
+
+    private NetworkSnapshot? BuildInitialNetworkSnapshot()
+    {
+        if (_selectedAlgorithm == null || !HasNetworkView()) return null;
+        var arr = GetTutorialArrayFor(_selectedAlgorithm);
+        if (arr.Length == 0) return null;
+
+        // Network structure is pre-calculated by NetworkTracker, so initial state has empty comparators
+        // The first step will have the full network structure
+        return new NetworkSnapshot
+        {
+            WireCount = arr.Length,
+            Comparators = [],
+            ActiveComparatorIndex = -1,
+            ComparatorResults = [],
+            WireValues = arr,
         };
     }
 

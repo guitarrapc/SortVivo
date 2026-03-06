@@ -109,6 +109,7 @@ public static class TutorialStepBuilder
             TutorialVisualizationHint.ValueBucket     => new DistributionTracker(initialArray),
             TutorialVisualizationHint.DigitBucketLsd  => new LsdRadixTracker(initialArray, lsdRadix),
             TutorialVisualizationHint.DigitBucketMsd  => new MsdRadixTracker(initialArray, lsdRadix),
+            TutorialVisualizationHint.SortingNetwork  => new NetworkTracker(initialArray.Length),
             _                                          => NullTracker.Instance,
         };
 

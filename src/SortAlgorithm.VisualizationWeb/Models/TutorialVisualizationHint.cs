@@ -46,4 +46,11 @@ public enum TutorialVisualizationHint
     /// 再帰範囲（start, length）を境界線で可視化する。
     /// </summary>
     DigitBucketMsd,
+
+    /// <summary>
+    /// ソーティングネットワーク図（ワイヤ＋コンパレータ）。
+    /// Bitonic sort: データ非依存の比較ネットワークを水平ワイヤ＋垂直コンパレータで描画。
+    /// 水平軸は時間（ステージ）、垂直軸はワイヤ（配列インデックス）。
+    /// </summary>
+    SortingNetwork,
 }

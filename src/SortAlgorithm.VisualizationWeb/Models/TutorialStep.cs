@@ -58,6 +58,12 @@ public record TutorialStep
     /// </summary>
     public DistributionSnapshot? Distribution { get; init; }
 
+    /// <summary>
+    /// Sorting Network チュートリアル用のネットワークスナップショット。
+    /// TutorialVisualizationHint が SortingNetwork のとき使用（他は null）。
+    /// </summary>
+    public NetworkSnapshot? Network { get; init; }
+
     /// <summary>この操作を日本語で説明するナラティブテキスト</summary>
     public string Narrative { get; init; } = string.Empty;
 }
