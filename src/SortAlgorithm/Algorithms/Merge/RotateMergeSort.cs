@@ -59,7 +59,7 @@ namespace SortAlgorithm.Algorithms;
 /// <item><description>Slightly simpler control flow; easier to reason about run boundaries</description></item>
 /// </list>
 /// </remarks>
-public static class RotateMergeSortIterative
+public static class RotateMergeSort
 {
     // Threshold for using insertion sort instead of rotation-based merge
     private const int InsertionSortThreshold = 16;
@@ -349,7 +349,7 @@ public static class RotateMergeSortIterative
 /// <para>Wiki: https://en.wikipedia.org/wiki/Merge_sort#Variants</para>
 /// <para>Rotation-based in-place merge: Practical In-Place Merging (Geffert et al.)</para>
 /// </remarks>
-public static class RotateMergeSort
+public static class RotateMergeSortRecursive
 {
     // Threshold for using insertion sort instead of rotation-based merge
     // Small subarrays benefit from insertion sort's lower overhead
