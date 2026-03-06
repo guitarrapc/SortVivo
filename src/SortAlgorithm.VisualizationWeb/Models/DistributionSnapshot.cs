@@ -33,9 +33,15 @@ public record DistributionSnapshot
 
     /// <summary>
     /// パスラベル（表示用）。
-    /// Phase A-1 では使用しない。Phase A-2 以降の LSD マルチパスで "ones digit" / "tens digit" などを設定する。
+    /// Phase A-2 以降のマルチパスで "ones digit" / "tens digit" などを設定する。
     /// </summary>
     public string PassLabel { get; init; } = string.Empty;
+
+    /// <summary>
+    /// 現在のパス番号（0-based）。
+    /// Phase A-2 以降のマルチパス LSD で使用する。
+    /// </summary>
+    public int PassIndex { get; init; }
 }
 
 /// <summary>

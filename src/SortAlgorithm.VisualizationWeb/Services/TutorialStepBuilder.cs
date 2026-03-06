@@ -22,6 +22,15 @@ public static class TutorialStepBuilder
     /// tracks the heap boundary for heap tree rendering.
     /// </summary>
     public static List<TutorialStep> Build(int[] initialArray, List<SortOperation> operations, TutorialVisualizationHint hint)
+        => Build(initialArray, operations, hint, lsdRadix: 0);
+
+    /// <summary>
+    /// Builds a list of TutorialSteps with optional visualization hint and LSD radix support.
+    /// <paramref name="lsdRadix"/> is used when <paramref name="hint"/> is
+    /// <see cref="TutorialVisualizationHint.DigitBucketLsd"/> to select bucket digit computation:
+    /// 10 = decimal (b=10), 4 = 2-bit groups (b=4).
+    /// </summary>
+    public static List<TutorialStep> Build(int[] initialArray, List<SortOperation> operations, TutorialVisualizationHint hint, int lsdRadix)
     {
         var steps = new List<TutorialStep>(operations.Count);
         var mainArray = (int[])initialArray.Clone();
@@ -89,6 +98,30 @@ public static class TutorialStepBuilder
             distBucketLabels = Enumerable.Range(distMinValue, distBucketCount).Select(v => v.ToString()).ToArray();
             distBuckets = Enumerable.Range(0, distBucketCount).Select(_ => new List<int>()).ToArray();
             distShadowTemp = new int[initialArray.Length];
+        }
+
+        // LSD Radix sort tracking for DigitBucketLsd visualization.
+        // LSD b=10: each pass emits n × (Read(main,i)+Write(temp,pos,v)) then RangeCopy(temp→main).
+        //           Pass boundary = RangeCopy(temp→main).
+        //           Digit = (v - minValue) / 10^passIndex % 10.
+        // LSD b=4:  uses ping-pong buffers. Pass 0: Read(main)+Write(temp), Pass 1: Read(temp)+Write(main), …
+        //           Pass boundary = Read source buffer changes (main→temp or temp→main).
+        //           Digit = ((uint)v ^ 0x8000_0000u) >> (passIndex * 2) & 0b11.
+        //           Precedes passes with n key-building Reads from main (no Writes) — detected by !lsdPhaseReady.
+        var trackLsd = hint == TutorialVisualizationHint.DigitBucketLsd;
+        int lsdPassIndex = 0;
+        int lsdPrevReadSourceId = -1;    // -1 = not yet seen any Read
+        bool lsdPhaseReady = false;      // false until first Write is seen (skips key-building Reads in b=4)
+        bool lsdClearBucketsAfterStep = false;  // set true for RangeCopy step in b=10; buckets cleared after adding step
+        if (trackLsd)
+        {
+            int lsdBucketCount = lsdRadix > 0 ? lsdRadix : 10;
+            distBucketCount = lsdBucketCount;
+            distBucketLabels = Enumerable.Range(0, lsdBucketCount).Select(i => i.ToString()).ToArray();
+            distMinValue = initialArray.Length > 0 ? initialArray.Min() : 0;
+            distBuckets = Enumerable.Range(0, lsdBucketCount).Select(_ => new List<int>()).ToArray();
+            distShadowTemp = new int[initialArray.Length];
+            distPhase = DistributionPhase.Scatter;
         }
 
         int opIdx = 0;
@@ -314,6 +347,62 @@ public static class TutorialStepBuilder
                     };
                 }
 
+                // Track LSD Radix sort state for DigitBucketLsd visualization.
+                if (trackLsd)
+                {
+                    if (op.Type == OperationType.IndexRead)
+                    {
+                        // Detect pass boundary in b=4: Read source changes between passes
+                        if (lsdPhaseReady && lsdPrevReadSourceId >= 0 && op.BufferId1 != lsdPrevReadSourceId)
+                        {
+                            // Source changed → end of previous pass, clear buckets for new pass
+                            foreach (var b in distBuckets) b.Clear();
+                            lsdPassIndex++;
+                        }
+                        if (lsdPhaseReady)
+                            lsdPrevReadSourceId = op.BufferId1;
+                        else
+                            lsdPrevReadSourceId = op.BufferId1;  // track even before first Write
+                        distActiveBucket = -1;
+                        distActiveElement = -1;
+                    }
+                    else if (op.Type == OperationType.IndexWrite && op.Value.HasValue)
+                    {
+                        // Scatter Write (to either main or temp, depending on pass)
+                        lsdPhaseReady = true;
+                        int v = op.Value.Value;
+                        int digit = ComputeLsdDigit(v, lsdPassIndex, lsdRadix, distMinValue);
+                        if ((uint)digit < (uint)distBucketCount)
+                        {
+                            distBuckets[digit].Add(v);
+                            if (op.BufferId1 == 1 && op.Index1 < distShadowTemp.Length)
+                                distShadowTemp[op.Index1] = v;
+                            distActiveBucket = digit;
+                            distActiveElement = distBuckets[digit].Count - 1;
+                        }
+                        distPhase = DistributionPhase.Scatter;
+                    }
+                    else if (op.Type == OperationType.RangeCopy && op.BufferId1 == 1 && op.BufferId2 == 0)
+                    {
+                        // b=10 pass end: RangeCopy(temp→main) = gather all buckets at once
+                        distActiveBucket = -1;
+                        distPhase = DistributionPhase.Gather;
+                        lsdClearBucketsAfterStep = true;
+                    }
+
+                    distSnapshot = new DistributionSnapshot
+                    {
+                        BucketCount = distBucketCount,
+                        BucketLabels = distBucketLabels,
+                        Buckets = distBuckets.Select(b => b.ToArray()).ToArray(),
+                        Phase = distPhase,
+                        ActiveBucketIndex = distActiveBucket,
+                        ActiveElementInBucket = distActiveElement,
+                        PassIndex = lsdPassIndex,
+                        PassLabel = GetLsdPassLabel(lsdPassIndex, lsdRadix),
+                    };
+                }
+
                 var (highlights, bufferHighlights, highlightType, compareResult, writeSourceIndex, writePreviousValue, narrative) =
                     GenerateStepInfo(op, mainArray, bufferArrays);
 
@@ -339,8 +428,8 @@ public static class TutorialStepBuilder
                     };
                 }
 
-                // Override narrative with Distribution-specific text
-                if (distSnapshot != null)
+                // Override narrative with Distribution-specific text (Pigeonhole)
+                if (distSnapshot != null && trackDistribution)
                 {
                     narrative = (op.Type, op.BufferId1) switch
                     {
@@ -352,6 +441,24 @@ public static class TutorialStepBuilder
                             => $"Pick up value {distShadowTemp[op.Index1]} from bucket [{distBucketLabels[distActiveBucket]}]",
                         (OperationType.IndexWrite, 0) when distPhase == DistributionPhase.Gather && distActiveBucket >= 0
                             => $"Place value {op.Value!.Value} from bucket [{distBucketLabels[distActiveBucket]}] to index {op.Index1}",
+                        _ => narrative
+                    };
+                }
+
+                // Override narrative with LSD-specific text
+                if (distSnapshot != null && trackLsd)
+                {
+                    string passLabel = GetLsdPassLabel(lsdPassIndex, lsdRadix);
+                    narrative = (op.Type, op.Value.HasValue) switch
+                    {
+                        (OperationType.IndexRead, _) when !lsdPhaseReady
+                            => $"Pre-compute key for value {GetValue(op.BufferId1, op.Index1, mainArray, bufferArrays)} at index {op.Index1}",
+                        (OperationType.IndexRead, _)
+                            => $"Read value {GetValue(op.BufferId1, op.Index1, mainArray, bufferArrays)} from index {op.Index1} ({passLabel})",
+                        (OperationType.IndexWrite, true) when distActiveBucket >= 0
+                            => $"Scatter value {op.Value!.Value} into digit bucket [{distBucketLabels[distActiveBucket]}] ({passLabel})",
+                        (OperationType.RangeCopy, _)
+                            => $"Gather all buckets back to main array — pass {lsdPassIndex + 1} complete",
                         _ => narrative
                     };
                 }
@@ -375,6 +482,15 @@ public static class TutorialStepBuilder
                     Bst = bstSnapshot,
                     Distribution = distSnapshot,
                 });
+
+                // Post-step: clear LSD buckets after b=10 RangeCopy gather step
+                if (lsdClearBucketsAfterStep)
+                {
+                    foreach (var b in distBuckets) b.Clear();
+                    lsdPassIndex++;
+                    lsdClearBucketsAfterStep = false;
+                }
+
                 opIdx++;
             }
         }
@@ -773,6 +889,58 @@ public static class TutorialStepBuilder
         return x;
     }
 
+    // ─── LSD helpers ─────────────────────────────────────────────────────
+
+    private static readonly uint[] Pow10 =
+    [
+        1u, 10u, 100u, 1_000u, 10_000u, 100_000u, 1_000_000u, 10_000_000u, 100_000_000u, 1_000_000_000u
+    ];
+
+    /// <summary>
+    /// LSD ソート用の桁インデックスを計算する。
+    /// radix=10: (v - minValue) / 10^passIndex % 10 （正整数に対して符号ビット反転後も同値）
+    /// radix=4:  ((uint)v ^ 0x8000_0000) >> (passIndex * 2) &amp; 0b11 （符号ビット反転で符号なし比較）
+    /// </summary>
+    private static int ComputeLsdDigit(int v, int passIndex, int radix, int minValue)
+    {
+        if (radix == 4)
+        {
+            // LSD b=4 uses raw sign-bit-flipped key (no minValue normalization)
+            uint key = (uint)v ^ 0x8000_0000u;
+            int shift = passIndex * 2;
+            return (int)((key >> shift) & 0b11u);
+        }
+        else // radix == 10 (default)
+        {
+            uint normalized = (uint)v - (uint)minValue;
+            uint divisor = (uint)passIndex < (uint)Pow10.Length ? Pow10[passIndex] : 1u;
+            return (int)((normalized / divisor) % 10u);
+        }
+    }
+
+    /// <summary>
+    /// パスインデックスと基数からパスラベル文字列を生成する。
+    /// radix=10: "ones digit" / "tens digit" / ...
+    /// radix=4:  "bits 0-1" / "bits 2-3" / ...
+    /// </summary>
+    private static string GetLsdPassLabel(int passIndex, int radix)
+    {
+        if (radix == 4)
+        {
+            int startBit = passIndex * 2;
+            int endBit = startBit + 1;
+            return $"bits {startBit}-{endBit}";
+        }
+        return passIndex switch
+        {
+            0 => "ones digit",
+            1 => "tens digit",
+            2 => "hundreds digit",
+            3 => "thousands digit",
+            _ => $"10^{passIndex} digit"
+        };
+    }
+
     /// <summary>Left rotation around x. Returns new subtree root (y = x.Right before rotation).</summary>
     private static int AvlRotateLeft(int x, int[] left, int[] right, int[] height)
     {
@@ -799,7 +967,6 @@ public static class TutorialStepBuilder
             string rotType;
             if (AvlGetBalance(li, left, right, height) < 0)
             {
-                // Left-Right case: left-rotate left child first, then right-rotate node
                 left[node] = AvlRotateLeft(li, left, right, height);
                 rotType = "LR";
             }
@@ -816,7 +983,6 @@ public static class TutorialStepBuilder
             string rotType;
             if (AvlGetBalance(ri, left, right, height) > 0)
             {
-                // Right-Left case: right-rotate right child first, then left-rotate node
                 right[node] = AvlRotateRight(ri, left, right, height);
                 rotType = "RL";
             }
@@ -827,6 +993,6 @@ public static class TutorialStepBuilder
             return (AvlRotateLeft(node, left, right, height), rotType);
         }
 
-        return (node, null);  // already balanced
+        return (node, null);
     }
 }

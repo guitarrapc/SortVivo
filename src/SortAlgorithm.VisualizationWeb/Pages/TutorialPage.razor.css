@@ -932,6 +932,16 @@
     transform: scale(1.1);
 }
 
+::deep .dist-pass-index {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(255, 255, 255, 0.06);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 9999px;
+    padding: 0.15rem 0.45rem;
+}
+
 @keyframes marble-pop {
     0% {
         transform: scale(1);

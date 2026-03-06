@@ -15,6 +15,10 @@
                     <span class="dist-pass-label">— @Snapshot.PassLabel</span>
                 }
             </span>
+            @if (!string.IsNullOrEmpty(Snapshot.PassLabel))
+            {
+                <span class="dist-pass-index">Pass @(Snapshot.PassIndex + 1)</span>
+            }
         }
     </div>
 

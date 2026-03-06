@@ -49,4 +49,11 @@ public record AlgorithmMetadata
     /// ヒープ木表示など、マーブル以外の代替表現を有効化する。
     /// </summary>
     public TutorialVisualizationHint TutorialVisualizationHint { get; init; } = TutorialVisualizationHint.None;
+
+    /// <summary>
+    /// LSD Radix sort のバケット基数。
+    /// <see cref="TutorialVisualizationHint"/> が <see cref="TutorialVisualizationHint.DigitBucketLsd"/> のときのみ使用。
+    /// 10 = 十進数 (b=10)、4 = 4 進数 (b=4)。0 = 未設定。
+    /// </summary>
+    public int TutorialLsdRadix { get; init; }
 }

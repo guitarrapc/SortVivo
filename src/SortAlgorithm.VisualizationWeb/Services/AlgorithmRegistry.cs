@@ -562,7 +562,9 @@ public class AlgorithmRegistry
                 - IndexRead: each element's current 2-bit digit group is extracted by a bitwise operation; the digit value increments its slot in the four-entry counting table
                 - IndexWrite: the prefix-sum pass converts counts to output positions; elements are then written to the output buffer in stable order by their current digit
                 - End of pass: each pass produces an array sorted by all digit positions processed so far; watch the partial order grow pass by pass from the least significant bits upward
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.DigitBucketLsd,
+            tutorialLsdRadix: 4);
         Add("LSD Radix sort (b=10)", "Distribution Sorts", "O(nk)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => RadixLSD10Sort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Sorts integers digit by digit from the least significant to the most significant decimal digit, applying a stable counting sort at each pass so that the order established by previous passes is never disturbed.
@@ -574,7 +576,9 @@ public class AlgorithmRegistry
                 - IndexWrite: the prefix-sum pass converts counts to output positions; elements are then written to the output buffer in stable order by their current digit
                 - End of pass: after the ones pass elements are grouped by last digit; after the tens pass by last two digits; each pass visibly extends the sorted prefix
                 """,
-            tutorialArrayType: TutorialArrayType.TwoDigitDecimal);
+            tutorialArrayType: TutorialArrayType.TwoDigitDecimal,
+            tutorialVisualizationHint: TutorialVisualizationHint.DigitBucketLsd,
+            tutorialLsdRadix: 10);
         Add("LSD Radix sort (b=256)", "Distribution Sorts", "O(nk)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => RadixLSD256Sort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Sorts integers byte by byte from the least significant to the most significant byte, applying a stable counting sort at each pass; for 32-bit integers only four passes are needed to fully sort the array.
@@ -715,7 +719,8 @@ public class AlgorithmRegistry
     private void Add(string name, string category, string complexity, int maxElements, int recommendedSize,
         Action<Span<int>, ISortContext> sortAction, string description = "", string tutorialDescription = "",
         TutorialArrayType tutorialArrayType = TutorialArrayType.Default, bool excludeFromTutorial = false,
-        TutorialVisualizationHint tutorialVisualizationHint = TutorialVisualizationHint.None)
+        TutorialVisualizationHint tutorialVisualizationHint = TutorialVisualizationHint.None,
+        int tutorialLsdRadix = 0)
     {
         _algorithms.Add(new AlgorithmMetadata
         {
@@ -729,7 +734,8 @@ public class AlgorithmRegistry
             TutorialDescription = tutorialDescription,
             TutorialArrayType = tutorialArrayType,
             ExcludeFromTutorial = excludeFromTutorial,
-            TutorialVisualizationHint = tutorialVisualizationHint
+            TutorialVisualizationHint = tutorialVisualizationHint,
+            TutorialLsdRadix = tutorialLsdRadix,
         });
     }
 }

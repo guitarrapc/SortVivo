@@ -387,7 +387,7 @@
             var tutorialArray = GetTutorialArrayFor(algo);
             _maxValue = tutorialArray.Length > 0 ? tutorialArray.Max() : 9;
             var (operations, _, _) = await Executor.ExecuteAndRecordAsync(tutorialArray, algo);
-            _steps = TutorialStepBuilder.Build(tutorialArray, operations, algo.TutorialVisualizationHint);
+            _steps = TutorialStepBuilder.Build(tutorialArray, operations, algo.TutorialVisualizationHint, algo.TutorialLsdRadix);
             _showTreeView = HasTreeView();
             _showBucketView = HasBucketView();
         }
@@ -566,7 +566,8 @@
 
     private bool HasBucketView()
         => _selectedAlgorithm?.TutorialVisualizationHint is
-            TutorialVisualizationHint.ValueBucket;
+            TutorialVisualizationHint.ValueBucket or
+            TutorialVisualizationHint.DigitBucketLsd;
 
     private bool IsBstView()
         => _selectedAlgorithm?.TutorialVisualizationHint is
@@ -605,6 +606,24 @@
         if (_selectedAlgorithm == null || !HasBucketView()) return null;
         var arr = GetTutorialArrayFor(_selectedAlgorithm);
         if (arr.Length == 0) return null;
+
+        if (_selectedAlgorithm.TutorialVisualizationHint == TutorialVisualizationHint.DigitBucketLsd)
+        {
+            int radix = _selectedAlgorithm.TutorialLsdRadix > 0 ? _selectedAlgorithm.TutorialLsdRadix : 10;
+            return new DistributionSnapshot
+            {
+                BucketCount = radix,
+                BucketLabels = Enumerable.Range(0, radix).Select(i => i.ToString()).ToArray(),
+                Buckets = Enumerable.Range(0, radix).Select(_ => Array.Empty<int>()).ToArray(),
+                Phase = DistributionPhase.Scatter,
+                ActiveBucketIndex = -1,
+                ActiveElementInBucket = -1,
+                PassIndex = 0,
+                PassLabel = radix == 4 ? "bits 0-1" : "ones digit",
+            };
+        }
+
+        // ValueBucket (Pigeonhole)
         var minVal = arr.Min();
         var maxVal = arr.Max();
         var bucketCount = maxVal > minVal ? maxVal - minVal + 1 : 1;

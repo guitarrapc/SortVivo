@@ -30,4 +30,12 @@ public enum TutorialVisualizationHint
     /// Counting sort / Bucket sort も対応予定（Phase A-3）。
     /// </summary>
     ValueBucket,
+
+    /// <summary>
+    /// 桁ベースの LSD バケット分配表示。
+    /// LSD Radix sort (b=10): 10 個の十進数桁バケットを描画（TwoDigitDecimal 配列で 2 パス）。
+    /// LSD Radix sort (b=4): 4 個の 2-bit グループバケットを描画。
+    /// どちらの基数かは <see cref="AlgorithmMetadata.TutorialLsdRadix"/> で区別する。
+    /// </summary>
+    DigitBucketLsd,
 }
