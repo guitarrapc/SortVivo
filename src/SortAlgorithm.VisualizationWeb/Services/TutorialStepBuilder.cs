@@ -129,6 +129,52 @@ public static class TutorialStepBuilder
             distPhase = DistributionPhase.Scatter;
         }
 
+        // MSD Radix sort tracking for DigitBucketMsd visualization.
+        // MSD b=10: each recursion level emits Read(main,start+i) × length (Count) → Read+Write (Distribute) → CopyTo → recurse.
+        //           Recursion boundary = Read range changes (start, length).
+        //           Digit = (v / 10^digitIndex) % 10 where digitIndex decrements with depth.
+        // MSD b=4:  similar structure but with 2-bit digit extraction.
+        //           Digit = ((uint)v ^ 0x8000_0000u) >> (digitIndex * 2) & 0b11.
+        var trackMsd = hint == TutorialVisualizationHint.DigitBucketMsd;
+        int msdDigitIndex = -1;          // Current digit being processed (decrements with recursion)
+        int msdActiveStart = 0;          // Current recursion range start
+        int msdActiveLength = 0;         // Current recursion range length
+        int msdMaxDigit = 0;             // Maximum digit count (computed from initial array)
+        int msdCountPhaseReadCount = 0;  // Count phase Read counter (length reads → phase transition)
+        bool msdInCountPhase = false;    // true during Count phase
+        if (trackMsd)
+        {
+            int msdBucketCount = lsdRadix > 0 ? lsdRadix : 10;
+            distBucketCount = msdBucketCount;
+            distBucketLabels = Enumerable.Range(0, msdBucketCount).Select(i => i.ToString()).ToArray();
+            distMinValue = 0; // MSD uses sign-bit-flipped keys, no minValue normalization
+            distBuckets = Enumerable.Range(0, msdBucketCount).Select(_ => new List<int>()).ToArray();
+            distShadowTemp = new int[initialArray.Length];
+            distPhase = DistributionPhase.Scatter;
+            msdActiveStart = 0;
+            msdActiveLength = initialArray.Length;
+            // Compute max digit from initial array
+            if (initialArray.Length > 0)
+            {
+                var maxVal = initialArray.Max();
+                if (lsdRadix == 4)
+                {
+                    uint key = (uint)maxVal ^ 0x8000_0000u;
+                    msdMaxDigit = key > 0 ? (32 - System.Numerics.BitOperations.LeadingZeroCount(key) + 1) / 2 : 1;
+                }
+                else // b=10
+                {
+                    ulong absMax = (ulong)Math.Abs(maxVal);
+                    msdMaxDigit = absMax > 0 ? (int)Math.Floor(Math.Log10(absMax)) + 1 : 1;
+                }
+            }
+            else
+            {
+                msdMaxDigit = 1;
+            }
+            msdDigitIndex = msdMaxDigit - 1; // Start from most significant digit
+        }
+
         int opIdx = 0;
         while (opIdx < operations.Count)
         {
@@ -489,6 +535,75 @@ public static class TutorialStepBuilder
                     };
                 }
 
+                // Track MSD Radix sort state for DigitBucketMsd visualization.
+                if (trackMsd)
+                {
+                    if (op.Type == OperationType.IndexRead && op.BufferId1 == 0)
+                    {
+                        // MSD Count phase: consecutive Reads from main within current range
+                        if (!msdInCountPhase && (msdCountPhaseReadCount == 0 || op.Index1 >= msdActiveStart && op.Index1 < msdActiveStart + msdActiveLength))
+                        {
+                            msdInCountPhase = true;
+                            msdCountPhaseReadCount = 0;
+                        }
+
+                        if (msdInCountPhase)
+                        {
+                            int v = mainArray[op.Index1];
+                            int digit = ComputeMsdDigit(v, msdDigitIndex, lsdRadix);
+                            if ((uint)digit < (uint)distBucketCount)
+                            {
+                                distActiveBucket = digit;
+                                msdCountPhaseReadCount++;
+                                distPhase = DistributionPhase.Scatter; // Count internally, show as Scatter prep
+                            }
+                        }
+                    }
+                    else if (op.Type == OperationType.IndexWrite && op.BufferId1 == 1 && op.Value.HasValue)
+                    {
+                        // MSD Distribute phase: Write to temp
+                        msdInCountPhase = false;
+                        int v = op.Value.Value;
+                        int digit = ComputeMsdDigit(v, msdDigitIndex, lsdRadix);
+                        if ((uint)digit < (uint)distBucketCount)
+                        {
+                            distBuckets[digit].Add(v);
+                            if (op.Index1 < distShadowTemp.Length)
+                                distShadowTemp[op.Index1] = v;
+                            distActiveBucket = digit;
+                            distActiveElement = distBuckets[digit].Count - 1;
+                        }
+                        distPhase = DistributionPhase.Scatter;
+                    }
+                    else if (op.Type == OperationType.RangeCopy && op.BufferId1 == 1 && op.BufferId2 == 0)
+                    {
+                        // MSD CopyTo: end of current recursion level, prepare for next
+                        distActiveBucket = -1;
+                        distPhase = DistributionPhase.Gather;
+                        msdCountPhaseReadCount = 0;
+
+                        // Detect recursion boundary: next Read will have different range
+                        // Clear buckets after CopyTo (next recursion level or next bucket)
+                        foreach (var b in distBuckets) b.Clear();
+                        if (msdDigitIndex > 0)
+                            msdDigitIndex--;
+                    }
+
+                    distSnapshot = new DistributionSnapshot
+                    {
+                        BucketCount = distBucketCount,
+                        BucketLabels = distBucketLabels,
+                        Buckets = distBuckets.Select(b => b.ToArray()).ToArray(),
+                        Phase = distPhase,
+                        ActiveBucketIndex = distActiveBucket,
+                        ActiveElementInBucket = distActiveElement,
+                        PassIndex = msdMaxDigit - msdDigitIndex - 1,
+                        PassLabel = GetMsdPassLabel(msdDigitIndex, lsdRadix),
+                        ActiveRange = (msdActiveStart, msdActiveLength),
+                        DigitIndex = msdDigitIndex,
+                    };
+                }
+
                 var (highlights, bufferHighlights, highlightType, compareResult, writeSourceIndex, writePreviousValue, narrative) =
                     GenerateStepInfo(op, mainArray, bufferArrays);
 
@@ -574,6 +689,25 @@ public static class TutorialStepBuilder
                             => $"Scatter value {op.Value!.Value} into digit bucket [{distBucketLabels[distActiveBucket]}] ({passLabel})",
                         (OperationType.RangeCopy, _)
                             => $"Gather all buckets back to main array — pass {lsdPassIndex + 1} complete",
+                        _ => narrative
+                    };
+                }
+
+                // Override narrative with MSD-specific text
+                if (distSnapshot != null && trackMsd)
+                {
+                    string passLabel = GetMsdPassLabel(msdDigitIndex, lsdRadix);
+                    string rangeLabel = msdActiveLength < mainArray.Length
+                        ? $" (range [{msdActiveStart}..{msdActiveStart + msdActiveLength - 1}])"
+                        : "";
+                    narrative = (op.Type, op.Value.HasValue) switch
+                    {
+                        (OperationType.IndexRead, _) when msdInCountPhase
+                            => $"Count value {GetValue(0, op.Index1, mainArray, bufferArrays)} for {passLabel}{rangeLabel}",
+                        (OperationType.IndexWrite, true) when distActiveBucket >= 0
+                            => $"Distribute value {op.Value!.Value} into bucket [{distBucketLabels[distActiveBucket]}] ({passLabel}{rangeLabel})",
+                        (OperationType.RangeCopy, _)
+                            => $"Copy sorted range back to main — recurse into sub-buckets",
                         _ => narrative
                     };
                 }
@@ -1054,6 +1188,51 @@ public static class TutorialStepBuilder
             3 => "thousands digit",
             _ => $"10^{passIndex} digit"
         };
+    }
+
+    /// <summary>
+    /// MSD 桁インデックスと基数からパスラベル文字列を生成する。
+    /// digitIndex は最上位桁から降順（digitIndex=1 → tens, digitIndex=0 → ones）。
+    /// </summary>
+    private static string GetMsdPassLabel(int digitIndex, int radix)
+    {
+        if (radix == 4)
+        {
+            int startBit = digitIndex * 2;
+            int endBit = startBit + 1;
+            return $"bits {startBit}-{endBit}";
+        }
+        return digitIndex switch
+        {
+            0 => "ones digit",
+            1 => "tens digit",
+            2 => "hundreds digit",
+            3 => "thousands digit",
+            _ => $"10^{digitIndex} digit"
+        };
+    }
+
+    /// <summary>
+    /// MSD ソート用の桁インデックスを計算する（符号ビット反転キーベース）。
+    /// radix=10: (key / 10^digitIndex) % 10
+    /// radix=4:  (key >> (digitIndex * 2)) &amp; 0b11
+    /// </summary>
+    private static int ComputeMsdDigit(int v, int digitIndex, int radix)
+    {
+        if (radix == 4)
+        {
+            // MSD b=4 uses sign-bit-flipped key (same as LSD)
+            uint key = (uint)v ^ 0x8000_0000u;
+            int shift = digitIndex * 2;
+            return (int)((key >> shift) & 0b11u);
+        }
+        else // radix == 10 (default)
+        {
+            // MSD b=10 uses sign-bit-flipped key without minValue normalization
+            ulong key = (ulong)v ^ 0x8000_0000_0000_0000UL;
+            ulong divisor = (uint)digitIndex < (uint)Pow10.Length ? Pow10[digitIndex] : 1UL;
+            return (int)((key / divisor) % 10UL);
+        }
     }
 
     /// <summary>Left rotation around x. Returns new subtree root (y = x.Right before rotation).</summary>

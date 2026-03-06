@@ -49,6 +49,20 @@ public record DistributionSnapshot
     /// null = Counting sort 以外のアルゴリズム。
     /// </summary>
     public int[]? Counts { get; init; }
+
+    /// <summary>
+    /// 現在の再帰範囲（MSD 用）。
+    /// start = 処理中の配列範囲の開始インデックス、length = 範囲の長さ。
+    /// null = MSD 以外のアルゴリズム。
+    /// </summary>
+    public (int start, int length)? ActiveRange { get; init; }
+
+    /// <summary>
+    /// 現在の桁インデックス（MSD 用）。
+    /// 最上位桁 = digitCount - 1、最下位桁 = 0。
+    /// -1 = MSD 以外のアルゴリズム。
+    /// </summary>
+    public int DigitIndex { get; init; } = -1;
 }
 
 /// <summary>

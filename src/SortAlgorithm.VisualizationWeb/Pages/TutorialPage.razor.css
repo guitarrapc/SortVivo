@@ -996,6 +996,16 @@
     padding: 0.15rem 0.45rem;
 }
 
+::deep .dist-range-label {
+    font-size: 0.68rem;
+    font-weight: 500;
+    color: var(--text-secondary);
+    background: rgba(168, 85, 247, 0.15);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 9999px;
+    padding: 0.15rem 0.45rem;
+}
+
 @keyframes marble-pop {
     0% {
         transform: scale(1);

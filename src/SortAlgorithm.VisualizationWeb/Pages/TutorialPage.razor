@@ -567,7 +567,8 @@
     private bool HasBucketView()
         => _selectedAlgorithm?.TutorialVisualizationHint is
             TutorialVisualizationHint.ValueBucket or
-            TutorialVisualizationHint.DigitBucketLsd;
+            TutorialVisualizationHint.DigitBucketLsd or
+            TutorialVisualizationHint.DigitBucketMsd;
 
     private bool IsBstView()
         => _selectedAlgorithm?.TutorialVisualizationHint is
@@ -623,7 +624,38 @@
             };
         }
 
-        // ValueBucket (Pigeonhole)
+        if (_selectedAlgorithm.TutorialVisualizationHint == TutorialVisualizationHint.DigitBucketMsd)
+        {
+            int radix = _selectedAlgorithm.TutorialLsdRadix > 0 ? _selectedAlgorithm.TutorialLsdRadix : 10;
+            var msdMaxVal = arr.Max();
+            int maxDigit;
+            if (radix == 4)
+            {
+                uint key = (uint)msdMaxVal ^ 0x8000_0000u;
+                maxDigit = key > 0 ? (32 - System.Numerics.BitOperations.LeadingZeroCount(key) + 1) / 2 : 1;
+            }
+            else // b=10
+            {
+                ulong absMax = (ulong)Math.Abs(msdMaxVal);
+                maxDigit = absMax > 0 ? (int)Math.Floor(Math.Log10(absMax)) + 1 : 1;
+            }
+            int digitIndex = maxDigit - 1;
+            return new DistributionSnapshot
+            {
+                BucketCount = radix,
+                BucketLabels = Enumerable.Range(0, radix).Select(i => i.ToString()).ToArray(),
+                Buckets = Enumerable.Range(0, radix).Select(_ => Array.Empty<int>()).ToArray(),
+                Phase = DistributionPhase.Scatter,
+                ActiveBucketIndex = -1,
+                ActiveElementInBucket = -1,
+                PassIndex = 0,
+                PassLabel = radix == 4 ? $"bits {digitIndex * 2}-{digitIndex * 2 + 1}" : (digitIndex == 0 ? "ones digit" : digitIndex == 1 ? "tens digit" : $"10^{digitIndex} digit"),
+                ActiveRange = (0, arr.Length),
+                DigitIndex = digitIndex,
+            };
+        }
+
+        // ValueBucket (Pigeonhole / Counting / Bucket)
         var minVal = arr.Min();
         var maxVal = arr.Max();
         var bucketCount = maxVal > minVal ? maxVal - minVal + 1 : 1;

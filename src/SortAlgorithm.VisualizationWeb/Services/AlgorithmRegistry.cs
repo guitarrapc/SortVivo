@@ -603,7 +603,9 @@ public class AlgorithmRegistry
                 - IndexRead: each element's current most-significant remaining digit is extracted by a bitwise operation; the digit determines which of the four buckets the element enters
                 - IndexWrite: elements are placed into their digit buckets; each bucket is then processed recursively for the next digit position
                 - End of pass: sub-buckets of size 1 terminate immediately; watch small sub-buckets stop early while larger ones recurse deeper into finer digit positions
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.DigitBucketMsd,
+            tutorialLsdRadix: 4);
         Add("MSD Radix sort (b=10)", "Distribution Sorts", "O(nk)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => RadixMSD10Sort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Sorts integers digit by digit from the most significant decimal digit first, distributing elements into up to ten buckets per pass and then recursively sorting each bucket for the next digit.
@@ -615,7 +617,9 @@ public class AlgorithmRegistry
                 - IndexWrite: elements are placed into their digit buckets; each bucket is then processed recursively for the next digit
                 - End of pass: elements that already differ at the current digit are permanently separated and never processed together again; watch the recursive depth grow only for elements sharing a long common prefix
                 """,
-            tutorialArrayType: TutorialArrayType.TwoDigitDecimal);
+            tutorialArrayType: TutorialArrayType.TwoDigitDecimal,
+            tutorialVisualizationHint: TutorialVisualizationHint.DigitBucketMsd,
+            tutorialLsdRadix: 10);
         Add("American flag sort", "Distribution Sorts", "O(nk)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => AmericanFlagSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: An in-place MSD Radix sort that makes two passes per digit: the first counts elements per bucket to compute bucket boundaries, the second cyclically permutes elements into their correct buckets without any auxiliary array.

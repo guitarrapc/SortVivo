@@ -38,4 +38,12 @@ public enum TutorialVisualizationHint
     /// どちらの基数かは <see cref="AlgorithmMetadata.TutorialLsdRadix"/> で区別する。
     /// </summary>
     DigitBucketLsd,
+
+    /// <summary>
+    /// 桁ベースの MSD バケット分配表示（再帰的）。
+    /// MSD Radix sort (b=10): 10 個の十進数桁バケットを描画し、各バケット内で再帰的に下位桁で分割。
+    /// MSD Radix sort (b=4): 4 個の 2-bit グループバケットを描画し、再帰的に分割。
+    /// 再帰範囲（start, length）を境界線で可視化する。
+    /// </summary>
+    DigitBucketMsd,
 }

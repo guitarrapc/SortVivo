@@ -19,6 +19,11 @@
             {
                 <span class="dist-pass-index">Pass @(Snapshot.PassIndex + 1)</span>
             }
+            @if (Snapshot.ActiveRange.HasValue)
+            {
+                var (start, length) = Snapshot.ActiveRange.Value;
+                <span class="dist-range-label">Range [@start..@(start + length - 1)]</span>
+            }
         }
     </div>
 
