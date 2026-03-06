@@ -293,18 +293,6 @@ public class AlgorithmRegistry
                 - Swap: a single rotation — implemented via 3-reversal — moves all misplaced elements into position at once, rather than the many small rotations that Rotate merge sort performs
                 - End of merge: two recursive SymMerge calls handle the two resulting subproblems on each half of the range, halving the problem at each level until the base case is reached
                 """);
-        Add("Timsort", "Merge Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => TimSort.Sort(arr, ctx),
-            tutorialDescription: """
-                How it works: Scans the input for naturally ordered runs, uses Insertion sort to extend any run shorter than a minimum length (minrun), then merges runs from a stack using a strategy that keeps stack heights balanced.
-
-                Key property: Adaptive — the more existing order the input has, the fewer merges are needed, approaching O(n) on nearly-sorted data; this is why it was chosen as the standard library sort for CPython and Java.
-
-                Watch for:
-                - Compare: adjacent pairs are tested during the run-detection scan; each confirmed run is pushed onto the merge stack
-                - IndexWrite: Insertion sort extends runs that fall below minrun, stitching short sequences into longer ones before any merging begins
-                - RangeCopy: when the stack triggers a merge, the shorter of the two runs is copied into a buffer; sorted values are then written back
-                """,
-            tutorialArrayType: TutorialArrayType.MultiRun);
         Add("Powersort", "Merge Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => PowerSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Scans the input for natural runs like Timsort, but schedules merges by computing a "power" value from each run's position and size to determine the provably optimal merge order.
@@ -327,6 +315,18 @@ public class AlgorithmRegistry
                 - Compare: adjacent pairs are tested to distinguish ascending runs from descending ones; descending run boundaries are recorded for reversal
                 - Swap: detected descending runs are reversed in-place by swapping symmetric pairs around the midpoint, converting them to ascending at zero allocation cost
                 - RangeCopy: after all runs are prepared, adjacent runs are merged using a buffer-based merge step identical to Timsort's
+                """,
+            tutorialArrayType: TutorialArrayType.MultiRun);
+        Add("Timsort", "Merge Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => TimSort.Sort(arr, ctx),
+            tutorialDescription: """
+                How it works: Scans the input for naturally ordered runs, uses Insertion sort to extend any run shorter than a minimum length (minrun), then merges runs from a stack using a strategy that keeps stack heights balanced.
+
+                Key property: Adaptive — the more existing order the input has, the fewer merges are needed, approaching O(n) on nearly-sorted data; this is why it was chosen as the standard library sort for CPython and Java.
+
+                Watch for:
+                - Compare: adjacent pairs are tested during the run-detection scan; each confirmed run is pushed onto the merge stack
+                - IndexWrite: Insertion sort extends runs that fall below minrun, stitching short sequences into longer ones before any merging begins
+                - RangeCopy: when the stack triggers a merge, the shorter of the two runs is copied into a buffer; sorted values are then written back
                 """,
             tutorialArrayType: TutorialArrayType.MultiRun);
 
