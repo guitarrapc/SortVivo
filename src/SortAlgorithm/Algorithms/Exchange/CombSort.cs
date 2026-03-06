@@ -96,15 +96,11 @@ public static class CombSort
 
         var len = s.Length;
         var gap = len;
-        // Optimize 2: Last Swap Index: initialized once here, shrinks across all bubble passes
-        // Used only in gap==1 bubble phase; shrinks across bubble passes
         var bubbleEnd = len;
         var swapped = true;
 
         while (gap != 1 || swapped)
         {
-            // Optimize 1: Loop-Head Gap Update: reduce at loop head, no end-of-loop branch needed
-            // first pass starts with gap < len; classic do-while form starts at gap = len
             gap = gap * 10 / 13;
             if (gap < 1) gap = 1;
 
@@ -119,6 +115,7 @@ public static class CombSort
             if (gap == 1)
             {
                 // Final bubble sort pass with last swap index optimization
+                context.OnPhase(SortPhase.CombBubblePass, bubbleEnd);
                 var newN = 0;
                 for (var i = 0; i + 1 < bubbleEnd; i++)
                 {
@@ -126,16 +123,15 @@ public static class CombSort
                     {
                         s.Swap(i, i + 1);
                         swapped = true;
-                        newN = i + 1;  // Optimize 2: record last swap position
+                        newN = i + 1;
                     }
                 }
-                // Optimize 2: shrink scan range; persists to next pass
-                // 0 means "already sorted" for bubble phase
                 bubbleEnd = newN;
             }
             else
             {
                 // Gap-based comb sort pass
+                context.OnPhase(SortPhase.CombGapPass, gap, len);
                 var end = len - gap;
                 for (var i = 0; i < end; i++)
                 {

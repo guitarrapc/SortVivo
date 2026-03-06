@@ -88,11 +88,13 @@ public static class OddEvenSort
         var s = new SortSpan<T, TComparer, TContext>(span, context, comparer, BUFFER_MAIN);
 
         var sorted = false;
+        int pass = 1;
         while (!sorted)
         {
             sorted = true;
 
             // Odd-even phase: compare pairs (0,1), (2,3), (4,5), ...
+            context.OnPhase(SortPhase.OddEvenOddPhase, pass);
             for (var i = 0; i < s.Length - 1; i += 2)
             {
                 if (s.Compare(i, i + 1) > 0)
@@ -103,6 +105,7 @@ public static class OddEvenSort
             }
 
             // Even-odd phase: compare pairs (1,2), (3,4), (5,6), ...
+            context.OnPhase(SortPhase.OddEvenEvenPhase, pass);
             for (var i = 1; i < s.Length - 1; i += 2)
             {
                 if (s.Compare(i, i + 1) > 0)
@@ -111,6 +114,7 @@ public static class OddEvenSort
                     sorted = false;
                 }
             }
+            pass++;
         }
     }
 }

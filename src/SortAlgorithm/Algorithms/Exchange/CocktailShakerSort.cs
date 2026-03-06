@@ -77,10 +77,14 @@ public static class CocktailShakerSort
 
         var min = 0;
         var max = s.Length - 1;
+        int pass = 1;
 
         while (min < max)
         {
-            // order scan
+            // Forward pass: bubble max to the right
+            context.OnPhase(SortPhase.CocktailForwardPass, pass, min, max);
+            context.OnRole(min, BUFFER_MAIN, RoleType.LeftPointer);
+            context.OnRole(max, BUFFER_MAIN, RoleType.RightPointer);
             var lastSwapIndex = min;
             for (var i = min; i < max; i++)
             {
@@ -91,10 +95,15 @@ public static class CocktailShakerSort
                 }
             }
 
+            context.OnRole(min, BUFFER_MAIN, RoleType.None);
+            context.OnRole(max, BUFFER_MAIN, RoleType.None);
             max = lastSwapIndex;
             if (min >= max) break;
 
-            // reverse order scan
+            // Backward pass: bubble min to the left
+            context.OnPhase(SortPhase.CocktailBackwardPass, pass, min, max);
+            context.OnRole(min, BUFFER_MAIN, RoleType.LeftPointer);
+            context.OnRole(max, BUFFER_MAIN, RoleType.RightPointer);
             lastSwapIndex = max;
             for (var i = max; i > min; i--)
             {
@@ -104,8 +113,12 @@ public static class CocktailShakerSort
                     lastSwapIndex = i;
                 }
             }
+
+            context.OnRole(min, BUFFER_MAIN, RoleType.None);
+            context.OnRole(max, BUFFER_MAIN, RoleType.None);
             min = lastSwapIndex;
             if (min >= max) break;
+            pass++;
         }
     }
 }
@@ -185,8 +198,14 @@ public static class CocktailShakerSortNonOptimized
         for (int i = 0; i < s.Length / 2; i++)
         {
             var swapped = false;
+            int pass = i + 1;
+            int lo = i;
+            int hi = s.Length - 1 - i;
 
-            // Bubble Sort (To Max)
+            // Forward pass: bubble max to the right
+            context.OnPhase(SortPhase.CocktailForwardPass, pass, lo, hi);
+            context.OnRole(lo, BUFFER_MAIN, RoleType.LeftPointer);
+            context.OnRole(hi, BUFFER_MAIN, RoleType.RightPointer);
             for (int j = i; j < s.Length - i - 1; j++)
             {
                 if (s.Compare(j, j + 1) > 0)
@@ -196,7 +215,13 @@ public static class CocktailShakerSortNonOptimized
                 }
             }
 
-            // Bubble Sort (To Min)
+            context.OnRole(lo, BUFFER_MAIN, RoleType.None);
+            context.OnRole(hi, BUFFER_MAIN, RoleType.None);
+
+            // Backward pass: bubble min to the left
+            context.OnPhase(SortPhase.CocktailBackwardPass, pass, lo, hi);
+            context.OnRole(lo, BUFFER_MAIN, RoleType.LeftPointer);
+            context.OnRole(hi, BUFFER_MAIN, RoleType.RightPointer);
             for (int j = s.Length - 2 - i; j > i; j--)
             {
                 if (s.Compare(j, j - 1) < 0)
@@ -205,6 +230,9 @@ public static class CocktailShakerSortNonOptimized
                     swapped = true;
                 }
             }
+
+            context.OnRole(lo, BUFFER_MAIN, RoleType.None);
+            context.OnRole(hi, BUFFER_MAIN, RoleType.None);
             if (!swapped) break;
         }
     }
