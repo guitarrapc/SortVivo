@@ -329,7 +329,10 @@ public static class StdSort
             }
 
             // Partition
+            s.Context.OnPhase(SortPhase.QuickSortPartition, first, last - 1);
+            s.Context.OnRole(first, BUFFER_MAIN, RoleType.Pivot);
             var (pivotPos, alreadyPartitioned) = PartitionWithEqualsOnRight(s, first, last);
+            s.Context.OnRole(first, BUFFER_MAIN, RoleType.None);
 
             // Check if already sorted using insertion sort heuristic
             if (alreadyPartitioned)

@@ -190,12 +190,15 @@ public static class StableQuickSort
             var mid = left + length / 2;
             var q3 = right - length / 4;   // overflow-safe: equivalent to left + length*3/4
             var pivotIndex = MedianOf3Index(s, q1, mid, q3);
+            s.Context.OnPhase(SortPhase.QuickSortPartition, left, right, pivotIndex);
+            s.Context.OnRole(pivotIndex, BUFFER_MAIN, RoleType.Pivot);
 
             // Phase 2. Stable partition using ArrayPool buffer
             // Use index-based comparison to avoid copying large struct pivot values
             var (lessEnd, greaterStart) = StablePartition(s, left, right, pivotIndex);
 
             // Phase 3. Recursively sort partitions with tail recursion optimization
+            s.Context.OnRole(pivotIndex, BUFFER_MAIN, RoleType.None);
             // Recurse on smaller partition, loop on larger to ensure O(log n) stack depth
             var leftLen = lessEnd - left;
             var rightLen = right + 1 - greaterStart;

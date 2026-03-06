@@ -195,8 +195,10 @@ public static class QuickSortMedian3
                 s.Swap(pivotIndex, right);
             }
             var pivotPos = right;
+            s.Context.OnPhase(SortPhase.QuickSortPartition, left, right, pivotPos);
+            s.Context.OnRole(pivotPos, BUFFER_MAIN, RoleType.Pivot);
 
-            // Phase 2. Three-way partition (Dijkstra's Dutch National Flag, https://en.wikipedia.org/wiki/Dutch_national_flag_problem)
+            // Phase 2. Three-way partition
             // Partitions into: [left, lt) < pivot, [lt, eqRight] == pivot, (eqRight, right] > pivot
             var lt = left;      // Elements before lt are < pivot
             var gt = right - 1; // Elements after gt are > pivot
@@ -256,7 +258,8 @@ public static class QuickSortMedian3
             // [right] : == pivot (element originally at gt+1, no need to sort)
             // Phase 3. Tail recursion optimization: recurse on smaller partition
             // Elements in [lt, eqRight] are equal to pivot and don't need further sorting
-            
+            s.Context.OnRole(pivotPos, BUFFER_MAIN, RoleType.None);
+
             // Calculate sizes of subranges to recurse on:
             // Left subrange: [left, lt-1] has size (lt-1) - left + 1 = lt - left
             // Right subrange: [eqRight+1, right] has size right - (eqRight+1) + 1 = right - eqRight

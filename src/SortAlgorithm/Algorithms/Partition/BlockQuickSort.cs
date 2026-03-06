@@ -261,6 +261,7 @@ public static class BlockQuickSort
             }
 
             // Partition using block-based Hoare partition
+            s.Context.OnPhase(SortPhase.QuickSortPartition, left, right);
             var result = HoareBlockPartition(s, left, right);
 
             // Decrement depth limit for next recursion level

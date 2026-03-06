@@ -165,10 +165,15 @@ public static class IntroSortDotnet
             depthLimit--;
 
             // Partition and get pivot position (returns position relative to left)
+            s.Context.OnPhase(SortPhase.QuickSortPartition, left, left + partitionSize - 1);
             int p = PickPivotAndPartition(s, left, partitionSize);
+
+            // Mark pivot position
+            s.Context.OnRole(left + p, BUFFER_MAIN, RoleType.Pivot);
 
             // Recursively sort right partition, loop on left (tail recursion elimination)
             // Note: pivot at position (left + p) is already in final position, exclude from recursion
+            s.Context.OnRole(left + p, BUFFER_MAIN, RoleType.None);
             IntroSortInternal(s, left + p + 1, left + partitionSize, depthLimit);
             partitionSize = p;
         }

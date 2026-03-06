@@ -302,6 +302,19 @@ public static class TutorialStepBuilder
             SortAlgorithm.Contexts.SortPhase.MergeInitSort             => $"Initial sort: insertion sort in blocks of {p1}",
             SortAlgorithm.Contexts.SortPhase.MergeRunDetect            => "Detecting natural runs",
             SortAlgorithm.Contexts.SortPhase.MergeRunCollapse          => $"Collapsing {p1} run(s) on stack",
+            SortAlgorithm.Contexts.SortPhase.DropMergeDetect           => "Detecting LNS (Longest Nondecreasing Subsequence)",
+            SortAlgorithm.Contexts.SortPhase.DropMergeSort             => $"Sorting {p1} dropped element(s)",
+            SortAlgorithm.Contexts.SortPhase.DropMergeMerge            => $"Merging LNS with {p1} dropped element(s) into [{0}..{p2 - 1}]",
+            SortAlgorithm.Contexts.SortPhase.BitonicLevel              => $"Level k={p1}: building bitonic sequence of size {p1} (count={p2})",
+            SortAlgorithm.Contexts.SortPhase.BitonicStage              => $"Stage j={p1}: compare-swap at distance {p1} within level {p2}",
+            SortAlgorithm.Contexts.SortPhase.BogoShuffle               => $"Shuffle attempt #{p1}",
+            SortAlgorithm.Contexts.SortPhase.RadixPass                 => $"Radix pass: digit {p1} (0=least significant)",
+            SortAlgorithm.Contexts.SortPhase.DistributionCount         => "Count: counting element occurrences",
+            SortAlgorithm.Contexts.SortPhase.DistributionAccumulate    => "Accumulate: computing bucket offsets (prefix sum)",
+            SortAlgorithm.Contexts.SortPhase.DistributionWrite         => "Write: scattering elements to sorted positions",
+            SortAlgorithm.Contexts.SortPhase.QuickSortPartition        => p3 >= 0
+                ? $"Partition [{p1}..{p2}] — pivot at [{p3}]"
+                : $"Partition [{p1}..{p2}]",
             _ => string.Empty,
         };
 

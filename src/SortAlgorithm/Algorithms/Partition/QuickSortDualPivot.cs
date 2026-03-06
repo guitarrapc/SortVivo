@@ -260,6 +260,9 @@ public static class QuickSortDualPivot
             // This is more efficient than checking after partitioning
             // At this point, left and right hold pivot values with left <= right guaranteed
             var diffPivots = s.Compare(left, right) != 0;
+            s.Context.OnPhase(SortPhase.QuickSortPartition, left, right);
+            s.Context.OnRole(left, BUFFER_MAIN, RoleType.Pivot);
+            s.Context.OnRole(right, BUFFER_MAIN, RoleType.Pivot);
 
             // Phase 1. Partition array into three regions using dual pivots
             // Following Yaroslavskiy 2009 paper structure exactly
@@ -406,6 +409,8 @@ public static class QuickSortDualPivot
             // Recurse on the two smallest regions; loop (continue) on the largest.
             // This bounds recursion depth to O(log n): given sizes l+c+r = length-2,
             // the looped region is the largest, so each recursed size ≤ (length-2)/2.
+            s.Context.OnRole(left, BUFFER_MAIN, RoleType.None);
+            s.Context.OnRole(right, BUFFER_MAIN, RoleType.None);
             int leftCount = pivot1 - left;
             // When diffPivots == false, the equal-pivot partition loop invariant guarantees
             // [less..great] is all == pivot, so sorting it is a no-op. Setting midCount=0

@@ -246,6 +246,7 @@ public static class PDQSort
             }
 
             // Partition and detect equal elements block
+            s.Context.OnPhase(SortPhase.QuickSortPartition, begin, end - 1);
             var (equalLeft, equalRight, alreadyPartitioned) = PartitionRightSkipEquals(s, begin, end);
 
             // Calculate sizes excluding the equal block

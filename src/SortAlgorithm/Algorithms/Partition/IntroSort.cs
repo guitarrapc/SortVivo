@@ -265,6 +265,7 @@ public static class IntroSort
             }
 
             // Hoare partition scheme with swap counting for nearly-sorted detection
+            s.Context.OnPhase(SortPhase.QuickSortPartition, left, right);
             var l = left;
             var r = right;
             var swapCount = 0;
