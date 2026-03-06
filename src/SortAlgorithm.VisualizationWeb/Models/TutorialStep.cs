@@ -71,6 +71,13 @@ public record TutorialStep
     /// </summary>
     public RecursionSnapshot? Recursion { get; init; }
 
+    /// <summary>
+    /// Shell sort の h-spaced 部分列色分け用のギャップ値。
+    /// TutorialVisualizationHint が ShellGap のとき使用（他は null）。
+    /// 各マーブルのインデックス i に対して i % ShellGap で部分列グループを決定する。
+    /// </summary>
+    public int? ShellGap { get; init; }
+
     /// <summary>この操作を日本語で説明するナラティブテキスト</summary>
     public string Narrative { get; init; } = string.Empty;
 }

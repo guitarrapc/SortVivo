@@ -255,6 +255,7 @@
                                         WritePreviousValue="@GetCurrentWritePreviousValue()"
                                         MaxValue="@_maxValue"
                                         StepIndex="@_currentStepIndex"
+                                        ShellGap="@GetCurrentShellGap()"
                                         Label="Main Array" />
                         <DistributionBucketRenderer Snapshot="@GetCurrentDistribution()"
                                                     MaxValue="@_maxValue"
@@ -300,6 +301,7 @@
                                         WritePreviousValue="@GetCurrentWritePreviousValue()"
                                         MaxValue="@_maxValue"
                                         StepIndex="@_currentStepIndex"
+                                        ShellGap="@GetCurrentShellGap()"
                                         Label="Main Array" />
                     }
 
@@ -654,6 +656,9 @@
             return BuildInitialNetworkSnapshot();
         return _steps[_currentStepIndex].Network;
     }
+
+    private int? GetCurrentShellGap()
+        => _currentStepIndex < 0 ? null : _steps[_currentStepIndex].ShellGap;
 
     private DistributionSnapshot? BuildInitialDistributionSnapshot()
     {

@@ -1125,6 +1125,22 @@
     font-family: monospace;
 }
 
+/* ─── Shell sort gap 部分列カラードット ────────────────────────────────── */
+::deep .marble-gap-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    margin: 0 auto;
+    opacity: 0.9;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.35);
+    animation: gap-dot-fade-in 0.25s ease;
+}
+
+@keyframes gap-dot-fade-in {
+    from { opacity: 0; transform: scale(0.5); }
+    to   { opacity: 0.9; transform: scale(1); }
+}
+
 /* PC: サイドバー幅を考慮してタイトルを右側エリアの中央に配置 */
 @media (min-width: 1280px) {
     .tutorial-title {

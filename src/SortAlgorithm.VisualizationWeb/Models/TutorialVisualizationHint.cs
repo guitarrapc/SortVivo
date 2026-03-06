@@ -60,4 +60,12 @@ public enum TutorialVisualizationHint
     /// ノードには部分配列の内容を表示し、処理中のノードをハイライトする。
     /// </summary>
     RecursionTree,
+
+    /// <summary>
+    /// Shell sort の h-spaced 部分列を色分けして表示するマーブルアノテーション拡張。
+    /// 独立した代替ビューではなく MarbleRenderer の拡張として機能し、
+    /// TutorialStep.ShellGap が non-null のとき各マーブルの下に部分列カラードットを表示する。
+    /// Shell sort (Knuth / Sedgewick / Tokuda / Ciura / Lee) に使用。
+    /// </summary>
+    ShellGap,
 }
