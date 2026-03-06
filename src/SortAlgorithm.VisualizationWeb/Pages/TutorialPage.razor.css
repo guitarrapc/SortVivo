@@ -662,7 +662,7 @@
 
 ::deep .recursion-tree-svg {
     width: 100%;
-    max-width: 1200px;
+    max-width: 100%;
     height: auto;
     overflow: visible;
 }

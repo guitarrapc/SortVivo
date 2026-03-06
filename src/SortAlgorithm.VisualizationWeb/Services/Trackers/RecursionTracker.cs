@@ -51,6 +51,7 @@ sealed class RecursionTracker : IVisualizationTracker
     public void Process(SortOperation op, int[] mainArray, Dictionary<int, int[]> buffers)
     {
         int newStart = -1, newEnd = -1;
+        bool allowCreate = true;
 
         switch (op.Type)
         {
@@ -61,6 +62,7 @@ sealed class RecursionTracker : IVisualizationTracker
                 newStart = op.Index1;
                 newEnd   = Math.Min(op.Index1 + op.Length * 2, _arrayLength);
                 _lastOpType = OperationType.RangeCopy;
+                allowCreate = true; // Merge フェーズ開始 → 新規ノード作成OK
                 break;
 
             // ── Quicksort: パーティション中の Swap ───────────────────────────
@@ -69,22 +71,26 @@ sealed class RecursionTracker : IVisualizationTracker
                 newStart = Math.Min(op.Index1, op.Index2);
                 newEnd   = Math.Max(op.Index1, op.Index2) + 1;
                 _lastOpType = OperationType.Swap;
+                allowCreate = true; // Quicksort パーティション → 新規ノード作成OK
                 break;
 
             // ── Compare(i, j, buf(0,0)), i≥0, j≥0 ─────────────────────────
-            // Merge sort の SortCore early-exit check / Quicksort のパーティションスキャン
+            // Merge sort の SortCore early-exit check。
+            // Compare(mid, mid+1) は親ノードの状態チェックであり、新ノードを作ってはいけない。
+            // ノード検索のみ行い、存在しない場合は何もしない。
             case OperationType.Compare
                 when op.Index1 >= 0 && op.Index2 >= 0
                   && op.BufferId1 == 0 && op.BufferId2 == 0:
                 newStart = Math.Min(op.Index1, op.Index2);
                 newEnd   = Math.Max(op.Index1, op.Index2) + 1;
                 _lastOpType = OperationType.Compare;
+                allowCreate = false; // Compare は既存ノード検索のみ、新規作成禁止
                 break;
         }
 
         if (newStart < 0)
         {
-            _cachedNarrative = null; // 追跡対象外の操作はナラティブ上書きしない
+            _cachedNarrative = null;
             return;
         }
 
@@ -92,7 +98,10 @@ sealed class RecursionTracker : IVisualizationTracker
         _lastOpEnd = newEnd;
 
         // ── ノードを特定してアクティブ化 ─────────────────────────────────────
-        var node = FindOrCreateNode(newStart, newEnd, mainArray);
+        var node = allowCreate
+            ? FindOrCreateNode(newStart, newEnd, mainArray)
+            : FindBestExistingNode(newStart, newEnd);
+
         if (node == null)
         {
             _cachedNarrative = null;
@@ -169,6 +178,7 @@ sealed class RecursionTracker : IVisualizationTracker
 
     /// <summary>
     /// [start..end) のノードを探す。存在しなければ最小包含ノードの子として作成する。
+    /// 作成後、既存ノードのうち「仮の親に繋がっていたが本来この新ノードの子であるべきもの」を再接続する。
     /// </summary>
     private RecursionNode? FindOrCreateNode(int start, int end, int[] mainArray)
     {
@@ -185,7 +195,7 @@ sealed class RecursionTracker : IVisualizationTracker
             .FirstOrDefault();
 
         if (parent == null)
-            return _nodes.FirstOrDefault(n => n.ParentId == -1); // フォールバック: ルート
+            return _nodes.FirstOrDefault(n => n.ParentId == -1);
 
         var newNode = new RecursionNode
         {
@@ -198,11 +208,65 @@ sealed class RecursionTracker : IVisualizationTracker
             Depth    = parent.Depth + 1
         };
         _nodes.Add(newNode);
+
+        // 既存ノードのうち「本来この新ノードの子であるべきもの」を再接続する。
+        // Merge sort では葉ノードが親ノードより先に作成されるため、
+        // 仮の親（上位ノード）に接続されている子候補を正しい親に付け替える。
+        ReattachChildren(newNode);
+
         return newNode;
+    }
+
+    /// <summary>
+    /// 新しく作成されたノードより小さい範囲のノードで、
+    /// 現在の親が「新ノードの親と同じ仮の親」かつ「新ノードの範囲内に収まる」ものを
+    /// 新ノードの子として再接続し、深さ（Depth）も更新する。
+    /// </summary>
+    private void ReattachChildren(RecursionNode newNode)
+    {
+        int newSize = newNode.End - newNode.Start;
+        for (int i = 0; i < _nodes.Count - 1; i++) // 新ノード自身を除く
+        {
+            var candidate = _nodes[i];
+            int candidateSize = candidate.End - candidate.Start;
+
+            // 再接続条件：
+            // 1. 新ノードの範囲内に完全に収まる
+            // 2. 新ノードより範囲が小さい（子候補）
+            // 3. 現在の親が新ノードの親と同じ（仮の親）
+            if (candidate.Start >= newNode.Start
+                && candidate.End <= newNode.End
+                && candidateSize < newSize
+                && candidate.ParentId == newNode.ParentId)
+            {
+                _nodes[i] = candidate with
+                {
+                    ParentId = newNode.Id,
+                    Depth    = newNode.Depth + 1,
+                };
+            }
+        }
     }
 
     private RecursionNode? FindNodeById(int id)
         => _nodes.FirstOrDefault(n => n.Id == id);
+
+    /// <summary>
+    /// [start..end) を包含する最小の既存ノードを返す（新規作成しない）。
+    /// Compare シグナル用。
+    /// </summary>
+    private RecursionNode? FindBestExistingNode(int start, int end)
+    {
+        // 完全一致を優先
+        var exact = _nodes.FirstOrDefault(n => n.Start == start && n.End == end);
+        if (exact != null) return exact;
+
+        // 完全包含する最小の既存ノードを返す
+        return _nodes
+            .Where(n => n.Start <= start && n.End >= end)
+            .OrderByDescending(n => n.Depth)
+            .FirstOrDefault();
+    }
 
     // ─── ノード状態更新 ─────────────────────────────────────────────────────
 
@@ -234,6 +298,9 @@ sealed class RecursionTracker : IVisualizationTracker
     {
         string rangeDesc = $"[{node.Start}..{node.End})";
         int size = node.End - node.Start;
+
+        // デバッグ：ノード情報をログ（開発時のみ）
+        // Console.WriteLine($"[RecursionTracker] Node {node.Id} {rangeDesc} State={node.State} Depth={node.Depth} ParentId={node.ParentId}");
 
         // ルートノード初回アクティブ化
         if (node.ParentId == -1 && prevNode == null)

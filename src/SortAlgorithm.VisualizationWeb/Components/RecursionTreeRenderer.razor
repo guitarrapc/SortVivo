@@ -8,11 +8,33 @@
 
     @if (Snapshot != null && Snapshot.Nodes.Length > 0)
     {
+        // レイアウトキャッシュをクリアして再計算
+        _nodeXPositions.Clear();
+
         var maxDepth = Snapshot.Nodes.Max(n => n.Depth);
-        var viewW = 1000;
-        var viewH = Math.Max(200, (maxDepth + 1) * 120 + 60);
-        var nodeHeight = 50;
-        var levelGap = 120;
+
+        // ビューボックスを動的に計算（葉ノードの数に応じて幅を拡大）
+        var leafNodes = Snapshot.Nodes.Where(n => !Snapshot.Nodes.Any(c => c.ParentId == n.Id)).Count();
+        var viewW = Math.Max(1200, leafNodes * 200 + 200);
+        var viewH = Math.Max(200, (maxDepth + 1) * 140 + 100);
+
+        // まず全ノードのX座標を計算してからviewW中央に寄せる
+        var treeRoot = Snapshot.Nodes.FirstOrDefault(n => n.ParentId == -1);
+        if (treeRoot != null) CalculateTreeLayout(treeRoot);
+        if (_nodeXPositions.Count > 0)
+        {
+            double treeMinX = _nodeXPositions.Values.Min() - GetActualNodeWidth(treeRoot!) / 2;
+            double treeMaxX = _nodeXPositions
+                .Select(kv => kv.Value + GetActualNodeWidth(Snapshot.Nodes.First(n => n.Id == kv.Key)) / 2)
+                .Max();
+            double treeW = treeMaxX - treeMinX;
+            double centerOffset = (viewW - treeW) / 2 - treeMinX;
+            foreach (var key in _nodeXPositions.Keys.ToList())
+                _nodeXPositions[key] += centerOffset;
+        }
+
+        var nodeHeight = 70;
+        var levelGap = 140;
 
         <svg class="recursion-tree-svg" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMid meet">
             <defs>
@@ -34,6 +56,10 @@
                     var parent = Snapshot.Nodes.FirstOrDefault(n => n.Id == node.ParentId);
                     if (parent != null)
                     {
+                        // 親が Completed なら子ノードは非表示 → エッジも非表示
+                        if (parent.State == RecursionNodeState.Completed) continue;
+                        // 祖先が Completed なら同様に非表示
+                        if (IsChildOfCompletedNode(parent)) continue;
                         var (px, py) = GetNodePosition(parent, maxDepth, viewW);
                         var (cx, cy) = GetNodePosition(node, maxDepth, viewW);
 
@@ -56,11 +82,22 @@
             @for (int nodeIdx = 0; nodeIdx < Snapshot.Nodes.Length; nodeIdx++)
             {
                 var node = Snapshot.Nodes[nodeIdx];
+
+                // 親が Completed → このノードは「マージ済みで吸収された」ので非表示
+                if (IsChildOfCompletedNode(node)) continue;
+
                 var (nx, ny) = GetNodePosition(node, maxDepth, viewW);
-                var nodeWidth = Math.Max(100, node.Values.Length * 24);
+
+                // ノード幅を要素数に応じて動的に調整（GetActualNodeWidthと統一）
+                var nodeWidth = (int)GetActualNodeWidth(node);
+
                 bool isActive = node.Id == Snapshot.ActiveNodeId;
                 var borderColor = GetNodeStateColor(node.State);
-                var opacity = node.State == RecursionNodeState.Pending ? "0.4" : "1.0";
+
+                // Pending は薄く表示（まだ処理されていない）
+                var nodeStyle = node.State == RecursionNodeState.Pending
+                    ? "opacity: 0.4;"
+                    : "opacity: 1.0;";
 
                 // Precompute text variables (outside SVG text tags to avoid Razor syntax conflict)
                 var rangeText = $"[{node.Start}..{node.End})";
@@ -70,7 +107,7 @@
                 var checkX = nx + nodeWidth/2 - 8;
                 var checkY = ny - nodeHeight/2 + 15;
 
-                <g class="recursion-node" opacity="@opacity">
+                <g class="recursion-node" style="@nodeStyle">
                     @* ノード枠 *@
                     @if (isActive)
                     {
@@ -97,19 +134,21 @@
                     @* 値のマーブル表示 *@
                     @if (node.Values.Length > 0)
                     {
-                        var marbleStartX = nx - (node.Values.Length * 20) / 2;
+                        const int marbleSize = 14;  // マーブル半径を8→14に拡大
+                        const int marbleSpacing = 32; // 間隔も20→32に拡大
+                        var marbleStartX = nx - (node.Values.Length * marbleSpacing) / 2 + marbleSpacing / 2;
                         var marbleY = ny + 8;
 
                         @for (int i = 0; i < node.Values.Length; i++)
                         {
                             var value = node.Values[i];
-                            var mx = marbleStartX + i * 20;
+                            var mx = marbleStartX + i * marbleSpacing;
                             var marbleColor = GetValueColor(value);
                             var isPivot = node.PivotValue.HasValue && value == node.PivotValue.Value;
                             var my = marbleY + 1;
 
-                            <circle cx="@mx" cy="@marbleY" r="8" fill="@marbleColor" stroke="@(isPivot ? "#FBBF24" : "rgba(255,255,255,0.2)")" stroke-width="@(isPivot ? "2" : "1")" />
-                            @(new MarkupString($"<text x=\"{mx:F2}\" y=\"{my:F2}\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"white\" font-size=\"10\" font-weight=\"700\">{value}</text>"))
+                            <circle cx="@mx" cy="@marbleY" r="@marbleSize" fill="@marbleColor" stroke="@(isPivot ? "#FBBF24" : "rgba(255,255,255,0.2)")" stroke-width="@(isPivot ? "2.5" : "1.5")" />
+                            @(new MarkupString($"<text x=\"{mx:F2}\" y=\"{my:F2}\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"white\" font-size=\"13\" font-weight=\"700\">{value}</text>"))
                         }
                     }
 
@@ -149,26 +188,79 @@
 
     private readonly string _glowFilterId = $"glow-{Guid.NewGuid().ToString("N")[..8]}";
 
+    // レイアウト計算用キャッシュ
+    private readonly Dictionary<int, double> _nodeXPositions = new();
+
+    /// <summary>
+    /// ノードの実際の描画幅を計算する（要素数に応じた動的幅）。
+    /// </summary>
+    private static double GetActualNodeWidth(RecursionNode node)
+        => Math.Max(120, (node.End - node.Start) * 32 + 40);
+
     /// <summary>
     /// ノードの位置を計算（x, y）。
-    /// 各深さレベルで等間隔に配置。同じ深さのノードを左から右へ並べる。
+    /// 親子関係を考慮したツリーレイアウト：各ノードは子ノードの中央に配置される。
     /// </summary>
     private (double x, double y) GetNodePosition(RecursionNode node, int maxDepth, double viewW)
     {
-        var nodesAtDepth = Snapshot!.Nodes.Where(n => n.Depth == node.Depth).OrderBy(n => n.Start).ToList();
-        int indexInLevel = nodesAtDepth.IndexOf(node);
-        int countAtDepth = nodesAtDepth.Count;
+        const double levelHeight = 140;
+        double y = 60 + node.Depth * levelHeight;
 
-        double y = 60 + node.Depth * 120;
-        double x = viewW / 2;
-        
-        if (countAtDepth > 1)
+        double x = _nodeXPositions.GetValueOrDefault(node.Id, viewW / 2);
+        return (x, y);
+    }
+
+    /// <summary>
+    /// ツリー全体のX座標を再帰的に計算する（後順走査）。
+    /// 各ノードの実際の描画幅と表示対象ノードのみを考慮して重なりを防ぐ。
+    /// </summary>
+    private double CalculateTreeLayout(RecursionNode node)
+    {
+        if (_nodeXPositions.ContainsKey(node.Id))
+            return _nodeXPositions[node.Id];
+
+        var visibleChildren = Snapshot!.Nodes
+            .Where(n => n.ParentId == node.Id && !IsChildOfCompletedNode(n))
+            .OrderBy(n => n.Start)
+            .ToList();
+
+        if (visibleChildren.Count == 0)
         {
-            double spacing = Math.Min(viewW * 0.8 / (countAtDepth - 1), 200);
-            x = (viewW / 2) - (spacing * (countAtDepth - 1) / 2) + (indexInLevel * spacing);
+            // 表示上の葉ノード：全表示葉ノードの中での順番を基に実際の幅で積み上げ配置
+            var allLeaves = GetAllVisibleLeaves();
+            int myIdx = allLeaves.FindIndex(n => n.Id == node.Id);
+            if (myIdx < 0) myIdx = 0;
+
+            const double gap = 40;
+            double x = 80;
+            for (int i = 0; i < myIdx; i++)
+                x += GetActualNodeWidth(allLeaves[i]) + gap;
+            x += GetActualNodeWidth(node) / 2;
+
+            _nodeXPositions[node.Id] = x;
+            return x;
         }
 
-        return (x, y);
+        // 子ノードを先に配置
+        var childPositions = visibleChildren.Select(c => CalculateTreeLayout(c)).ToList();
+
+        // 親は子ノードの中央に配置
+        double parentX = (childPositions.Min() + childPositions.Max()) / 2;
+        _nodeXPositions[node.Id] = parentX;
+        return parentX;
+    }
+
+    /// <summary>
+    /// 表示されているノードのうち「表示上の葉ノード（可視の子を持たないノード）」を
+    /// start 順で返す。深さが混在していても重ならない配置を実現する。
+    /// </summary>
+    private List<RecursionNode> GetAllVisibleLeaves()
+    {
+        return Snapshot!.Nodes
+            .Where(n => !IsChildOfCompletedNode(n))
+            .Where(n => !Snapshot.Nodes.Any(c => c.ParentId == n.Id && !IsChildOfCompletedNode(c)))
+            .OrderBy(n => n.Start)
+            .ToList();
     }
 
     /// <summary>
@@ -191,4 +283,23 @@
         RecursionNodeState.Completed => "#10B981",                  // 緑（完了）
         _ => "rgba(255,255,255,0.2)"
     };
+
+    /// <summary>
+    /// ノードの親が完了済み（Completed）かどうかを判定する。
+    /// マージ完了後、子ノード（マージ元）を薄く表示するために使用。
+    /// </summary>
+    private bool IsChildOfCompletedNode(RecursionNode node)
+    {
+        if (node.ParentId < 0 || Snapshot == null) return false;
+
+        var parent = Snapshot.Nodes.FirstOrDefault(n => n.Id == node.ParentId);
+        if (parent == null) return false;
+
+        bool isCompleted = parent.State == RecursionNodeState.Completed;
+
+        // デバッグ（ブラウザのコンソールで確認可能）
+        // Console.WriteLine($"Node [{node.Start}..{node.End}) parent [{parent.Start}..{parent.End}) isCompleted={isCompleted}");
+
+        return isCompleted;
+    }
 }
