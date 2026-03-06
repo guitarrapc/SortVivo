@@ -64,6 +64,13 @@ public record TutorialStep
     /// </summary>
     public NetworkSnapshot? Network { get; init; }
 
+    /// <summary>
+    /// Recursion Tree チュートリアル用の再帰構造スナップショット。
+    /// TutorialVisualizationHint が RecursionTree のとき使用（他は null）。
+    /// Merge Sort / Quicksort などの分割統治アルゴリズムの再帰構造を木として可視化する。
+    /// </summary>
+    public RecursionSnapshot? Recursion { get; init; }
+
     /// <summary>この操作を日本語で説明するナラティブテキスト</summary>
     public string Narrative { get; init; } = string.Empty;
 }

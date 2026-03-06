@@ -1,0 +1,194 @@
+@using SortAlgorithm.VisualizationWeb.Models
+
+<div class="recursion-tree-container">
+    @if (!string.IsNullOrEmpty(Label))
+    {
+        <div class="recursion-tree-label">@Label</div>
+    }
+
+    @if (Snapshot != null && Snapshot.Nodes.Length > 0)
+    {
+        var maxDepth = Snapshot.Nodes.Max(n => n.Depth);
+        var viewW = 1000;
+        var viewH = Math.Max(200, (maxDepth + 1) * 120 + 60);
+        var nodeHeight = 50;
+        var levelGap = 120;
+
+        <svg class="recursion-tree-svg" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMid meet">
+            <defs>
+                <filter id="@_glowFilterId" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                </filter>
+            </defs>
+
+            @* ─── Edges (drawn first, behind nodes) ─── *@
+            @for (int edgeIdx = 0; edgeIdx < Snapshot.Nodes.Length; edgeIdx++)
+            {
+                var node = Snapshot.Nodes[edgeIdx];
+                if (node.ParentId >= 0)
+                {
+                    var parent = Snapshot.Nodes.FirstOrDefault(n => n.Id == node.ParentId);
+                    if (parent != null)
+                    {
+                        var (px, py) = GetNodePosition(parent, maxDepth, viewW);
+                        var (cx, cy) = GetNodePosition(node, maxDepth, viewW);
+
+                        bool edgeHighlighted = node.State == RecursionNodeState.Active || 
+                                             node.State == RecursionNodeState.Merging;
+                        var edgeStroke = edgeHighlighted 
+                            ? GetNodeStateColor(node.State)
+                            : "rgba(255,255,255,0.2)";
+                        var edgeWidth = edgeHighlighted ? "2.5" : "1.5";
+
+                        <line x1="@(px)" y1="@(py + nodeHeight/2)" 
+                              x2="@(cx)" y2="@(cy - nodeHeight/2)"
+                              stroke="@edgeStroke"
+                              stroke-width="@edgeWidth" />
+                    }
+                }
+            }
+
+            @* ─── Nodes ─── *@
+            @for (int nodeIdx = 0; nodeIdx < Snapshot.Nodes.Length; nodeIdx++)
+            {
+                var node = Snapshot.Nodes[nodeIdx];
+                var (nx, ny) = GetNodePosition(node, maxDepth, viewW);
+                var nodeWidth = Math.Max(100, node.Values.Length * 24);
+                bool isActive = node.Id == Snapshot.ActiveNodeId;
+                var borderColor = GetNodeStateColor(node.State);
+                var opacity = node.State == RecursionNodeState.Pending ? "0.4" : "1.0";
+
+                // Precompute text variables (outside SVG text tags to avoid Razor syntax conflict)
+                var rangeText = $"[{node.Start}..{node.End})";
+                var rangeY = ny - nodeHeight/2 + 15;
+                var pivotText = node.PivotValue.HasValue ? $"pivot={node.PivotValue}" : "";
+                var pivotY = ny + nodeHeight/2 - 8;
+                var checkX = nx + nodeWidth/2 - 8;
+                var checkY = ny - nodeHeight/2 + 15;
+
+                <g class="recursion-node" opacity="@opacity">
+                    @* ノード枠 *@
+                    @if (isActive)
+                    {
+                        <rect x="@(nx - nodeWidth/2 - 4)" y="@(ny - nodeHeight/2 - 4)"
+                              width="@(nodeWidth + 8)" height="@(nodeHeight + 8)"
+                              rx="8" ry="8"
+                              fill="none"
+                              stroke="@borderColor"
+                              stroke-width="3"
+                              opacity="0.6"
+                              filter="@($"url(#{_glowFilterId})")" />
+                    }
+
+                    <rect x="@(nx - nodeWidth/2)" y="@(ny - nodeHeight/2)"
+                          width="@nodeWidth" height="@nodeHeight"
+                          rx="6" ry="6"
+                          fill="rgba(30, 30, 30, 0.9)"
+                          stroke="@borderColor"
+                          stroke-width="@(isActive ? "2.5" : "1.5")" />
+
+                    @* 範囲ラベル（@ifの外なのでtext要素を直接使用可） *@
+                    <text x="@nx" y="@rangeY" text-anchor="middle" dominant-baseline="central" fill="rgba(156, 163, 175, 1)" font-size="11" font-weight="600">@rangeText</text>
+
+                    @* 値のマーブル表示 *@
+                    @if (node.Values.Length > 0)
+                    {
+                        var marbleStartX = nx - (node.Values.Length * 20) / 2;
+                        var marbleY = ny + 8;
+
+                        @for (int i = 0; i < node.Values.Length; i++)
+                        {
+                            var value = node.Values[i];
+                            var mx = marbleStartX + i * 20;
+                            var marbleColor = GetValueColor(value);
+                            var isPivot = node.PivotValue.HasValue && value == node.PivotValue.Value;
+                            var my = marbleY + 1;
+
+                            <circle cx="@mx" cy="@marbleY" r="8" fill="@marbleColor" stroke="@(isPivot ? "#FBBF24" : "rgba(255,255,255,0.2)")" stroke-width="@(isPivot ? "2" : "1")" />
+                            @(new MarkupString($"<text x=\"{mx:F2}\" y=\"{my:F2}\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"white\" font-size=\"10\" font-weight=\"700\">{value}</text>"))
+                        }
+                    }
+
+                    @* ピボット表示（Quicksort）：@ifの内側なのでMarkupString使用 *@
+                    @if (node.PivotValue.HasValue)
+                    {
+                        @(new MarkupString($"<text x=\"{nx:F2}\" y=\"{pivotY:F2}\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"#FBBF24\" font-size=\"10\" font-weight=\"600\">{pivotText}</text>"))
+                    }
+
+                    @* 状態インジケーター：@ifの内側なのでMarkupString使用 *@
+                    @if (node.State == RecursionNodeState.Completed)
+                    {
+                        @(new MarkupString($"<text x=\"{checkX:F2}\" y=\"{checkY:F2}\" text-anchor=\"end\" dominant-baseline=\"central\" fill=\"#10B981\" font-size=\"14\">✓</text>"))
+                    }
+                </g>
+            }
+        </svg>
+    }
+    else
+    {
+        <div class="recursion-tree-empty">No recursion data</div>
+    }
+</div>
+
+@code {
+    /// <summary>再帰ツリーのスナップショット</summary>
+    [Parameter] public RecursionSnapshot? Snapshot { get; set; }
+
+    /// <summary>配列内の最大値（HSLグラデーション計算に使用）</summary>
+    [Parameter] public int MaxValue { get; set; } = 9;
+
+    /// <summary>現在のステップインデックス（アニメーション再トリガー用）</summary>
+    [Parameter] public int StepIndex { get; set; } = -1;
+
+    /// <summary>行ラベル</summary>
+    [Parameter] public string Label { get; set; } = string.Empty;
+
+    private readonly string _glowFilterId = $"glow-{Guid.NewGuid().ToString("N")[..8]}";
+
+    /// <summary>
+    /// ノードの位置を計算（x, y）。
+    /// 各深さレベルで等間隔に配置。同じ深さのノードを左から右へ並べる。
+    /// </summary>
+    private (double x, double y) GetNodePosition(RecursionNode node, int maxDepth, double viewW)
+    {
+        var nodesAtDepth = Snapshot!.Nodes.Where(n => n.Depth == node.Depth).OrderBy(n => n.Start).ToList();
+        int indexInLevel = nodesAtDepth.IndexOf(node);
+        int countAtDepth = nodesAtDepth.Count;
+
+        double y = 60 + node.Depth * 120;
+        double x = viewW / 2;
+        
+        if (countAtDepth > 1)
+        {
+            double spacing = Math.Min(viewW * 0.8 / (countAtDepth - 1), 200);
+            x = (viewW / 2) - (spacing * (countAtDepth - 1) / 2) + (indexInLevel * spacing);
+        }
+
+        return (x, y);
+    }
+
+    /// <summary>
+    /// 値に基づいてマーブルの色を生成（HSLグラデーション）。
+    /// </summary>
+    private string GetValueColor(int value)
+    {
+        double hue = MaxValue > 1 ? (value - 1) * 360.0 / (MaxValue - 1) : 0;
+        return $"hsl({hue:F0}, 70%, 50%)";
+    }
+
+    /// <summary>
+    /// ノードの状態に応じた色を返す。
+    /// </summary>
+    private string GetNodeStateColor(RecursionNodeState state) => state switch
+    {
+        RecursionNodeState.Pending => "rgba(107, 114, 128, 0.5)",  // グレー
+        RecursionNodeState.Active => "#A855F7",                     // 紫（分割中）
+        RecursionNodeState.Merging => "#F59E0B",                    // 橙（マージ中）
+        RecursionNodeState.Completed => "#10B981",                  // 緑（完了）
+        _ => "rgba(255,255,255,0.2)"
+    };
+}

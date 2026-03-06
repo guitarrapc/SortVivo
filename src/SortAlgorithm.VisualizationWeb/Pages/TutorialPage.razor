@@ -263,7 +263,14 @@
                     }
                     else if (_showTreeView && HasTreeView())
                     {
-                        @if (IsBstView())
+                        @if (IsRecursionView())
+                        {
+                            <RecursionTreeRenderer Snapshot="@GetCurrentRecursion()"
+                                                   MaxValue="@_maxValue"
+                                                   StepIndex="@_currentStepIndex"
+                                                   Label="Recursion Tree" />
+                        }
+                        else if (IsBstView())
                         {
                             <BstTreeRenderer Bst="@GetCurrentBst()"
                                              MaxValue="@_maxValue"
@@ -585,7 +592,8 @@
             TutorialVisualizationHint.TernaryHeapTree or
             TutorialVisualizationHint.WeakHeapTree or
             TutorialVisualizationHint.BstTree or
-            TutorialVisualizationHint.AvlTree;
+            TutorialVisualizationHint.AvlTree or
+            TutorialVisualizationHint.RecursionTree;
 
     private bool HasBucketView()
         => _selectedAlgorithm?.TutorialVisualizationHint is
@@ -602,6 +610,9 @@
             TutorialVisualizationHint.BstTree or
             TutorialVisualizationHint.AvlTree;
 
+    private bool IsRecursionView()
+        => _selectedAlgorithm?.TutorialVisualizationHint == TutorialVisualizationHint.RecursionTree;
+
     private int GetBranchingFactor()
         => _selectedAlgorithm?.TutorialVisualizationHint == TutorialVisualizationHint.TernaryHeapTree ? 3 : 2;
 
@@ -612,6 +623,7 @@
             TutorialVisualizationHint.WeakHeapTree    => "Weak Heap",
             TutorialVisualizationHint.BstTree         => "BST",
             TutorialVisualizationHint.AvlTree         => "AVL Tree",
+            TutorialVisualizationHint.RecursionTree   => "Recursion Tree",
             _ => "Heap Tree"
         };
 
@@ -621,6 +633,13 @@
     private BstSnapshot? GetCurrentBst()
         => _currentStepIndex < 0 ? new BstSnapshot { Size = 0, Root = -1 }
             : _steps[_currentStepIndex].Bst;
+
+    private RecursionSnapshot? GetCurrentRecursion()
+    {
+        if (_currentStepIndex < 0)
+            return BuildInitialRecursionSnapshot();
+        return _steps[_currentStepIndex].Recursion;
+    }
 
     private DistributionSnapshot? GetCurrentDistribution()
     {
@@ -719,6 +738,31 @@
             ActiveComparatorIndex = -1,
             ComparatorResults = [],
             WireValues = arr,
+        };
+    }
+
+    private RecursionSnapshot? BuildInitialRecursionSnapshot()
+    {
+        if (_selectedAlgorithm == null || !IsRecursionView()) return null;
+        var arr = GetTutorialArrayFor(_selectedAlgorithm);
+        if (arr.Length == 0) return null;
+
+        // Initial state: root node only, pending
+        var rootNode = new RecursionNode
+        {
+            Id = 0,
+            ParentId = -1,
+            Start = 0,
+            End = arr.Length,
+            State = RecursionNodeState.Pending,
+            Values = arr,
+            Depth = 0
+        };
+
+        return new RecursionSnapshot
+        {
+            Nodes = [rootNode],
+            ActiveNodeId = -1
         };
     }
 

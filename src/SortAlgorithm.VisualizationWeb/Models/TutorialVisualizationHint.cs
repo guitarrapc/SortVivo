@@ -53,4 +53,11 @@ public enum TutorialVisualizationHint
     /// 水平軸は時間（ステージ）、垂直軸はワイヤ（配列インデックス）。
     /// </summary>
     SortingNetwork,
+
+    /// <summary>
+    /// 再帰ツリー表示（分割統治の構造を木で描画）。
+    /// Merge Sort / Quicksort: 分割統治構造をツリーとして表示し、「今どの部分問題を解いているか」を示す。
+    /// ノードには部分配列の内容を表示し、処理中のノードをハイライトする。
+    /// </summary>
+    RecursionTree,
 }

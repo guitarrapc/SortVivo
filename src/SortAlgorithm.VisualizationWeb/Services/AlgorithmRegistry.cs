@@ -248,7 +248,8 @@ public class AlgorithmRegistry
                 - RangeCopy: both halves of the current sub-array are copied into a temporary buffer before the merge begins
                 - Compare: the merge reads from both buffer halves simultaneously, always picking the smaller front value to write back
                 - IndexWrite: the chosen value is written back to the original array one position at a time until both buffer halves are exhausted
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.RecursionTree);
         Add("Bottom-up merge sort", "Merge Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => BottomupMergeSort.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Treats every individual element as a sorted run of length 1, then iteratively merges adjacent runs and doubles the merge width each pass: 1 → 2 → 4 → 8 → … until a single sorted run spans the whole array.
@@ -402,7 +403,8 @@ public class AlgorithmRegistry
                 - Compare: each element in the unsorted region is tested against the pivot to determine which side it belongs to
                 - Swap: elements found on the wrong side of the partition boundary are swapped across it; the pivot is placed at its final sorted position at the end
                 - End of partition: the pivot's position is fixed, splitting the remaining unsorted work into two independent sub-problems
-                """);
+                """,
+            tutorialVisualizationHint: TutorialVisualizationHint.RecursionTree);
         Add("Quicksort (Median3)", "Partition Sorts", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => QuickSortMedian3.Sort(arr, ctx),
             tutorialDescription: """
                 How it works: Selects the pivot as the median of the first, middle, and last elements, then performs the same in-place partition and recursion as basic Quicksort.
