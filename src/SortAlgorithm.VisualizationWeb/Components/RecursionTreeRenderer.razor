@@ -13,13 +13,12 @@
         _subtreeWidthCache.Clear();
         _nodeDepths.Clear();
 
-        // ビューボックス幅を動的に計算（葉ノードの数に応じて拡大）
-        var leafNodes = Snapshot.Nodes.Where(n => !Snapshot.Nodes.Any(c => c.ParentId == n.Id)).Count();
-        var viewW = Math.Max(1200, leafNodes * 200 + 200);
-
-        // X座標と走査深さを計算してからviewW中央に寄せる
+        // X座標と走査深さを計算
         var treeRoot = Snapshot.Nodes.FirstOrDefault(n => n.ParentId == -1);
         if (treeRoot != null) CalculateTreeLayout(treeRoot);
+
+        // 実際のコンテンツ幅から viewW を決定（固定 1200px フロアを廃止しコンテンツに合わせる）
+        double viewW;
         if (_nodeXPositions.Count > 0)
         {
             double treeMinX = _nodeXPositions
@@ -29,9 +28,15 @@
                 .Select(kv => kv.Value + GetActualNodeWidth(Snapshot.Nodes.First(n => n.Id == kv.Key)) / 2)
                 .Max();
             double treeW = treeMaxX - treeMinX;
-            double centerOffset = (viewW - treeW) / 2 - treeMinX;
+            double padding = 40 * HorizScale;
+            viewW = Math.Max(200 * HorizScale, treeW + padding * 2);
+            double centerOffset = padding - treeMinX;
             foreach (var key in _nodeXPositions.Keys.ToList())
                 _nodeXPositions[key] += centerOffset;
+        }
+        else
+        {
+            viewW = 400 * HorizScale;
         }
 
         // CalculateTreeLayout で記録した走査深さで viewH を正確に計算する
@@ -40,6 +45,8 @@
 
         var nodeHeight = 70;
         var levelGap = 140;
+        var marbleSize = (int)Math.Round(14 * HorizScale);
+        var marbleSpacing = Math.Max(marbleSize * 2 + 2, (int)Math.Round(32 * HorizScale));
 
         <svg class="recursion-tree-svg" viewBox="@($"0 0 {viewW} {viewH}")" preserveAspectRatio="xMidYMid meet">
             <defs>
@@ -139,8 +146,6 @@
                     @* 値のマーブル表示 *@
                     @if (node.Values.Length > 0)
                     {
-                        const int marbleSize = 14;  // マーブル半径を8→14に拡大
-                        const int marbleSpacing = 32; // 間隔も20→32に拡大
                         var marbleStartX = nx - (node.Values.Length * marbleSpacing) / 2 + marbleSpacing / 2;
                         var marbleY = ny + 8;
 
@@ -198,6 +203,9 @@
     /// <summary>現在のステップインデックス（アニメーション再トリガー用）</summary>
     [Parameter] public int StepIndex { get; set; } = -1;
 
+    /// <summary>水平方向のスケール係数（1.0 = 通常、0.5 = 半分。タブレット・スマホ向けに間隔を圧縮する際に使用）</summary>
+    [Parameter] public double HorizScale { get; set; } = 1.0;
+
     /// <summary>行ラベル</summary>
     [Parameter] public string Label { get; set; } = string.Empty;
 
@@ -211,8 +219,8 @@
     /// <summary>
     /// ノードの実際の描画幅を計算する（要素数に応じた動的幅）。
     /// </summary>
-    private static double GetActualNodeWidth(RecursionNode node)
-        => Math.Max(120, (node.End - node.Start) * 32 + 40);
+    private double GetActualNodeWidth(RecursionNode node)
+        => Math.Max(120, (node.End - node.Start) * 32 + 40) * HorizScale;
 
     /// <summary>
     /// ノードの位置を計算（x, y）。
@@ -239,7 +247,7 @@
     {
         if (_subtreeWidthCache.TryGetValue(node.Id, out var cached)) return cached;
 
-        const double gap = 40;
+        double gap = 40 * HorizScale;
         var visibleChildren = Snapshot!.Nodes
             .Where(n => n.ParentId == node.Id && !IsChildOfCompletedNode(n))
             .OrderBy(n => n.Start)
@@ -271,7 +279,7 @@
         double subtreeWidth = GetSubtreeWidth(node);
         _nodeXPositions[node.Id] = left + subtreeWidth / 2;
 
-        const double gap = 40;
+        double gap = 40 * HorizScale;
         var visibleChildren = Snapshot!.Nodes
             .Where(n => n.ParentId == node.Id && !IsChildOfCompletedNode(n))
             .OrderBy(n => n.Start)

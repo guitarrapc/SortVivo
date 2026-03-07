@@ -274,6 +274,7 @@
                             <RecursionTreeRenderer Snapshot="@GetCurrentRecursion()"
                                                    MaxValue="@_maxValue"
                                                    StepIndex="@_currentStepIndex"
+                                                   HorizScale="@GetRecursionHorizScale()"
                                                    Label="Recursion Tree" />
                         }
                         else if (IsBstView())
@@ -363,6 +364,7 @@
     private bool _showTreeView = true;  // デフォルトは木表示（ヒープ木対応アルゴリズムのみ）
     private bool _showBucketView = true; // デフォルトはバケット表示（Distribution 対応アルゴリズムのみ）
     private bool _showNetworkView = true; // デフォルトはネットワーク表示（Network 対応アルゴリズムのみ）
+    private int _windowWidth = 0; // ウィンドウ幅（0 = 未取得1.0）
 
     // ─── ナビゲーション ────────────────────────────────────────────────────
 
@@ -388,7 +390,11 @@
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
+        {
             await _containerRef.FocusAsync();
+            _windowWidth = await JS.InvokeAsync<int>("scrollHelper.getWindowWidth");
+            StateHasChanged();
+        }
     }
 
     public void Dispose()
@@ -396,6 +402,14 @@
         _autoPlayCts?.Cancel();
         _autoPlayCts?.Dispose();
     }
+
+    // タブレット・スマホ向けに RecursionTree の水平間隔を圧縮するスケール係数
+    private double GetRecursionHorizScale() => _windowWidth switch
+    {
+        > 0 and <= 767 => 0.5,
+        >= 768 and <= 1279 => 0.65,
+        _ => 1.0
+    };
 
     // ─── アルゴリズム選択 ──────────────────────────────────────────────────
 

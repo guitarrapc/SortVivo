@@ -10,5 +10,12 @@ window.scrollHelper = {
     var el = document.getElementById('visualization-area');
     if (!el) return;
     el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  },
+
+  /**
+   * 現在のウィンドウ幅を返す
+   */
+  getWindowWidth: function () {
+    return window.innerWidth;
   }
 };
