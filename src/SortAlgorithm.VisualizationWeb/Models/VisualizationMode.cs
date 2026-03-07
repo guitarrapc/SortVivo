@@ -24,5 +24,8 @@ public enum VisualizationMode
     PictureColumn,
 
     /// <summary>画像ブロック表示（アップロード画像を 2D グリッドのブロックに分割してソート）</summary>
-    PictureBlock
+    PictureBlock,
+
+    /// <summary>不均衡和音表示（各要素の現在位置と整列後の位置を弦で結び、位置ずれを可視化）</summary>
+    DisparityChords
 }

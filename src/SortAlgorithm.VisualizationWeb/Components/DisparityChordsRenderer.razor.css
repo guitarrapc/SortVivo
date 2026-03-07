@@ -1,0 +1,23 @@
+/* ─── DisparityChordsRenderer ─────────────────────────────────────────── */
+
+.disparity-chords-container {
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--bg-main);
+}
+
+    .disparity-chords-container:hover::after {
+        content: '▶';
+        position: absolute;
+        font-size: 4rem;
+        color: rgba(255, 255, 255, 0.3);
+        pointer-events: none;
+    }
+
+    .disparity-chords-container.playing:hover::after {
+        content: '⏸';
+    }

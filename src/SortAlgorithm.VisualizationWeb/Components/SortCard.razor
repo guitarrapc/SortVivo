@@ -103,6 +103,14 @@
                 GridColumnCount="@GridColumnCount"
                 OnClick="@OnVisualizationClick" />
         }
+        else if (VisualizationMode == VisualizationMode.DisparityChords)
+        {
+            <DisparityChordsRenderer
+                State="@State"
+                Playback="@Playback"
+                GridColumnCount="@GridColumnCount"
+                OnClick="@OnVisualizationClick" />
+        }
     </div>
 
     @* Stats Summary *@
@@ -194,10 +202,11 @@
 
     private string ModeIcon => VisualizationMode switch
     {
-        VisualizationMode.Circular => "⭕",
-        VisualizationMode.Spiral   => "🌀",
-        VisualizationMode.DotPlot  => "🔵",
-        _                          => "📊",
+        VisualizationMode.Circular        => "⭕",
+        VisualizationMode.Spiral          => "🌀",
+        VisualizationMode.DotPlot         => "🔵",
+        VisualizationMode.DisparityChords => "🎻",
+        _                                 => "📊",
     };
 
     private async Task HandleRemove()

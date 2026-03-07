@@ -1,0 +1,217 @@
+@using SortAlgorithm.VisualizationWeb.Models
+@using SortAlgorithm.VisualizationWeb.Services
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject DebugSettings DebugSettings
+@inject RenderSettings RenderSettings
+@implements IAsyncDisposable
+
+<div class="disparity-chords-container @(State?.PlaybackState == PlaybackState.Playing ? "playing" : "")"
+     @onclick="OnCanvasClick"
+     style="position: relative; width: 100%; height: 100%;">
+
+    @if (State != null && State.MainArray.Length > 0)
+    {
+        <canvas @key="_canvasId" id="@_canvasId" style="width: 100%; height: 100%; display: block;"></canvas>
+    }
+    else
+    {
+        <div style="text-align: center; color: #999; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center;">
+            <p style="font-size: 2rem;">🎻</p>
+            <p>Click "Generate & Sort" to start visualization</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter]
+    public VisualizationState? State { get; set; }
+
+    [Parameter]
+    public EventCallback OnClick { get; set; }
+
+    [Parameter]
+    public int GridColumnCount { get; set; } = 1;
+
+    /// <summary>PlaybackService 直接購読で canvas を更新する。Blazor のレンダリングサイクルをバイパスする。</summary>
+    [Parameter]
+    public PlaybackService? Playback { get; set; }
+
+    private PlaybackService? _subscribedPlayback;
+    private string _canvasId = $"sortDisparityChordsCanvas_{Guid.NewGuid():N}";
+    private bool _isInitialized = false;
+    private bool _isInitializing = false;
+    private bool _previousHasData = false;
+    private int _previousGridColumnCount = 0;
+    private int _lastSortVersion = -1;
+
+    protected override void OnInitialized()
+    {
+        RenderSettings.OnChanged += OnRenderSettingsChanged;
+    }
+
+    protected override void OnParametersSet()
+    {
+        if (_subscribedPlayback != Playback)
+        {
+            if (_subscribedPlayback != null)
+                _subscribedPlayback.StateChanged -= OnDirectStateChanged;
+            _subscribedPlayback = Playback;
+            if (_subscribedPlayback != null)
+                _subscribedPlayback.StateChanged += OnDirectStateChanged;
+        }
+    }
+
+    private void OnDirectStateChanged()
+    {
+        InvokeAsync(RenderCanvas);
+    }
+
+    private void OnRenderSettingsChanged()
+    {
+        InvokeAsync(async () =>
+        {
+            var oldCanvasId = _canvasId;
+            var wasInitialized = _isInitialized;
+
+            _canvasId = $"sortDisparityChordsCanvas_{Guid.NewGuid():N}";
+            _isInitialized = false;
+            _lastSortVersion = -1;
+            StateHasChanged();
+
+            if (wasInitialized)
+            {
+                try { await JS.InvokeVoidAsync("disparityChordsCanvasRenderer.dispose", oldCanvasId); } catch { }
+            }
+        });
+    }
+
+    protected override bool ShouldRender()
+    {
+        var hasData = State?.MainArray.Length > 0;
+        var shouldRender = _previousHasData != hasData || !_isInitialized;
+        _previousHasData = hasData;
+        return shouldRender;
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        if (!_isInitialized) return;
+        if (_subscribedPlayback != null) return;
+
+        if (_previousGridColumnCount != GridColumnCount)
+        {
+            DebugSettings.Log($"[DisparityChordsRenderer] Grid column count changed: {_previousGridColumnCount} -> {GridColumnCount} for canvas {_canvasId}");
+            _previousGridColumnCount = GridColumnCount;
+        }
+
+        await RenderCanvas();
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (_isInitialized || _isInitializing) return;
+        _isInitializing = true;
+        var targetCanvasId = _canvasId;
+
+        try
+        {
+            var success = await JS.InvokeAsync<bool>("disparityChordsCanvasRenderer.initialize", targetCanvasId, RenderSettings.UseWebGL);
+            if (success && _canvasId == targetCanvasId)
+            {
+                _isInitialized = true;
+                _previousGridColumnCount = GridColumnCount;
+                await RenderCanvas();
+            }
+        }
+        finally
+        {
+            _isInitializing = false;
+            if (!_isInitialized)
+                StateHasChanged();
+        }
+    }
+
+    private async Task RenderCanvas()
+    {
+        if (!_isInitialized || State == null || State.MainArray.Length == 0) return;
+
+        try
+        {
+            if (_lastSortVersion != State.SortVersion)
+            {
+                _lastSortVersion = State.SortVersion;
+                await JS.InvokeVoidAsync("disparityChordsCanvasRenderer.setArray",
+                    _canvasId,
+                    State.MainArray,
+                    State.BufferArrays,
+                    State.CompareIndices,
+                    State.SwapIndices,
+                    State.ReadIndices,
+                    State.WriteIndices,
+                    State.IsSortCompleted,
+                    State.ShowCompletionHighlight);
+            }
+            else if (State.MainArrayDelta != null)
+            {
+                await JS.InvokeVoidAsync("disparityChordsCanvasRenderer.applyFrame",
+                    _canvasId,
+                    State.MainArrayDelta,
+                    State.BufferArrayDeltas,
+                    State.CompareIndices,
+                    State.SwapIndices,
+                    State.ReadIndices,
+                    State.WriteIndices,
+                    State.IsSortCompleted,
+                    State.ShowCompletionHighlight);
+            }
+            else
+            {
+                await JS.InvokeVoidAsync("disparityChordsCanvasRenderer.updateData",
+                    _canvasId,
+                    State.MainArray,
+                    State.CompareIndices,
+                    State.SwapIndices,
+                    State.ReadIndices,
+                    State.WriteIndices,
+                    State.IsSortCompleted,
+                    State.BufferArrays,
+                    State.ShowCompletionHighlight);
+            }
+        }
+        catch (Exception ex)
+        {
+            DebugSettings.Log($"DisparityChords Canvas render error: {ex.Message}");
+        }
+    }
+
+    private async Task OnCanvasClick()
+    {
+        await OnClick.InvokeAsync();
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        if (_subscribedPlayback != null)
+            _subscribedPlayback.StateChanged -= OnDirectStateChanged;
+        RenderSettings.OnChanged -= OnRenderSettingsChanged;
+        DebugSettings.Log($"[DisparityChordsRenderer] DisposeAsync called for canvas: {_canvasId}");
+
+        if (_isInitialized)
+        {
+            try
+            {
+                await JS.InvokeVoidAsync("disparityChordsCanvasRenderer.dispose", _canvasId);
+                DebugSettings.Log($"[DisparityChordsRenderer] Successfully disposed canvas: {_canvasId}");
+            }
+            catch (Exception ex)
+            {
+                DebugSettings.Log($"[DisparityChordsRenderer] ERROR disposing canvas {_canvasId}: {ex.Message}");
+            }
+        }
+        else
+        {
+            DebugSettings.Log($"[DisparityChordsRenderer] Canvas {_canvasId} was not initialized, skipping dispose");
+        }
+    }
+}
