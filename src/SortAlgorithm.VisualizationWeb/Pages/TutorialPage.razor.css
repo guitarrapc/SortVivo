@@ -1562,6 +1562,15 @@
         width: 100%;
     }
 
+    /* desc-name + try-btn が横に収まらない場合は縦に折り返す */
+    .tdp-header {
+        flex-wrap: wrap;
+    }
+
+    .tdp-header__left {
+        flex-wrap: wrap;
+    }
+
     /* モバイル: 説明折りたたみトグルを表示 */
     .tdp-toggle {
         display: flex;
