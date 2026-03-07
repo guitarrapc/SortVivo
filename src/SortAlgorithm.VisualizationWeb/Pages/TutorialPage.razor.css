@@ -71,10 +71,12 @@
     transform: translateX(-50%);
     margin: 0;
     font-size: 2.25rem;
-    font-weight: 400;
-    color: var(--text-primary);
+    font-weight: 700;
     white-space: nowrap;
     pointer-events: none;
+    background: linear-gradient(#c8aa6e,#785a28);
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
 }
 
 .tutorial__title__algo {
