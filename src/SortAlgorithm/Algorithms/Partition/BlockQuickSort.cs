@@ -1,4 +1,4 @@
-﻿using System.Numerics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using SortAlgorithm.Contexts;
 
@@ -261,7 +261,6 @@ public static class BlockQuickSort
             }
 
             // Partition using block-based Hoare partition
-            s.Context.OnPhase(SortPhase.QuickSortPartition, left, right);
             var result = HoareBlockPartition(s, left, right);
 
             // Decrement depth limit for next recursion level
@@ -342,6 +341,7 @@ public static class BlockQuickSort
             pivotIndex = MedianOf3(s, left, mid, right, out hasDuplicatePivot);
         }
 
+        s.Context.OnPhase(SortPhase.QuickSortPartition, left, right, pivotIndex);
         var pivotPos = HoareBlockPartitionCore(s, left, right, pivotIndex);
 
         // Paper condition 1: Pivot occurs twice in sample (detected during pivot selection)
@@ -377,6 +377,7 @@ public static class BlockQuickSort
         // Move pivot to the end and extract its value
         var pivotEnd = right;
         s.Swap(pivotIndex, pivotEnd);
+        s.Context.OnRole(pivotEnd, BUFFER_MAIN, RoleType.Pivot);
         var last = pivotEnd - 1;
 
         // Index buffers for storing positions of elements to swap
@@ -563,6 +564,7 @@ public static class BlockQuickSort
             }
 
             // Place pivot in final position
+            s.Context.OnRole(pivotEnd, BUFFER_MAIN, RoleType.None);
             s.Swap(pivotEnd, begin + upper + 1);
             return begin + upper + 1;
         }
@@ -588,12 +590,14 @@ public static class BlockQuickSort
 
             // Place pivot in final position
             var pivotPos = end - upper;
+            s.Context.OnRole(pivotEnd, BUFFER_MAIN, RoleType.None);
             s.Swap(pivotEnd, pivotPos);
             return pivotPos;
         }
         else
         {
             // No remaining elements - begin and end+1 crossed
+            s.Context.OnRole(pivotEnd, BUFFER_MAIN, RoleType.None);
             s.Swap(pivotEnd, begin);
             return begin;
         }
