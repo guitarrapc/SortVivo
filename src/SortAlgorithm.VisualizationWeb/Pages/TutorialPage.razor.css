@@ -1291,7 +1291,7 @@
     }
 
     ::deep .marble-arrow-area {
-        height: 26px;
+        height: 42px;
     }
 
     ::deep .marble {
@@ -1458,7 +1458,7 @@
     }
 
     ::deep .marble-arrow-area {
-        height: 22px;
+        height: 38px;
     }
 
     ::deep .marble {
@@ -1469,8 +1469,9 @@
     }
 
     ::deep .marble-row {
-        gap: 0.5rem;
-        --marble-slot-width: calc(36px + 0.5rem);
+        gap: 0.375rem;
+        flex-wrap: nowrap; /* 8個が折り返さないよう強制1行 */
+        --marble-slot-width: calc(36px + 0.375rem);
     }
 
     ::deep .marble-index {
