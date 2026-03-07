@@ -507,8 +507,8 @@ input[type="range"] {
 /* Title */
 .loading-title {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 1.6rem;
-    font-weight: 600;
+    font-size: 8rem;
+    font-weight: 700;
     letter-spacing: 0.04em;
     color: #ffffff;
     text-shadow: 0 0 30px rgba(127,168,111,0.35);
