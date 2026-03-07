@@ -37,8 +37,10 @@
     <div class="loading-screen">
         <div class="loading-title">SORTVIZ</div>
         <div class="loading-subtitle">LEARN SORTING ALGORITHMS</div>
-        <div class="loading-description">Free browser-based tool to understand sorting algorithms visually. Explore
-            multiple visualizations, follow guided tutorials, and compare performance.</div>
+        <div class="loading-description">
+            Free browser-based tool to understand sorting algorithms visually. Explore
+            multiple visualizations, follow guided tutorials, and compare performance.
+        </div>
         <div class="loading-progress-track">
             <div class="loading-progress-fill"></div>
         </div>
@@ -70,7 +72,10 @@
         <a href="." class="reload">Reload</a>
         <span class="dismiss">🗙</span>
     </div>
-    <script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>
+
+    <!-- Custom loader. custom loader handle autostart by js -->
+    <!--<script src="_framework/blazor.webassembly#[.{fingerprint}].js"></script>-->
+    <script src="_framework/blazor.webassembly#[.{fingerprint}].js" autostart="false"></script>
 </body>
 
 </html>
