@@ -485,16 +485,31 @@ input[type="range"] {
     bottom: 2rem;
     display: flex;
     align-items: flex-end;
-    gap: 4px;
-    height: 120px;
-    padding: 0 1rem;
+    gap: 3px;
+    height: 80px;
+    padding: 0 0.5rem;
 }
 
 .loading-bar {
-    width: 10px;
-    border-radius: 3px 3px 0 0;
+    width: 6px;
+    border-radius: 2px 2px 0 0;
     animation: bar-sort 2.8s cubic-bezier(.4,0,.2,1) infinite;
     animation-delay: calc(var(--i) * 0.12s);
+}
+
+/* モバイル対応 */
+@media (max-width: 768px) {
+    .loading-bars {
+        right: 1rem;
+        bottom: 1rem;
+        gap: 2px;
+        height: 50px;
+        padding: 0 0.25rem;
+    }
+
+    .loading-bar {
+        width: 4px;
+    }
 }
 
 @keyframes bar-sort {
