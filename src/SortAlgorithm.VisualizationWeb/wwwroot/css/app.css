@@ -525,12 +525,14 @@ input[type="range"] {
 /* Title */
 .loading-title {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 8rem;
+    font-size: clamp(3rem, 15vw, 8rem);
     font-weight: 700;
     letter-spacing: 0.04em;
     background: linear-gradient(#c8aa6e,#785a28);
     background-clip: text;
     -webkit-text-fill-color: transparent;
+    padding: 0 1rem;
+    text-align: center;
 
     /* glow animation */
     color: #ffffff;
@@ -546,22 +548,24 @@ input[type="range"] {
 /* Subtitle */
 .loading-subtitle {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 2.5rem;
+    font-size: clamp(0.875rem, 3.5vw, 2.5rem);
     font-weight: 600;
-    letter-spacing: 0.15em;
+    letter-spacing: clamp(0.05em, 0.15em, 0.15em);
     color: #7fa86f;
     text-transform: uppercase;
     margin-top: -1rem;
+    padding: 0 1rem;
+    text-align: center;
 }
 
 /* Description */
 .loading-description {
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-    font-size: 1.5rem;
+    font-size: clamp(0.875rem, 2vw, 1.5rem);
     font-weight: 400;
     line-height: 1.6;
     color: #9ca3af;
-    max-width: 900px;
+    max-width: min(900px, 90vw);
     text-align: center;
     padding: 0 1.5rem;
     margin-top: 0.5rem;
