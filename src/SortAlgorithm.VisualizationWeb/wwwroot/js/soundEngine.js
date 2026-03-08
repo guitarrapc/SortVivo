@@ -136,8 +136,8 @@ window.soundEngine = {
         const expectedOverlap = Math.max(1, durationSec * 60);
         const gainPerNote = (0.15 * vol) / (expectedOverlap * Math.max(1, frequencies.length));
 
-        // poko は固定 90ms ディケイに基づいて独立計算（SpeedMultiplier によらず実効時間は常に 90ms）
-        const gainPerPoko = (0.22 * vol) / (Math.max(1, 0.09 * 60) * Math.max(1, frequencies.length));
+        // poko は固定 140ms ディケイに基づいて独立計算（SpeedMultiplier によらず実効時間は常に 140ms）
+        const gainPerPoko = (0.22 * vol) / (Math.max(1, 0.14 * 60) * Math.max(1, frequencies.length));
 
         for (let i = 0; i < frequencies.length; i++) {
             const freq = frequencies[i];
@@ -187,8 +187,8 @@ window.soundEngine = {
 
     /**
      * ポコポコ: 専用ボイスプール（_pokoVoices）を使った完全ゼロアロケーション実装。
-     * - メイン: triangle 波 + lowpass + ピッチドロップ（18ms）で「ぽこっ」感
-     * - クリック: 高調波 sine （12ms）で「ぽ」の頭だけ追加
+     * - メイン: sine 波 + lowpass + 控えめピッチドロップ（25ms）で優しい「ぽこっ」感
+     * - クリック: 高調波 sine （10ms）でごく薄いアタック
      * @param {number} now - AudioContext の現在時刻（秒）
      * @param {number} freq - 周波数（Hz）
      * @param {number} gainPerNote - ノートあたりのゲイン
@@ -213,26 +213,28 @@ window.soundEngine = {
             voice.clickGain.gain.linearRampToValueAtTime(0.0001, startAt);
         }
 
-        // ── メイン（triangle + lowpass）──
-        // freq * 1.18 → freq へ 18ms exponential ramp で「ぽこ」感
-        voice.mainOsc.frequency.setValueAtTime(freq * 1.18, startAt);
-        voice.mainOsc.frequency.exponentialRampToValueAtTime(freq, startAt + 0.018);
+        // ── メイン（sine + lowpass）──
+        // freq * 1.06 → freq へ 25ms exponential ramp で控えめな「ぽこ」感
+        voice.mainOsc.frequency.setValueAtTime(freq * 1.06, startAt);
+        voice.mainOsc.frequency.exponentialRampToValueAtTime(freq, startAt + 0.025);
 
-        voice.lowpass.frequency.setValueAtTime(Math.min(freq * 2.4, 3500), startAt);
+        // 高域を軽く丸める（freq * 1.8、最大 2200Hz、Q = 0.5）
+        voice.lowpass.frequency.setValueAtTime(Math.min(freq * 1.8, 2200), startAt);
+        voice.lowpass.Q.setValueAtTime(0.5, startAt);
 
         voice.mainGain.gain.setValueAtTime(0.0001, startAt);
-        voice.mainGain.gain.linearRampToValueAtTime(gainPerNote, startAt + 0.004);
-        voice.mainGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.09);
+        voice.mainGain.gain.linearRampToValueAtTime(gainPerNote * 0.73, startAt + 0.008); // gainPerNote は 0.22 ベースなので × 0.73 ≈ 0.16
+        voice.mainGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.14);
 
-        // ── アタッククリック（sine 高調波、12ms で消音）──
-        voice.clickOsc.frequency.setValueAtTime(freq * 2.2, startAt);
+        // ── アタッククリック（sine 高調波、10ms で消音、ごく薄い）──
+        voice.clickOsc.frequency.setValueAtTime(freq * 1.8, startAt);
 
-        const clickPeak = gainPerNote * (0.05 / 0.22);
+        const clickPeak = gainPerNote * (0.015 / 0.22);
         voice.clickGain.gain.setValueAtTime(0.0001, startAt);
-        voice.clickGain.gain.linearRampToValueAtTime(clickPeak, startAt + 0.0015);
-        voice.clickGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.012);
+        voice.clickGain.gain.linearRampToValueAtTime(clickPeak, startAt + 0.002);
+        voice.clickGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.010);
 
-        voice.freeAt = startAt + 0.10;  // 90ms + 10ms マージン
+        voice.freeAt = startAt + 0.15;  // 140ms + 10ms マージン
     },
 
     /**
