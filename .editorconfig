@@ -24,6 +24,10 @@ indent_size = 4
 indent_style = space
 indent_size = 4
 
+[*.js]
+indent_style = space
+indent_size = 4
+
 [*.cs]
 charset = utf-8-bom
 indent_style = space
