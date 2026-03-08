@@ -1,0 +1,49 @@
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "src/**"
+  pull_request:
+    branches: [main]
+    paths:
+      - "src/**"
+
+jobs:
+  deploy:
+    if: ${{ github.event_name == 'push' || (github.event_name == 'pull_request' && ! github.event.pull_request.head.repo.fork) }}
+    permissions:
+      contents: read
+      deployments: write
+      pull-requests: write
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6.0.1
+        with:
+          persist-credentials: false
+      - name: Install system deps
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3
+      - uses: guitarrapc/actions/.github/actions/setup-dotnet@main
+        with:
+          restore-wasm-workload: true
+      - name: Publish (Release + AOT)
+        run: |
+          dotnet publish ./src/SortAlgorithm.VisualizationWeb/SortAlgorithm.VisualizationWeb.csproj -c Release -o ./out
+      - name: Deploy
+        id: deploy
+        uses: cloudflare/wrangler-action@da0e0dfe58b7a431659754fdf3f186c529afbe65 # 3.14.1
+        with:
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          command: pages deploy ./out/wwwroot --project-name=sortviz
+      - name: Post Preview deployment URL to PR
+        if: ${{ github.event_name == 'pull_request' }}
+        run: |
+          gh pr comment ${{ github.event.pull_request.number }} --body "Preview Deployment URL: ${{ steps.deploy.outputs.deployment-url }}" --create-if-none --edit-last
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
