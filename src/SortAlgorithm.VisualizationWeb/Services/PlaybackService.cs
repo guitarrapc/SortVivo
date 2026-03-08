@@ -72,6 +72,9 @@ public class PlaybackService : IDisposable
     /// <summary>音量（0.0～1.0、デフォルト 0.5）</summary>
     public double SoundVolume { get; set; } = 0.5;
 
+    /// <summary>サウンドタイプ（"sine" または "poko"、デフォルト "sine"）</summary>
+    public string SoundType { get; set; } = "sine";
+
     /// <summary>状態が変更されたときのイベント</summary>
     public event Action? StateChanged;
     
@@ -89,6 +92,7 @@ public class PlaybackService : IDisposable
     public async ValueTask InitSoundAsync()
     {
         await _js.InvokeVoidAsync("soundEngine.initAudio");
+        await _js.InvokeVoidAsync("soundEngine.setSoundType", SoundType);
     }
     
     /// <summary>

@@ -86,8 +86,28 @@
                         <input type="range" min="0" max="1" step="0.05"
                                @bind="Playback.SoundVolume"
                                @bind:event="oninput"
+                               @bind:after="HandleVolumeChanged"
                                class="settings-slider"
                                style="@RangeTrackStyle(Playback.SoundVolume, 0, 1)" />
+                    </div>
+
+                    <div class="settings-row settings-row--vertical">
+                        <span class="settings-label">Sound Type</span>
+                        <div class="settings-segment">
+                            <button class="settings-segment__btn @(Playback.SoundType == "sine" ? "settings-segment__btn--active" : "")"
+                                    @onclick='() => HandleSoundTypeChanged("sine")'>
+                                Sine
+                            </button>
+                            <button class="settings-segment__btn @(Playback.SoundType == "poko" ? "settings-segment__btn--active" : "")"
+                                    @onclick='() => HandleSoundTypeChanged("poko")'>
+                                Poko
+                            </button>
+                            <button class="settings-segment__btn @(Playback.SoundType == "cutePop" ? "settings-segment__btn--active" : "")"
+                                    @onclick='() => HandleSoundTypeChanged("cutePop")'>
+                                CutePop
+                            </button>
+                        </div>
+                        <span class="settings-hint">Poko is a soft, round sound with a gentle pitch drop.</span>
                     </div>
 
                 </div>
@@ -154,6 +174,7 @@
     [Parameter, EditorRequired] public PlaybackService Playback { get; set; } = default!;
     [Parameter, EditorRequired] public RenderSettings RenderSettings { get; set; } = default!;
     [Parameter, EditorRequired] public DebugSettings DebugSettings { get; set; } = default!;
+    [Parameter, EditorRequired] public ComparisonModeService ComparisonMode { get; set; } = default!;
 
     private bool _isClosing = false;
 
@@ -175,6 +196,17 @@
     private async Task HandleDebugToggleChanged()
     {
         await JS.InvokeVoidAsync("debugHelper.setDebugMode", DebugSettings.IsEnabled);
+    }
+
+    private async Task HandleSoundTypeChanged(string soundType)
+    {
+        Playback.SoundType = soundType;
+        await ComparisonMode.SetSoundTypeForAllAsync(soundType);
+    }
+
+    private void HandleVolumeChanged()
+    {
+        ComparisonMode.SetSoundVolumeForAll(Playback.SoundVolume);
     }
 
     private static string RangeTrackStyle(double value, double min, double max)

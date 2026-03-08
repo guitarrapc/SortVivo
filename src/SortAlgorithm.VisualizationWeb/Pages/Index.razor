@@ -60,6 +60,7 @@
         Playback="Playback"
         RenderSettings="RenderSettings"
         DebugSettings="DebugSettings"
+        ComparisonMode="ComparisonMode"
         @bind-AutoSwitchToRecommendedSize="_autoSwitchToRecommendedSize"
         @bind-SelectedCategory="_selectedCategory" />
 
@@ -322,6 +323,11 @@ private VisualizationMode SelectedVisualizationMode
             if (prefs.TryGetValue("sortvis.soundVolume", out var sv) &&
                 double.TryParse(sv, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var svVal))
                 Playback.SoundVolume = svVal;
+            if (prefs.TryGetValue("sortvis.soundType", out var stype))
+            {
+                Playback.SoundType = stype is "poko" ? "poko" : "sine";
+                await JS.InvokeVoidAsync("soundEngine.setSoundType", Playback.SoundType);
+            }
             if (prefs.TryGetValue("sortvis.autoRecommendedSize", out var ars))
                 _autoSwitchToRecommendedSize = ars == "true";
             if (prefs.TryGetValue("sortvis.categoryFilter", out var cf))
@@ -354,6 +360,7 @@ private VisualizationMode SelectedVisualizationMode
                 ["sortvis.instantMode"]          = Playback.InstantMode ? "true" : "false",
                 ["sortvis.soundEnabled"]         = Playback.SoundEnabled ? "true" : "false",
                 ["sortvis.soundVolume"]          = Playback.SoundVolume.ToString(inv),
+                ["sortvis.soundType"]            = Playback.SoundType,
                 ["sortvis.autoRecommendedSize"]  = _autoSwitchToRecommendedSize ? "true" : "false",
                 ["sortvis.categoryFilter"]       = _selectedCategory ?? string.Empty,
                 ["sortvis.debugLog"]             = DebugSettings.IsEnabled ? "true" : "false",
@@ -665,6 +672,7 @@ private VisualizationMode SelectedVisualizationMode
             var instance = ComparisonMode.State.Instances[0];
             instance.Playback.SoundEnabled = Playback.SoundEnabled;
             instance.Playback.SoundVolume = Playback.SoundVolume;
+            instance.Playback.SoundType = Playback.SoundType;
         }
         else if (ComparisonMode.State.Instances.Count > 1)
         {

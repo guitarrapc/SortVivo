@@ -261,6 +261,25 @@ public class ComparisonModeService : IDisposable
         }
     }
 
+    /// <summary>すべてのPlaybackServiceのサウンドボリュームを設定する。</summary>
+    public void SetSoundVolumeForAll(double volume)
+    {
+        foreach (var p in _playbackServices)
+        {
+            p.SoundVolume = volume;
+        }
+    }
+
+    /// <summary>すべてのPlaybackServiceのサウンドタイプを設定する。</summary>
+    public async Task SetSoundTypeForAllAsync(string soundType)
+    {
+        foreach (var p in _playbackServices)
+        {
+            p.SoundType = soundType;
+        }
+        await _js.InvokeVoidAsync("soundEngine.setSoundType", soundType);
+    }
+
     // ────────────────────────────────────────────────────────────────────────
     // プライベートヘルパー
     // ────────────────────────────────────────────────────────────────────────
