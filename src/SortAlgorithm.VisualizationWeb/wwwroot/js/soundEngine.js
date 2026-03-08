@@ -13,17 +13,21 @@ window.soundEngine = {
     _output: null,    // DynamicsCompressor → destination
     _voices: [],      // 固定ボイスプール: { osc, gain, freeAt }
     _voiceCount: 32,  // 最大ポリフォニー数（240Hz 表示でも横取りなし: 3音 × ceil(40ms/4ms) = 30）
-    _soundType: 'sine',     // 現在のサウンドタイプ: 'sine' | 'poko'
-    _pokoVoices: [],        // ポコ用固定ボイスプール: { mainOsc, mainGain, lowpass, clickOsc, clickGain, freeAt }
-    _pokoVoiceCount: 16,    // ポコの最大ポリフォニー数（60ms × 60fps × 3音 ≈ 11 で余裕を持って 16）
+    _soundType: 'sine',          // 現在のサウンドタイプ: 'sine' | 'poko' | 'cutePop'
+    _pokoVoices: [],             // ポコ用固定ボイスプール: { osc, gain, freeAt }
+    _pokoVoiceCount: 16,         // ポコの最大ポリフォニー数（60ms × 60fps × 3音 ≈ 11 で余裕を持って 16）
+    _cutePopVoices: [],          // CutePop 用固定ボイスプール: { osc1, gain1, osc2, gain2, freeAt }
+    _cutePopVoiceCount: 16,      // CutePop の最大ポリフォニー数（70ms × 60fps × 3音 ≈ 13 で余裕を持って 16）
 
     /**
-     * サウンドタイプを設定する。'sine'（デフォルト）または 'poko'。
+     * サウンドタイプを設定する。'sine'（デフォルト）、'poko'、または 'cutePop'。
      * AudioContext 初期化前でも呼び出し可能。
-     * @param {string} type - 'sine' | 'poko'
+     * @param {string} type - 'sine' | 'poko' | 'cutePop'
      */
     setSoundType: function (type) {
-        this._soundType = (type === 'poko') ? 'poko' : 'sine';
+        if (type === 'poko') this._soundType = 'poko';
+        else if (type === 'cutePop') this._soundType = 'cutePop';
+        else this._soundType = 'sine';
     },
 
     /**
@@ -50,6 +54,7 @@ window.soundEngine = {
         this._setupOutput();
         this._setupVoices();
         this._setupPokoVoices();
+        this._setupCutePopVoices();
     },
 
     /**
@@ -138,6 +143,8 @@ window.soundEngine = {
 
         // poko は固定 60ms ディケイに基づいて独立計算（SpeedMultiplier によらず実効時間は常に 60ms）
         const gainPerPoko = (0.3 * vol) / (Math.max(1, 0.06 * 60) * Math.max(1, frequencies.length));
+        // cutePop は固定 70ms ディケイに基づいて独立計算
+        const gainPerCutePop = (0.25 * vol) / (Math.max(1, 0.07 * 60) * Math.max(1, frequencies.length));
 
         for (let i = 0; i < frequencies.length; i++) {
             const freq = frequencies[i];
@@ -145,6 +152,8 @@ window.soundEngine = {
 
             if (this._soundType === 'poko') {
                 this._pokoSound(now, freq, gainPerPoko);
+            } else if (this._soundType === 'cutePop') {
+                this._cutePopSound(now, freq, gainPerCutePop);
             } else {
                 const voice = this._acquireVoice(now);
                 const stealing = voice.freeAt > now;
@@ -219,6 +228,50 @@ window.soundEngine = {
     },
 
     /**
+     * CutePop: 専用ボイスプール（_cutePopVoices）を使った完全ゼロアロケーション実装。
+     * - osc1: sine、freq*1.35 → freq（duration*0.75）で丸いメイン音
+     * - osc2: triangle、freq*2.0 → freq*1.3（duration*0.35）で薄いアタック層
+     * @param {number} now - AudioContext の現在時刻（秒）
+     * @param {number} freq - 周波数（Hz）
+     * @param {number} gainPerNote - ノートあたりのゲイン
+     */
+    _cutePopSound: function (now, freq, gainPerNote) {
+        const duration = 0.07;
+        const voice = this._acquireCutePopVoice(now);
+        const stealing = voice.freeAt > now;
+        const startAt = stealing ? now + 0.002 : now;
+
+        // 既存スケジュールをキャンセル
+        voice.osc1.frequency.cancelScheduledValues(now);
+        voice.gain1.gain.cancelScheduledValues(now);
+        voice.osc2.frequency.cancelScheduledValues(now);
+        voice.gain2.gain.cancelScheduledValues(now);
+
+        if (stealing) {
+            voice.gain1.gain.setValueAtTime(voice.gain1.gain.value, now);
+            voice.gain1.gain.linearRampToValueAtTime(0.0001, startAt);
+            voice.gain2.gain.setValueAtTime(voice.gain2.gain.value, now);
+            voice.gain2.gain.linearRampToValueAtTime(0.0001, startAt);
+        }
+
+        // osc1: 丸いメイン音
+        voice.osc1.frequency.setValueAtTime(freq * 1.35, startAt);
+        voice.osc1.frequency.exponentialRampToValueAtTime(freq, startAt + duration * 0.75);
+        voice.gain1.gain.setValueAtTime(0.0001, startAt);
+        voice.gain1.gain.exponentialRampToValueAtTime(gainPerNote, startAt + 0.004);
+        voice.gain1.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
+
+        // osc2: 薄いアタック層
+        voice.osc2.frequency.setValueAtTime(freq * 2.0, startAt);
+        voice.osc2.frequency.exponentialRampToValueAtTime(freq * 1.3, startAt + duration * 0.35);
+        voice.gain2.gain.setValueAtTime(0.0001, startAt);
+        voice.gain2.gain.exponentialRampToValueAtTime(gainPerNote * 0.25, startAt + 0.002);
+        voice.gain2.gain.exponentialRampToValueAtTime(0.0001, startAt + duration * 0.45);
+
+        voice.freeAt = startAt + duration;
+    },
+
+    /**
      * ポコ専用ボイスプールを初期化する。
      * 各ボイス: triangle osc → gain → output
      * 全ノードは起動済みで、ゲイン 0.0001 で待機する。
@@ -257,6 +310,51 @@ window.soundEngine = {
     },
 
     /**
+     * CutePop 専用ボイスプールを初期化する。
+     * 各ボイス: sine osc1 → gain1 → output
+     *           triangle osc2 → gain2 → output
+     * 全ノードは起動済みで、ゲイン 0.0001 で待機する。
+     */
+    _setupCutePopVoices: function () {
+        const ctx = this._audioContext;
+        const output = this._output || ctx.destination;
+        this._cutePopVoices = [];
+        for (let i = 0; i < this._cutePopVoiceCount; i++) {
+            const osc1  = ctx.createOscillator();
+            const gain1 = ctx.createGain();
+            osc1.type = 'sine';
+            gain1.gain.setValueAtTime(0.0001, ctx.currentTime);
+            osc1.connect(gain1);
+            gain1.connect(output);
+            osc1.start();
+
+            const osc2  = ctx.createOscillator();
+            const gain2 = ctx.createGain();
+            osc2.type = 'triangle';
+            gain2.gain.setValueAtTime(0.0001, ctx.currentTime);
+            osc2.connect(gain2);
+            gain2.connect(output);
+            osc2.start();
+
+            this._cutePopVoices.push({ osc1, gain1, osc2, gain2, freeAt: 0 });
+        }
+    },
+
+    /**
+     * CutePop 専用プールから空きボイスを取得する。
+     * @param {number} now - AudioContext の現在時刻（秒）
+     */
+    _acquireCutePopVoice: function (now) {
+        let best = this._cutePopVoices[0];
+        for (let i = 0; i < this._cutePopVoices.length; i++) {
+            const v = this._cutePopVoices[i];
+            if (v.freeAt <= now) return v;
+            if (v.freeAt < best.freeAt) best = v;
+        }
+        return best;
+    },
+
+    /**
      * AudioContext を閉じてリソースを解放する。
      */
     disposeAudio: function () {
@@ -268,6 +366,11 @@ window.soundEngine = {
             try { v.osc.stop(); } catch (e) { /* already stopped */ }
         }
         this._pokoVoices = [];
+        for (const v of this._cutePopVoices) {
+            try { v.osc1.stop(); } catch (e) { /* already stopped */ }
+            try { v.osc2.stop(); } catch (e) { /* already stopped */ }
+        }
+        this._cutePopVoices = [];
         if (this._output) {
             this._output.disconnect();
             this._output = null;

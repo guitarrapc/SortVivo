@@ -102,6 +102,10 @@
                                     @onclick='() => HandleSoundTypeChanged("poko")'>
                                 Poko
                             </button>
+                            <button class="settings-segment__btn @(Playback.SoundType == "cutePop" ? "settings-segment__btn--active" : "")"
+                                    @onclick='() => HandleSoundTypeChanged("cutePop")'>
+                                CutePop
+                            </button>
                         </div>
                         <span class="settings-hint">Poko is a soft, round sound with a gentle pitch drop.</span>
                     </div>
