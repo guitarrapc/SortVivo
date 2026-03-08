@@ -213,32 +213,32 @@ window.soundEngine = {
             voice.clickGain.gain.linearRampToValueAtTime(0.0001, startAt);
         }
 
-        // ── メイン（sine + lowpass）──
-        // freq * 1.06 → freq へ 25ms exponential ramp で控えめな「ぽこ」感
-        voice.mainOsc.frequency.setValueAtTime(freq * 1.06, startAt);
+        // main
+        // 控えめな「ぽこ」感
+        voice.mainOsc.frequency.setValueAtTime(freq * 1.04, startAt);
         voice.mainOsc.frequency.exponentialRampToValueAtTime(freq, startAt + 0.025);
 
-        // 高域を軽く丸める（freq * 1.8、最大 2200Hz、Q = 0.5）
-        voice.lowpass.frequency.setValueAtTime(Math.min(freq * 1.8, 2200), startAt);
+        // 高域を軽く丸める（freq * 1.6、最大 1800Hz、Q = 0.5）
+        voice.lowpass.frequency.setValueAtTime(Math.min(freq * 1.6, 1800), startAt);
         voice.lowpass.Q.setValueAtTime(0.5, startAt);
 
-        const mainEndTime = startAt + 0.14;
+        const mainEndTime = startAt + 0.12;
         voice.mainGain.gain.setValueAtTime(0.0001, startAt);
         voice.mainGain.gain.linearRampToValueAtTime(gainPerNote * 0.73, startAt + 0.008); // gainPerNote は 0.22 ベースなので × 0.73 ≈ 0.16
         voice.mainGain.gain.exponentialRampToValueAtTime(0.0001, mainEndTime);
         voice.mainGain.gain.setValueAtTime(0.0, mainEndTime);  // 残響カット
 
-        // ── アタッククリック（sine 高調波、10ms で消音、ごく薄い）──
-        voice.clickOsc.frequency.setValueAtTime(freq * 1.8, startAt);
+        // click
+        voice.clickOsc.frequency.setValueAtTime(freq * 1.5, startAt);
 
         const clickPeak = gainPerNote * (0.015 / 0.22);
         const clickEndTime = startAt + 0.010;
         voice.clickGain.gain.setValueAtTime(0.0001, startAt);
         voice.clickGain.gain.linearRampToValueAtTime(clickPeak, startAt + 0.002);
         voice.clickGain.gain.exponentialRampToValueAtTime(0.0001, clickEndTime);
-      voice.clickGain.gain.setValueAtTime(0.0, clickEndTime);  // 残響カット
+        voice.clickGain.gain.setValueAtTime(0.0, clickEndTime);  // 残響カット
 
-        voice.freeAt = startAt + 0.15;  // 140ms + 10ms マージン
+        voice.freeAt = startAt + 0.13; 
     },
 
     /**
@@ -256,7 +256,7 @@ window.soundEngine = {
             const mainGain = ctx.createGain();
             const lowpass  = ctx.createBiquadFilter();
 
-            mainOsc.type = 'triangle';
+            mainOsc.type = 'sine';
             lowpass.type = 'lowpass';
             lowpass.Q.setValueAtTime(0.7, ctx.currentTime);
             mainGain.gain.setValueAtTime(0.0001, ctx.currentTime);
