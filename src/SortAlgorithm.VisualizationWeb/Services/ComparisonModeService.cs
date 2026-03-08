@@ -20,8 +20,8 @@ public class ComparisonModeService : IDisposable
     /// </summary>
     public bool IsAddingAlgorithm { get; private set; }
 
-    /// <summary>N=1 のときのみ有効なサウンドの ON/OFF 状態。</summary>
-    public bool SoundEnabled => _playbackServices.Count == 1 && _playbackServices[0].SoundEnabled;
+    /// <summary>インスタンスが 1 件以上あるときの先頭インスタンスのサウンド ON/OFF 状態。</summary>
+    public bool SoundEnabled => _playbackServices.Count > 0 && _playbackServices[0].SoundEnabled;
 
     public ComparisonModeService(SortExecutor executor, DebugSettings debug, IJSRuntime js)
     {
@@ -251,14 +251,14 @@ public class ComparisonModeService : IDisposable
         NotifyStateChanged();
     }
 
-    /// <summary>N=1 時のみ有効。サウンドをトグルする。</summary>
+    /// <summary>全インスタンスのサウンドをトグルする。</summary>
     public void ToggleSound()
     {
-        if (_playbackServices.Count == 1)
-        {
-            _playbackServices[0].SoundEnabled = !_playbackServices[0].SoundEnabled;
-            NotifyStateChanged();
-        }
+        if (_playbackServices.Count == 0) return;
+        var newState = !_playbackServices[0].SoundEnabled;
+        foreach (var p in _playbackServices)
+            p.SoundEnabled = newState;
+        NotifyStateChanged();
     }
 
     /// <summary>すべてのPlaybackServiceのサウンドボリュームを設定する。</summary>

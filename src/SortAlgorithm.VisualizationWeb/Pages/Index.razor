@@ -77,7 +77,7 @@
                         PlayDisabled="@(ComparisonMode.State.Instances.Count == 0)"
                         StopDisabled="@(ComparisonMode.State.Instances.Count == 0)"
                         SoundEnabled="@GetSoundEnabled()"
-                        SoundDisabled="@(ComparisonMode.State.Instances.Count > 1)"
+                        SoundDisabled="false"
                         StatusText="@GetComparisonStatusText()"
                         ArraySize="@GetArraySize()"
                         OnTogglePlayPause="HandleTogglePlayPause"
@@ -617,7 +617,7 @@
     }
 
     private bool GetSoundEnabled() =>
-        ComparisonMode.State.Instances.Count == 1
+        ComparisonMode.State.Instances.Count > 0
             ? ComparisonMode.SoundEnabled
             : Playback.SoundEnabled;
 
@@ -638,16 +638,17 @@
 
     private async Task HandleToggleSound()
     {
-        if (ComparisonMode.State.Instances.Count == 1)
+        if (ComparisonMode.State.Instances.Count >= 1)
         {
-            // N=1: ComparisonModeのインスタンスとグローバルPlayback両方を更新
+            // N>=1: 全インスタンスとグローバルPlayback両方を更新
             ComparisonMode.ToggleSound();
             // グローバルPlaybackにも同期（localStorageへの保存用）
             Playback.SoundEnabled = ComparisonMode.SoundEnabled;
             // サウンドON時にAudioContextを初期化（ブラウザAutoplay Policy対応）
             if (ComparisonMode.SoundEnabled)
             {
-                await ComparisonMode.State.Instances[0].Playback.InitSoundAsync();
+                foreach (var instance in ComparisonMode.State.Instances)
+                    await instance.Playback.InitSoundAsync();
             }
         }
         else
@@ -659,26 +660,15 @@
     }
 
     /// <summary>
-    /// N=1 の場合、localStorage から読み込んだサウンド設定を適用する。
-    /// N>=2 の場合は全インスタンスのサウンドを明示的にオフにする。
+    /// 全インスタンスに localStorage から読み込んだサウンド設定を適用する。
     /// </summary>
     private void ApplySavedSoundSettings()
     {
-        if (ComparisonMode.State.Instances.Count == 1)
+        foreach (var instance in ComparisonMode.State.Instances)
         {
-            // N=1: localStorageから読み込んだ設定を適用
-            var instance = ComparisonMode.State.Instances[0];
             instance.Playback.SoundEnabled = Playback.SoundEnabled;
             instance.Playback.SoundVolume = Playback.SoundVolume;
             instance.Playback.SoundType = Playback.SoundType;
-        }
-        else if (ComparisonMode.State.Instances.Count > 1)
-        {
-            // N>=2: 全インスタンスのサウンドを強制的にオフにする
-            foreach (var instance in ComparisonMode.State.Instances)
-            {
-                instance.Playback.SoundEnabled = false;
-            }
         }
     }
 
