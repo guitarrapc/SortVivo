@@ -56,4 +56,7 @@ public record AlgorithmMetadata
     /// 10 = 十進数 (b=10)、4 = 4 進数 (b=4)。0 = 未設定。
     /// </summary>
     public int TutorialLsdRadix { get; init; }
+
+    /// <summary>実装ソースコードへの GitHub URL</summary>
+    public string GitHubSourceUrl { get; init; } = string.Empty;
 }
