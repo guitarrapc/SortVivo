@@ -370,6 +370,32 @@ window.soundEngine = {
     },
 
     /**
+     * 全ボイスプールを即座にミュートする。一時停止・リセット時の残響音を防ぐ。
+     * スケジュール済みの AudioParam イベントをキャンセルし、ゲインを 0 に即セットする。
+     */
+    silenceAll: function () {
+        if (!this._audioContext) return;
+        const now = this._audioContext.currentTime;
+        for (const v of this._voices) {
+            v.gain.gain.cancelScheduledValues(now);
+            v.gain.gain.setValueAtTime(0.0, now);
+            v.freeAt = 0;
+        }
+        for (const v of this._pokoVoices) {
+            v.gain.gain.cancelScheduledValues(now);
+            v.gain.gain.setValueAtTime(0.0, now);
+            v.freeAt = 0;
+        }
+        for (const v of this._cutePopVoices) {
+            v.gain1.gain.cancelScheduledValues(now);
+            v.gain1.gain.setValueAtTime(0.0, now);
+            v.gain2.gain.cancelScheduledValues(now);
+            v.gain2.gain.setValueAtTime(0.0, now);
+            v.freeAt = 0;
+        }
+    },
+
+    /**
      * AudioContext を閉じてリソースを解放する。
      */
     disposeAudio: function () {

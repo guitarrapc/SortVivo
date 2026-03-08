@@ -317,6 +317,7 @@ public class PlaybackService : IDisposable
             _ = _js.InvokeVoidAsync("playbackHelper.stop", _instanceId);
             _isRegisteredWithLoop = false;
         }
+        _ = _js.InvokeVoidAsync("soundEngine.silenceAll");
     }
 
     /// <summary>
