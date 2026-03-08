@@ -222,17 +222,21 @@ window.soundEngine = {
         voice.lowpass.frequency.setValueAtTime(Math.min(freq * 1.8, 2200), startAt);
         voice.lowpass.Q.setValueAtTime(0.5, startAt);
 
+        const mainEndTime = startAt + 0.14;
         voice.mainGain.gain.setValueAtTime(0.0001, startAt);
         voice.mainGain.gain.linearRampToValueAtTime(gainPerNote * 0.73, startAt + 0.008); // gainPerNote は 0.22 ベースなので × 0.73 ≈ 0.16
-        voice.mainGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.14);
+        voice.mainGain.gain.exponentialRampToValueAtTime(0.0001, mainEndTime);
+        voice.mainGain.gain.setValueAtTime(0.0, mainEndTime);  // 残響カット
 
         // ── アタッククリック（sine 高調波、10ms で消音、ごく薄い）──
         voice.clickOsc.frequency.setValueAtTime(freq * 1.8, startAt);
 
         const clickPeak = gainPerNote * (0.015 / 0.22);
+        const clickEndTime = startAt + 0.010;
         voice.clickGain.gain.setValueAtTime(0.0001, startAt);
         voice.clickGain.gain.linearRampToValueAtTime(clickPeak, startAt + 0.002);
-        voice.clickGain.gain.exponentialRampToValueAtTime(0.0001, startAt + 0.010);
+        voice.clickGain.gain.exponentialRampToValueAtTime(0.0001, clickEndTime);
+      voice.clickGain.gain.setValueAtTime(0.0, clickEndTime);  // 残響カット
 
         voice.freeAt = startAt + 0.15;  // 140ms + 10ms マージン
     },
