@@ -324,7 +324,10 @@ private VisualizationMode SelectedVisualizationMode
                 double.TryParse(sv, System.Globalization.NumberStyles.Any, System.Globalization.CultureInfo.InvariantCulture, out var svVal))
                 Playback.SoundVolume = svVal;
             if (prefs.TryGetValue("sortvis.soundType", out var stype))
+            {
                 Playback.SoundType = stype is "poko" ? "poko" : "sine";
+                await JS.InvokeVoidAsync("soundEngine.setSoundType", Playback.SoundType);
+            }
             if (prefs.TryGetValue("sortvis.autoRecommendedSize", out var ars))
                 _autoSwitchToRecommendedSize = ars == "true";
             if (prefs.TryGetValue("sortvis.categoryFilter", out var cf))
