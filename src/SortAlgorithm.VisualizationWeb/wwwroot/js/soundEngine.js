@@ -190,6 +190,7 @@ window.soundEngine = {
         voice.gain.gain.setValueAtTime(0.0, startAt);
         voice.gain.gain.linearRampToValueAtTime(gainPerNote, startAt + attackSec);
         voice.gain.gain.linearRampToValueAtTime(0.0, startAt + durationSec);
+        voice.gain.gain.setValueAtTime(0.0, startAt + durationSec);  // 残響カット
 
         voice.freeAt = startAt + durationSec;
     },
@@ -294,7 +295,7 @@ window.soundEngine = {
             const gain = ctx.createGain();
 
             osc.type = 'triangle';
-            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            gain.gain.setValueAtTime(0.0, ctx.currentTime);
 
             osc.connect(gain);
             gain.connect(output);

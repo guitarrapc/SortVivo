@@ -420,6 +420,13 @@ public class PlaybackService : IDisposable
         FinalizeDeltas();
         StateChanged?.Invoke();
 
+        if (SoundEnabled)
+        {
+            // 最後のノートが鳴り終わる時間だけ待ってから残留ゲインをクリアする
+            await Task.Delay(GetSoundDuration(SpeedMultiplier) + 50);
+            _ = _js.InvokeVoidAsync("soundEngine.silenceAll");
+        }
+
         if (AutoReset)
         {
             await Task.Delay(500);
