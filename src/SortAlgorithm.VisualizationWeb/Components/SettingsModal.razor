@@ -86,6 +86,7 @@
                         <input type="range" min="0" max="1" step="0.05"
                                @bind="Playback.SoundVolume"
                                @bind:event="oninput"
+                               @bind:after="HandleVolumeChanged"
                                class="settings-slider"
                                style="@RangeTrackStyle(Playback.SoundVolume, 0, 1)" />
                     </div>
@@ -169,6 +170,7 @@
     [Parameter, EditorRequired] public PlaybackService Playback { get; set; } = default!;
     [Parameter, EditorRequired] public RenderSettings RenderSettings { get; set; } = default!;
     [Parameter, EditorRequired] public DebugSettings DebugSettings { get; set; } = default!;
+    [Parameter, EditorRequired] public ComparisonModeService ComparisonMode { get; set; } = default!;
 
     private bool _isClosing = false;
 
@@ -195,7 +197,12 @@
     private async Task HandleSoundTypeChanged(string soundType)
     {
         Playback.SoundType = soundType;
-        await JS.InvokeVoidAsync("soundEngine.setSoundType", soundType);
+        await ComparisonMode.SetSoundTypeForAllAsync(soundType);
+    }
+
+    private void HandleVolumeChanged()
+    {
+        ComparisonMode.SetSoundVolumeForAll(Playback.SoundVolume);
     }
 
     private static string RangeTrackStyle(double value, double min, double max)
