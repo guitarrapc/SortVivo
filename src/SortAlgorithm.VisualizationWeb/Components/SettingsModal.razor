@@ -138,18 +138,6 @@
                         </label>
                     </div>
 
-                    <div class="settings-row settings-row--vertical">
-                        <span class="settings-label">Category Filter</span>
-                        <select value="@SelectedCategory"
-                                @onchange="e => SelectedCategoryChanged.InvokeAsync((string)e.Value!)">
-                            <option value="">All Categories</option>
-                            @foreach (var category in AlgorithmRegistry.GetCategories())
-                            {
-                                <option value="@category">@category</option>
-                            }
-                        </select>
-                    </div>
-
                     <div class="settings-row">
                         <span class="settings-label">🐛 Debug Log</span>
                         <label class="toggle-switch">
@@ -180,9 +168,6 @@
 
     [Parameter] public bool AutoSwitchToRecommendedSize { get; set; }
     [Parameter] public EventCallback<bool> AutoSwitchToRecommendedSizeChanged { get; set; }
-
-    [Parameter] public string SelectedCategory { get; set; } = string.Empty;
-    [Parameter] public EventCallback<string> SelectedCategoryChanged { get; set; }
 
     private async Task HandleClose()
     {

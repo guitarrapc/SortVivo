@@ -41,7 +41,6 @@
                       @bind-ArraySize="ArraySize"
                       @bind-SelectedPatternName="SelectedPatternName"
                       @bind-SelectedVisualizationMode="SelectedVisualizationMode"
-                      @bind-SelectedCategory="_selectedCategory"
                       @bind-AutoSwitchToRecommendedSize="_autoSwitchToRecommendedSize"
                       IsLoading="IsLoading"
                       Playback="Playback"
@@ -59,8 +58,7 @@
                    RenderSettings="RenderSettings"
                    DebugSettings="DebugSettings"
                    ComparisonMode="ComparisonMode"
-                   @bind-AutoSwitchToRecommendedSize="_autoSwitchToRecommendedSize"
-                   @bind-SelectedCategory="_selectedCategory" />
+                   @bind-AutoSwitchToRecommendedSize="_autoSwitchToRecommendedSize" />
 
 
 
@@ -207,7 +205,6 @@
     private bool _preferencesDirty = false;
 
     // Settings: QuickAccessPanel と共有する設定
-    private string _selectedCategory = string.Empty;
     private bool _autoSwitchToRecommendedSize = false;
 
     // URL cards パラメータから復元する比較カードのアルゴリズム名一覧（OnInitialized でパース）
@@ -328,8 +325,6 @@
             }
             if (prefs.TryGetValue("sortvis.autoRecommendedSize", out var ars))
                 _autoSwitchToRecommendedSize = ars == "true";
-            if (prefs.TryGetValue("sortvis.categoryFilter", out var cf))
-                _selectedCategory = cf ?? string.Empty;
             if (prefs.TryGetValue("sortvis.debugLog", out var dl))
                 DebugSettings.IsEnabled = dl == "true";
             if (prefs.TryGetValue("sortvis.scrollOnGenerate", out var sog))
@@ -360,7 +355,6 @@
                 ["sortvis.soundVolume"] = Playback.SoundVolume.ToString(inv),
                 ["sortvis.soundType"] = Playback.SoundType,
                 ["sortvis.autoRecommendedSize"] = _autoSwitchToRecommendedSize ? "true" : "false",
-                ["sortvis.categoryFilter"] = _selectedCategory ?? string.Empty,
                 ["sortvis.debugLog"] = DebugSettings.IsEnabled ? "true" : "false",
                 ["sortvis.scrollOnGenerate"] = RenderSettings.ScrollOnGenerate ? "true" : "false",
             });

@@ -18,12 +18,6 @@ public class AlgorithmRegistry
 
     public IReadOnlyList<AlgorithmMetadata> GetAllAlgorithms() => _algorithms.AsReadOnly();
 
-    public IEnumerable<AlgorithmMetadata> GetByCategory(string category)
-        => _algorithms.Where(a => a.Category == category);
-
-    public IEnumerable<string> GetCategories()
-        => _algorithms.Select(a => a.Category).Distinct().OrderBy(c => c);
-
     private void RegisterAlgorithms()
     {
         // 最大サイズは全て16384、推奨サイズは計算量に応じて設定

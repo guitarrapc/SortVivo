@@ -234,9 +234,6 @@
     [Parameter] public EventCallback OnSpeedSettingsChanged { get; set; }
 
     // ── 内部状態 ──────────────────────────────────────────────────────────────
-    [Parameter] public string SelectedCategory { get; set; } = string.Empty;
-    [Parameter] public EventCallback<string> SelectedCategoryChanged { get; set; }
-
     [Parameter] public bool AutoSwitchToRecommendedSize { get; set; }
     [Parameter] public EventCallback<bool> AutoSwitchToRecommendedSizeChanged { get; set; }
 
@@ -339,9 +336,7 @@
 
     private IEnumerable<IGrouping<string, AlgorithmMetadata>> GetAlgorithmsByCategory()
     {
-        var source = string.IsNullOrEmpty(SelectedCategory)
-            ? AlgorithmRegistry.GetAllAlgorithms()
-            : AlgorithmRegistry.GetByCategory(SelectedCategory);
+        var source = AlgorithmRegistry.GetAllAlgorithms();
 
         var categoryOrder = source
             .Select((a, i) => new { a.Category, i })
