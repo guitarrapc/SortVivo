@@ -137,7 +137,7 @@ window.soundEngine = {
         const gainPerNote = (0.15 * vol) / (expectedOverlap * Math.max(1, frequencies.length));
 
         // poko は固定 140ms ディケイに基づいて独立計算（SpeedMultiplier によらず実効時間は常に 140ms）
-        const gainPerPoko = (0.22 * vol) / (Math.max(1, 0.14 * 60) * Math.max(1, frequencies.length));
+        const gainPerPoko = (0.65 * vol) / (Math.max(1, 0.14 * 60) * Math.max(1, frequencies.length));
 
         for (let i = 0; i < frequencies.length; i++) {
             const freq = frequencies[i];
