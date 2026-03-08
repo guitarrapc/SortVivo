@@ -15,7 +15,7 @@ window.soundEngine = {
     _voiceCount: 32,  // 最大ポリフォニー数（240Hz 表示でも横取りなし: 3音 × ceil(40ms/4ms) = 30）
     _soundType: 'sine',     // 現在のサウンドタイプ: 'sine' | 'poko'
     _pokoVoices: [],        // ポコ用固定ボイスプール: { mainOsc, mainGain, lowpass, clickOsc, clickGain, freeAt }
-    _pokoVoiceCount: 24,    // ポコの最大ポリフォニー数（90ms × 60fps × 3音 ≈ 16 で余裕を持って 24）
+    _pokoVoiceCount: 16,    // ポコの最大ポリフォニー数（60ms × 60fps × 3音 ≈ 11 で余裕を持って 16）
 
     /**
      * サウンドタイプを設定する。'sine'（デフォルト）または 'poko'。
@@ -136,8 +136,8 @@ window.soundEngine = {
         const expectedOverlap = Math.max(1, durationSec * 60);
         const gainPerNote = (0.15 * vol) / (expectedOverlap * Math.max(1, frequencies.length));
 
-        // poko は固定 140ms ディケイに基づいて独立計算（SpeedMultiplier によらず実効時間は常に 140ms）
-        const gainPerPoko = (0.65 * vol) / (Math.max(1, 0.14 * 60) * Math.max(1, frequencies.length));
+        // poko は固定 60ms ディケイに基づいて独立計算（SpeedMultiplier によらず実効時間は常に 60ms）
+        const gainPerPoko = (0.3 * vol) / (Math.max(1, 0.06 * 60) * Math.max(1, frequencies.length));
 
         for (let i = 0; i < frequencies.length; i++) {
             const freq = frequencies[i];
@@ -187,64 +187,40 @@ window.soundEngine = {
 
     /**
      * ポコポコ: 専用ボイスプール（_pokoVoices）を使った完全ゼロアロケーション実装。
-     * - メイン: triangle 波 + lowpass + 控えめピッチドロップ（25ms）で優しい「ぽこっ」感
-     * - クリック: 高調波 sine （10ms）でごく薄いアタック
+     * - triangle 波 + ピッチドロップ（freq*1.25 → freq）で「ぽこっ」感
      * @param {number} now - AudioContext の現在時刻（秒）
      * @param {number} freq - 周波数（Hz）
      * @param {number} gainPerNote - ノートあたりのゲイン
      */
     _pokoSound: function (now, freq, gainPerNote) {
+        const duration = 0.06;
         const voice = this._acquirePokoVoice(now);
         const stealing = voice.freeAt > now;
         const startAt = stealing ? now + 0.002 : now;
 
         // 既存スケジュールをキャンセル
-        voice.mainOsc.frequency.cancelScheduledValues(now);
-        voice.mainGain.gain.cancelScheduledValues(now);
-        voice.lowpass.frequency.cancelScheduledValues(now);
-        voice.clickOsc.frequency.cancelScheduledValues(now);
-        voice.clickGain.gain.cancelScheduledValues(now);
+        voice.osc.frequency.cancelScheduledValues(now);
+        voice.gain.gain.cancelScheduledValues(now);
 
         if (stealing) {
             // スムーズな横取り: 2ms でフェードアウト
-            voice.mainGain.gain.setValueAtTime(voice.mainGain.gain.value, now);
-            voice.mainGain.gain.linearRampToValueAtTime(0.0001, startAt);
-            voice.clickGain.gain.setValueAtTime(voice.clickGain.gain.value, now);
-            voice.clickGain.gain.linearRampToValueAtTime(0.0001, startAt);
+            voice.gain.gain.setValueAtTime(voice.gain.gain.value, now);
+            voice.gain.gain.linearRampToValueAtTime(0.0001, startAt);
         }
 
-        // main
-        // 控えめな「ぽこ」感
-        voice.mainOsc.frequency.setValueAtTime(freq * 1.04, startAt);
-        voice.mainOsc.frequency.exponentialRampToValueAtTime(freq, startAt + 0.025);
+        voice.osc.frequency.setValueAtTime(freq * 1.25, startAt);
+        voice.osc.frequency.exponentialRampToValueAtTime(freq, startAt + duration * 0.8);
 
-        // 高域を強めに抑える（freq * 1.5、最大 1000Hz、Q = 0.8）
-        voice.lowpass.frequency.setValueAtTime(Math.min(freq * 1.5, 1000), startAt);
-        voice.lowpass.Q.setValueAtTime(0.8, startAt);
+        voice.gain.gain.setValueAtTime(0.0001, startAt);
+        voice.gain.gain.exponentialRampToValueAtTime(gainPerNote, startAt + 0.005);
+        voice.gain.gain.exponentialRampToValueAtTime(0.0001, startAt + duration);
 
-        const mainEndTime = startAt + 0.12;
-        voice.mainGain.gain.setValueAtTime(0.0001, startAt);
-        voice.mainGain.gain.linearRampToValueAtTime(gainPerNote * 0.73, startAt + 0.008);
-        voice.mainGain.gain.exponentialRampToValueAtTime(0.0001, mainEndTime);
-        voice.mainGain.gain.setValueAtTime(0.0, mainEndTime);  // 残響カット
-
-        // click
-        voice.clickOsc.frequency.setValueAtTime(freq * 1.5, startAt);
-
-        const clickPeak = gainPerNote * 0.068;
-        const clickEndTime = startAt + 0.010;
-        voice.clickGain.gain.setValueAtTime(0.0001, startAt);
-        voice.clickGain.gain.linearRampToValueAtTime(clickPeak, startAt + 0.002);
-        voice.clickGain.gain.exponentialRampToValueAtTime(0.0001, clickEndTime);
-        voice.clickGain.gain.setValueAtTime(0.0, clickEndTime);  // 残響カット
-
-        voice.freeAt = startAt + 0.13; 
+        voice.freeAt = startAt + duration;
     },
 
     /**
      * ポコ専用ボイスプールを初期化する。
-     * 各ボイス: triangle mainOsc → mainGain → lowpass → output
-     *           sine clickOsc → clickGain → output
+     * 各ボイス: triangle osc → gain → output
      * 全ノードは起動済みで、ゲイン 0.0001 で待機する。
      */
     _setupPokoVoices: function () {
@@ -252,31 +228,17 @@ window.soundEngine = {
         const output = this._output || ctx.destination;
         this._pokoVoices = [];
         for (let i = 0; i < this._pokoVoiceCount; i++) {
-            const mainOsc  = ctx.createOscillator();
-            const mainGain = ctx.createGain();
-            const lowpass  = ctx.createBiquadFilter();
+            const osc  = ctx.createOscillator();
+            const gain = ctx.createGain();
 
-            mainOsc.type = 'triangle';
-            lowpass.type = 'lowpass';
-            lowpass.Q.setValueAtTime(0.7, ctx.currentTime);
-            mainGain.gain.setValueAtTime(0.0001, ctx.currentTime);
+            osc.type = 'triangle';
+            gain.gain.setValueAtTime(0.0001, ctx.currentTime);
 
-            mainOsc.connect(mainGain);
-            mainGain.connect(lowpass);
-            lowpass.connect(output);
-            mainOsc.start();
+            osc.connect(gain);
+            gain.connect(output);
+            osc.start();
 
-            const clickOsc  = ctx.createOscillator();
-            const clickGain = ctx.createGain();
-
-            clickOsc.type = 'sine';
-            clickGain.gain.setValueAtTime(0.0001, ctx.currentTime);
-
-            clickOsc.connect(clickGain);
-            clickGain.connect(output);
-            clickOsc.start();
-
-            this._pokoVoices.push({ mainOsc, mainGain, lowpass, clickOsc, clickGain, freeAt: 0 });
+            this._pokoVoices.push({ osc, gain, freeAt: 0 });
         }
     },
 
@@ -303,8 +265,7 @@ window.soundEngine = {
         }
         this._voices = [];
         for (const v of this._pokoVoices) {
-            try { v.mainOsc.stop(); } catch (e) { /* already stopped */ }
-            try { v.clickOsc.stop(); } catch (e) { /* already stopped */ }
+            try { v.osc.stop(); } catch (e) { /* already stopped */ }
         }
         this._pokoVoices = [];
         if (this._output) {
