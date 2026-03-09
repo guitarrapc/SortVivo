@@ -2,8 +2,9 @@
 @using SortAlgorithm.VisualizationWeb.Services
 @inject IJSRuntime JS
 @inject DebugSettings DebugSettings
+@inject LocalizationService L
 
-<button class="cst-trigger-btn" @onclick="TogglePanel" title="Statistics Comparison">
+<button class="cst-trigger-btn" @onclick="TogglePanel" title="@L["comparisonStats.title"]">
     📊 Stats
 </button>
 
@@ -13,33 +14,33 @@
         <div class="cst-dialog" @onclick:stopPropagation="true">
 
             <div class="cst-dialog-header">
-                <button class="cst-close-btn" @onclick="CloseModal" title="Close">✕</button>
-                <h3 class="cst-dialog-title">📊 Statistics Comparison</h3>
+                <button class="cst-close-btn" @onclick="CloseModal" title="@L["comparisonStats.close"]">✕</button>
+                <h3 class="cst-dialog-title">📊 @L["comparisonStats.title"]</h3>
                 <div class="cst-header-controls">
-                    <span class="cst-sort-label">Sort by</span>
+                    <span class="cst-sort-label">@L["comparisonStats.sortBy"]</span>
                     <select class="cst-sort-select" value="@_sortColumn" @onchange="OnSortChanged">
-                        <option value="ExecTime">Exec Time</option>
-                        <option value="Algorithm">Algorithm</option>
-                        <option value="Compares">Compares</option>
-                        <option value="Swaps">Swaps</option>
-                        <option value="Reads">Reads</option>
-                        <option value="Writes">Writes</option>
+                        <option value="ExecTime">@L["comparisonStats.execTime"]</option>
+                        <option value="Algorithm">@L["comparisonStats.algorithm"]</option>
+                        <option value="Compares">@L["comparisonStats.compares"]</option>
+                        <option value="Swaps">@L["comparisonStats.swaps"]</option>
+                        <option value="Reads">@L["comparisonStats.reads"]</option>
+                        <option value="Writes">@L["comparisonStats.writes"]</option>
                     </select>
                     <div class="cst-copy-dropdown">
-                        <button class="cst-copy-btn" @onclick="ToggleCopyMenu" title="Copy to Clipboard">
-                            📋 Copy
+                        <button class="cst-copy-btn" @onclick="ToggleCopyMenu" title="@L["comparisonStats.copyToClipboard"]">
+                            📋 @L["comparisonStats.copy"]
                         </button>
                         @if (_showCopyMenu)
                         {
                             <div class="cst-copy-menu">
                                 <button class="cst-copy-menu-item" @onclick="() => CopyToClipboard(CopyFormat.Tsv)">
-                                    📋 TSV (Excel)
+                                    📋 @L["comparisonStats.copyTsv"]
                                 </button>
                                 <button class="cst-copy-menu-item" @onclick="() => CopyToClipboard(CopyFormat.Json)">
-                                    📄 JSON
+                                    📄 @L["comparisonStats.copyJson"]
                                 </button>
                                 <button class="cst-copy-menu-item" @onclick="() => CopyToClipboard(CopyFormat.Markdown)">
-                                    📝 Markdown
+                                    📝 @L["comparisonStats.copyMarkdown"]
                                 </button>
                             </div>
                         }
@@ -87,7 +88,7 @@
                         </div>
                         <div class="cst-metrics">
                             <div class="cst-metric-row">
-                                <span class="cst-metric-label">Compares</span>
+                                <span class="cst-metric-label">@L["comparisonStats.compares"]</span>
                                 <div class="cst-bar-track">
                                     <div class="cst-bar-fill @(cmBest ? "cst-bar-fill--best" : "")" style="width: @cmPct%"></div>
                                 </div>
@@ -96,7 +97,7 @@
                                 </span>
                             </div>
                             <div class="cst-metric-row">
-                                <span class="cst-metric-label">Swaps</span>
+                                <span class="cst-metric-label">@L["comparisonStats.swaps"]</span>
                                 <div class="cst-bar-track">
                                     <div class="cst-bar-fill @(swBest ? "cst-bar-fill--best" : "")" style="width: @swPct%"></div>
                                 </div>
@@ -105,7 +106,7 @@
                                 </span>
                             </div>
                             <div class="cst-metric-row">
-                                <span class="cst-metric-label">Reads</span>
+                                <span class="cst-metric-label">@L["comparisonStats.reads"]</span>
                                 <div class="cst-bar-track">
                                     <div class="cst-bar-fill @(rdBest ? "cst-bar-fill--best" : "")" style="width: @rdPct%"></div>
                                 </div>
@@ -114,7 +115,7 @@
                                 </span>
                             </div>
                             <div class="cst-metric-row">
-                                <span class="cst-metric-label">Writes</span>
+                                <span class="cst-metric-label">@L["comparisonStats.writes"]</span>
                                 <div class="cst-bar-track">
                                     <div class="cst-bar-fill @(wrBest ? "cst-bar-fill--best" : "")" style="width: @wrPct%"></div>
                                 </div>

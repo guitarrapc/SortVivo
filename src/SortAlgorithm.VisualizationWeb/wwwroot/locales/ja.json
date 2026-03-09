@@ -613,5 +613,21 @@
       "name": "⚔️ TimSortDrag 最悪ケース",
       "description": "Timsort の最悪ケース"
     }
+  },
+  "comparisonStats": {
+    "title": "統計比較",
+    "sortBy": "並び替え",
+    "execTime": "実行時間",
+    "algorithm": "アルゴリズム",
+    "compares": "比較",
+    "swaps": "交換",
+    "reads": "読み取り",
+    "writes": "書き込み",
+    "copy": "コピー",
+    "copyToClipboard": "クリップボードにコピー",
+    "copyTsv": "TSV (Excel)",
+    "copyJson": "JSON",
+    "copyMarkdown": "Markdown",
+    "close": "閉じる"
   }
 }

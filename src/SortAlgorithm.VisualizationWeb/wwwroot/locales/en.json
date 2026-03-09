@@ -333,5 +333,21 @@
     "stoogeSort": {
       "tutorial": "How it works: Checks and corrects the first and last elements, then recursively sorts the first two-thirds of the array, then the last two-thirds, then the first two-thirds again — three overlapping recursive passes at every level.\n\nKey property: The triple-recursive structure on overlapping two-thirds regions is correct but wildly wasteful: T(n) = 3T(2n/3) solves to O(n^2.71), worse than any practical sorting algorithm and introduced in CLRS as a cautionary example of correctness without efficiency.\n\nWatch for:\n- Compare: the first action at each level checks only the first and last elements of the current range; all other ordering is delegated to the recursive calls\n- Swap: fires only when the first element is greater than the last; the three recursive calls then handle everything else\n- End of phase: observe the three-pass pattern — first-two-thirds, last-two-thirds, first-two-thirds — repeating recursively on shrinking sub-arrays"
     }
+  },
+  "comparisonStats": {
+    "title": "Statistics Comparison",
+    "sortBy": "Sort by",
+    "execTime": "Exec Time",
+    "algorithm": "Algorithm",
+    "compares": "Compares",
+    "swaps": "Swaps",
+    "reads": "Reads",
+    "writes": "Writes",
+    "copy": "Copy",
+    "copyToClipboard": "Copy to Clipboard",
+    "copyTsv": "TSV (Excel)",
+    "copyJson": "JSON",
+    "copyMarkdown": "Markdown",
+    "close": "Close"
   }
 }
