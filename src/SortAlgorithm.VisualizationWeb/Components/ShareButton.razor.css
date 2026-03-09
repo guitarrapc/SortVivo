@@ -1,0 +1,64 @@
+.share-button-container {
+    position: relative;
+    display: inline-block;
+}
+
+.share-popover {
+    position: absolute;
+    top: calc(100% + 8px);
+    right: 0;
+    background: rgba(0, 0, 0, 0.95);
+    border: 1px solid var(--sortviz-gold, #c8aa6e);
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+    min-width: 200px;
+    padding: 8px;
+    z-index: 1000;
+    animation: fadeIn 200ms ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-8px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.share-option {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    width: 100%;
+    padding: 10px 12px;
+    background: transparent;
+    border: none;
+    border-radius: 4px;
+    color: #fff;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background-color 150ms ease;
+    text-align: left;
+}
+
+.share-option:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.share-option:focus-visible {
+    outline: 2px solid var(--sortviz-gold, #c8aa6e);
+    outline-offset: 2px;
+}
+
+.share-option__icon {
+    font-size: 18px;
+    width: 24px;
+    text-align: center;
+}
+
+.share-option__label {
+    flex: 1;
+}

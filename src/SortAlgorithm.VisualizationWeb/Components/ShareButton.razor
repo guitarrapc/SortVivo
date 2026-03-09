@@ -1,0 +1,155 @@
+@using Microsoft.JSInterop
+@inject IJSRuntime JS
+@inject NavigationManager NavigationManager
+@inject LocalizationService L
+@implements IDisposable
+
+<div class="share-button-container" id="share-button-container">
+    <button class="header__icon-btn" @onclick="TogglePopover" title="@L["share.button"]" aria-label="@L["share.button"]">
+        <svg fill="currentColor" viewBox="0 0 24 24" height="24px" width="24px" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16 5.63636L14.58 6.92727L12.99 5.48182V15.6364H11.01V5.48182L9.42 6.92727L8 5.63636L12 2L16 5.63636ZM20 10.1818V20.1818C20 21.1818 19.1 22 18 22H6C4.89 22 4 21.1818 4 20.1818V10.1818C4 9.17273 4.89 8.36364 6 8.36364H9V10.1818H6V20.1818H18V10.1818H15V8.36364H18C19.1 8.36364 20 9.17273 20 10.1818Z" fill="currentColor"></path>
+        </svg>
+    </button>
+
+    @if (_isOpen)
+    {
+        <div class="share-popover" role="menu">
+            <button class="share-option" role="menuitem" @onclick="CopyLink" tabindex="0">
+                <span class="share-option__icon">📋</span>
+                <span class="share-option__label">@L["share.copyLink"]</span>
+            </button>
+            <button class="share-option" role="menuitem" @onclick="ShareToX" tabindex="0">
+                <span class="share-option__icon">𝕏</span>
+                <span class="share-option__label">@L["share.shareToX"]</span>
+            </button>
+            <button class="share-option" role="menuitem" @onclick="ShareToThreads" tabindex="0">
+                <span class="share-option__icon">🔗</span>
+                <span class="share-option__label">@L["share.shareToThreads"]</span>
+            </button>
+        </div>
+    }
+</div>
+
+@code {
+    private bool _isOpen = false;
+    private DotNetObjectReference<ShareButton>? _dotNetRef;
+
+    protected override void OnInitialized()
+    {
+        _dotNetRef = DotNetObjectReference.Create(this);
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender && _dotNetRef != null)
+        {
+            await JS.InvokeVoidAsync("popoverHelper.register", "share-button-container", _dotNetRef);
+        }
+    }
+
+    private void TogglePopover()
+    {
+        _isOpen = !_isOpen;
+    }
+
+    [JSInvokable]
+    public void OnClickOutside()
+    {
+        if (_isOpen)
+        {
+            _isOpen = false;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    [JSInvokable]
+    public void OnEscapeKey()
+    {
+        if (_isOpen)
+        {
+            _isOpen = false;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private async Task CopyLink()
+    {
+        try
+        {
+            var url = NavigationManager.Uri;
+            var success = await JS.InvokeAsync<bool>("shareHelper.copyToClipboard", url);
+            
+            if (success)
+            {
+                // TODO: Show toast notification
+                Console.WriteLine(L["share.copySuccess"]);
+            }
+            else
+            {
+                Console.WriteLine(L["share.copyFailed"]);
+            }
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Copy failed: {ex.Message}");
+        }
+        finally
+        {
+            _isOpen = false;
+        }
+    }
+
+    private async Task ShareToX()
+    {
+        try
+        {
+            var url = NavigationManager.Uri;
+            var text = L["share.defaultText"];
+            var shareUrl = $"https://x.com/intent/tweet?text={Uri.EscapeDataString(text)}&url={Uri.EscapeDataString(url)}";
+            
+            await JS.InvokeVoidAsync("shareHelper.openShareWindow", shareUrl, "Share to X", 600, 400);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Share to X failed: {ex.Message}");
+        }
+        finally
+        {
+            _isOpen = false;
+        }
+    }
+
+    private async Task ShareToThreads()
+    {
+        try
+        {
+            var url = NavigationManager.Uri;
+            var text = L["share.defaultText"];
+            var combinedText = $"{text} {url}";
+            var shareUrl = $"https://threads.net/intent/post?text={Uri.EscapeDataString(combinedText)}";
+            
+            await JS.InvokeVoidAsync("shareHelper.openShareWindow", shareUrl, "Share to Threads", 600, 700);
+        }
+        catch (Exception ex)
+        {
+            Console.Error.WriteLine($"Share to Threads failed: {ex.Message}");
+        }
+        finally
+        {
+            _isOpen = false;
+        }
+    }
+
+    public void Dispose()
+    {
+        if (_dotNetRef != null)
+        {
+            try
+            {
+                JS.InvokeVoidAsync("popoverHelper.unregister", "share-button-container");
+            }
+            catch { /* Ignore disposal errors */ }
+            _dotNetRef.Dispose();
+        }
+    }
+}

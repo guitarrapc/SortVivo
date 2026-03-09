@@ -349,5 +349,14 @@
     "copyJson": "JSON",
     "copyMarkdown": "Markdown",
     "close": "Close"
+  },
+  "share": {
+    "button": "Share",
+    "copyLink": "Copy Link",
+    "copySuccess": "Link copied!",
+    "copyFailed": "Failed to copy link",
+    "shareToX": "X",
+    "shareToThreads": "Threads",
+    "defaultText": "Visualizing sorting algorithms with SortViz!"
   }
 }
