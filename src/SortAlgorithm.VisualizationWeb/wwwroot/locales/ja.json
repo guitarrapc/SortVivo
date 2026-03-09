@@ -643,6 +643,7 @@
     "copyFailed": "リンクのコピーに失敗しました",
     "shareToX": "X",
     "shareToThreads": "Threads",
+    "shareToReddit": "Reddit",
     "defaultText": "SortVizでソートアルゴリズムを可視化！"
   }
 }

@@ -357,6 +357,7 @@
     "copyFailed": "Failed to copy link",
     "shareToX": "X",
     "shareToThreads": "Threads",
+    "shareToReddit": "Reddit",
     "defaultText": "Visualizing sorting algorithms with SortViz!"
   }
 }
