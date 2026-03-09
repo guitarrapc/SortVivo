@@ -4,25 +4,30 @@
     <File Path="Directory.Packages.props" />
   </Folder>
   <Folder Name="/docs/">
-    <File Path="Docs/BlockQuickSort_DuplicateCheck.md" />
-    <File Path="Docs/PDQSort_Go_Implementation_Guide.md" />
-    <File Path="Docs/PDQSort_Implementation_Comparison.md" />
-    <File Path="Docs/SortArchitecture.md" />
-    <File Path="Docs/SortArchitecture_Release_ButStatistics.md" />
-    <File Path="Docs/TODO.md" />
-    <File Path="Docs/VisualizationWeb.md" />
-    <File Path="Docs/VisualizationWeb_ComparisonMode_Implementation_Status.md" />
-    <File Path="Docs/VisualizationWeb_ComparisonMode_Performance.md" />
-    <File Path="Docs/VisualizationWeb_ExecutionTimeVisualization.md" />
-    <File Path="Docs/VisualizationWeb_Implementation_Status.md" />
-    <File Path="Docs/VisualizationWeb_LoadingState_Spec.md" />
-    <File Path="Docs/VisualizationWeb_PerformanceAccuracy.md" />
-    <File Path="Docs/VisualizationWeb_Performance_Analysis.md" />
-    <File Path="Docs/VisualizationWeb_PictureRow_Bug_Analysis.md" />
-    <File Path="Docs/VisualizationWeb_Rendering_Performance_Improvement.md" />
-    <File Path="Docs/VisualizationWeb_Sound_Spec.md" />
-    <File Path="Docs/VisualizationWeb_tutorial.md" />
-    <File Path="Docs/VisualizationWeb_UIUX_Spec.md" />
+    <File Path="Docs/SortArchitecture_architecture.md" />
+    <File Path="Docs/VisualizationWeb_architecture.md" />
+  </Folder>
+  <Folder Name="/docs/Sorts/">
+    <File Path="Docs/Sorts/BlockQuickSort_DuplicateCheck.md" />
+    <File Path="Docs/Sorts/PDQSort_Go_Implementation_Guide.md" />
+    <File Path="Docs/Sorts/PDQSort_Implementation_Comparison.md" />
+    <File Path="Docs/Sorts/SortArchitecture_Release_ButStatistics.md" />
+  </Folder>
+  <Folder Name="/docs/VisualizationWeb/">
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_ComparisonMode_Implementation_Status.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_ComparisonMode_Performance.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_ExecutionTimeVisualization.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_Implementation_Status.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_LoadingState_Spec.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_Localization_Spec.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_PerformanceAccuracy.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_Performance_Analysis.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_PictureRow_Bug_Analysis.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_Rendering_Performance_Improvement.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_Sound_Spec.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_tutorial.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_tutorial_additional_visualizations.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_UIUX_Spec.md" />
   </Folder>
   <Folder Name="/sandbox/">
     <Project Path="sandbox/AntiQuickSortDemo/AntiQuickSortDemo.csproj" />
