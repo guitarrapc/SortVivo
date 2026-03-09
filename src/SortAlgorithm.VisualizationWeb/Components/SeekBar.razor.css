@@ -46,10 +46,22 @@
     white-space: nowrap;
 }
 
+.time-display--compact {
+    display: none;
+}
+
 /* ─── スマホ ──────────────────────────────────────────────────────────── */
 @media (max-width: 767px) {
     .seek-bar {
         padding: 6px 8px;
+    }
+
+    .time-display--full {
+        display: none;
+    }
+
+    .time-display--compact {
+        display: inline;
     }
 }
 
