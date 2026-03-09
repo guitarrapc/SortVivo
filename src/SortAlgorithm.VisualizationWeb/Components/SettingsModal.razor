@@ -2,6 +2,7 @@
 @using SortAlgorithm.VisualizationWeb.Services
 @inject AlgorithmRegistry AlgorithmRegistry
 @inject IJSRuntime JS
+@inject LocalizationService L
 
 @if (IsOpen || _isClosing)
 {
@@ -13,8 +14,8 @@
 
         @* ── ヘッダー ── *@
         <div class="settings-modal__header">
-            <span class="settings-modal__title">Settings</span>
-            <button class="settings-modal__close" @onclick="HandleClose" title="Close">✕</button>
+            <span class="settings-modal__title">@L["settings.title"]</span>
+            <button class="settings-modal__close" @onclick="HandleClose" title="@L["common.close"]">✕</button>
         </div>
 
         @* ── スクロール可能なボディ ── *@
@@ -24,22 +25,22 @@
                🎨 Rendering
                ──────────────────────────────────── *@
             <section class="settings-section">
-                <h3 class="settings-section__title">🎨 Rendering</h3>
+                <h3 class="settings-section__title">@L["settings.rendering"]</h3>
                 <div class="settings-section__body">
 
                     <div class="settings-row settings-row--vertical">
-                        <span class="settings-label">Renderer</span>
+                        <span class="settings-label">@L["settings.renderer"]</span>
                         <div class="settings-segment">
                             <button class="settings-segment__btn @(!RenderSettings.UseWebGL ? "settings-segment__btn--active" : "")"
                                     @onclick="() => RenderSettings.UseWebGL = false">
-                                Canvas 2D
+                                @L["settings.canvas2d"]
                             </button>
                             <button class="settings-segment__btn @(RenderSettings.UseWebGL ? "settings-segment__btn--active" : "")"
                                     @onclick="() => RenderSettings.UseWebGL = true">
-                                WebGL
+                                @L["settings.webgl"]
                             </button>
                         </div>
-                        <span class="settings-hint">WebGL is faster but may have compatibility issues.</span>
+                        <span class="settings-hint">@L["settings.webglHint"]</span>
                     </div>
 
                 </div>
@@ -49,11 +50,11 @@
                ▶ Playback
                ──────────────────────────────────── *@
             <section class="settings-section">
-                <h3 class="settings-section__title">▶ Playback</h3>
+                <h3 class="settings-section__title">@L["settings.playback"]</h3>
                 <div class="settings-section__body">
 
                     <div class="settings-row">
-                        <span class="settings-label">Auto Reset on Complete</span>
+                        <span class="settings-label">@L["settings.autoReset"]</span>
                         <label class="toggle-switch">
                             <input type="checkbox" @bind="Playback.AutoReset" />
                             <span class="toggle-slider"></span>
@@ -61,7 +62,7 @@
                     </div>
 
                     <div class="settings-row">
-                        <span class="settings-label">Instant Mode <span class="settings-hint-inline">(No Animation)</span></span>
+                        <span class="settings-label">@L["settings.instantMode"] <span class="settings-hint-inline">@L["settings.noAnimation"]</span></span>
                         <label class="toggle-switch">
                             <input type="checkbox" @bind="Playback.InstantMode" />
                             <span class="toggle-slider"></span>
@@ -75,12 +76,12 @@
                🔊 Sound
                ──────────────────────────────────── *@
             <section class="settings-section">
-                <h3 class="settings-section__title">🔊 Sound</h3>
+                <h3 class="settings-section__title">@L["settings.sound"]</h3>
                 <div class="settings-section__body">
 
                     <div class="settings-row settings-row--vertical">
                         <div class="settings-row__inline">
-                            <span class="settings-label">Volume</span>
+                            <span class="settings-label">@L["settings.volume"]</span>
                             <span class="settings-value">@((int)(Playback.SoundVolume * 100))%</span>
                         </div>
                         <input type="range" min="0" max="1" step="0.05"
@@ -92,22 +93,46 @@
                     </div>
 
                     <div class="settings-row settings-row--vertical">
-                        <span class="settings-label">Sound Type</span>
+                        <span class="settings-label">@L["settings.soundType"]</span>
                         <div class="settings-segment">
                             <button class="settings-segment__btn @(Playback.SoundType == "sine" ? "settings-segment__btn--active" : "")"
                                     @onclick='() => HandleSoundTypeChanged("sine")'>
-                                Sine
+                                @L["settings.soundTypeSine"]
                             </button>
                             <button class="settings-segment__btn @(Playback.SoundType == "poko" ? "settings-segment__btn--active" : "")"
                                     @onclick='() => HandleSoundTypeChanged("poko")'>
-                                Poko
+                                @L["settings.soundTypePoko"]
                             </button>
                             <button class="settings-segment__btn @(Playback.SoundType == "cutePop" ? "settings-segment__btn--active" : "")"
                                     @onclick='() => HandleSoundTypeChanged("cutePop")'>
-                                CutePop
+                                @L["settings.soundTypeCutePop"]
                             </button>
                         </div>
-                        <span class="settings-hint">Poko is a soft, round sound with a gentle pitch drop.</span>
+                        <span class="settings-hint">@L["settings.soundTypePokoHint"]</span>
+                    </div>
+
+                </div>
+            </section>
+
+            @* ────────────────────────────────────
+               🌐 Language
+               ──────────────────────────────────── *@
+            <section class="settings-section">
+                <h3 class="settings-section__title">@L["settings.language"]</h3>
+                <div class="settings-section__body">
+
+                    <div class="settings-row settings-row--vertical">
+                        <span class="settings-label">@L["settings.languageHint"]</span>
+                        <div class="settings-segment">
+                            @foreach (var lang in LocalizationService.SupportedLanguages)
+                            {
+                                var captured = lang;
+                                <button class="settings-segment__btn @(L.CurrentLanguage == lang ? "settings-segment__btn--active" : "")"
+                                        @onclick="() => ChangeLanguageAsync(captured)">
+                                    @LocalizationService.GetDisplayName(lang)
+                                </button>
+                            }
+                        </div>
                     </div>
 
                 </div>
@@ -117,11 +142,11 @@
                🔧 Advanced
                ──────────────────────────────────── *@
             <section class="settings-section">
-                <h3 class="settings-section__title">🔧 Advanced</h3>
+                <h3 class="settings-section__title">@L["settings.advanced"]</h3>
                 <div class="settings-section__body">
 
                     <div class="settings-row">
-                        <span class="settings-label">Scroll to Sort Panel after Add &amp; Generate <span class="settings-hint-inline">(Tablet / Mobile)</span></span>
+                        <span class="settings-label">@L["settings.scrollOnGenerate"] <span class="settings-hint-inline">@L["settings.tabletMobile"]</span></span>
                         <label class="toggle-switch">
                             <input type="checkbox" @bind="RenderSettings.ScrollOnGenerate" />
                             <span class="toggle-slider"></span>
@@ -129,7 +154,7 @@
                     </div>
 
                     <div class="settings-row">
-                        <span class="settings-label">Auto Switch to Recommended Size</span>
+                        <span class="settings-label">@L["settings.autoRecommendedSize"]</span>
                         <label class="toggle-switch">
                             <input type="checkbox"
                                    checked="@AutoSwitchToRecommendedSize"
@@ -139,7 +164,7 @@
                     </div>
 
                     <div class="settings-row">
-                        <span class="settings-label">🐛 Debug Log</span>
+                        <span class="settings-label">@L["settings.debugLog"]</span>
                         <label class="toggle-switch">
                             <input type="checkbox"
                                    @bind="DebugSettings.IsEnabled"
@@ -155,38 +180,36 @@
                ℹ️ About
                ──────────────────────────────────── *@
             <section class="settings-section">
-                <h3 class="settings-section__title">ℹ️ About</h3>
+                <h3 class="settings-section__title">@L["settings.about"]</h3>
                 <div class="settings-section__body">
 
                     <div class="about-content">
                         <div class="about-item">
-                            <h4 class="about-item__title">🌐 100% Browser-Based</h4>
+                            <h4 class="about-item__title">@L["settings.aboutBrowserBased"]</h4>
                             <p class="about-item__text">
-                                All sorting runs locally in your browser using WebAssembly.
-                                No server communication after initial load, works offline.
+                                @L["settings.aboutBrowserBasedText"]
                             </p>
                         </div>
 
                         <div class="about-item">
-                            <h4 class="about-item__title">🔒 Privacy First</h4>
+                            <h4 class="about-item__title">@L["settings.aboutPrivacy"]</h4>
                             <p class="about-item__text">
-                                Your data never leaves your device. Picture sorting processes images entirely in the browser.
-                                No uploads, no tracking, no external requests.
+                                @L["settings.aboutPrivacyText"]
                             </p>
                         </div>
 
                         <div class="about-item">
-                            <h4 class="about-item__title">⚡ Built With C#</h4>
+                            <h4 class="about-item__title">@L["settings.aboutBuiltWith"]</h4>
                             <p class="about-item__text">
-                                Blazor WebAssembly, .NET 10, Canvas 2D / WebGL, AOT
+                                @L["settings.aboutBuiltWithText"]
                             </p>
                         </div>
 
                         <div class="about-item">
-                            <h4 class="about-item__title">📖 Open Source</h4>
+                            <h4 class="about-item__title">@L["settings.aboutOpenSource"]</h4>
                             <p class="about-item__text">
                                 <a href="https://github.com/guitarrapc/SortAlgorithms" target="_blank" rel="noopener noreferrer" class="about-link">
-                                    View on GitHub
+                                    @L["settings.aboutViewOnGitHub"]
                                 </a>
                             </p>
                         </div>
@@ -220,6 +243,11 @@
         await Task.Delay(200);
         _isClosing = false;
         await OnClose.InvokeAsync();
+    }
+
+    private async Task ChangeLanguageAsync(string lang)
+    {
+        await L.SetLanguageAsync(lang, JS);
     }
 
     private async Task HandleDebugToggleChanged()

@@ -1,12 +1,13 @@
 @using SortAlgorithm.VisualizationWeb.Models
 @using SortAlgorithm.VisualizationWeb.Services
+@inject LocalizationService L
 
 <div class="play-control-bar">
     <div class="play-control-buttons">
         <button class="play-control-btn @(IsPlaying ? "btn-pause" : "btn-play")"
                 @onclick="OnTogglePlayPause"
                 disabled="@PlayDisabled"
-                title="@(IsPlaying ? "Pause" : "Play")">
+                title="@(IsPlaying ? L["playback.pause"] : L["playback.play"])">
             @if (IsPlaying)
             {
                 <svg viewBox="0 0 24 24" fill="currentColor">
@@ -25,7 +26,7 @@
         <button class="play-control-btn btn-stop"
                 @onclick="OnStop"
                 disabled="@StopDisabled"
-                title="Stop">
+                title="@L["playback.stop"]">
             <svg viewBox="0 0 24 24" fill="currentColor">
                 <rect x="5" y="5" width="14" height="14"></rect>
             </svg>
@@ -34,7 +35,7 @@
         <button class="play-control-btn btn-clear"
                 @onclick="OnClearAll"
                 disabled="@ClearAllDisabled"
-                title="Clear All">
+                title="@L["playback.clearAll"]">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                 <polyline points="3 6 5 6 21 6"></polyline>
                 <path d="M19 6l-1 14H6L5 6"></path>
@@ -47,7 +48,7 @@
         <button class="play-control-btn @(SoundEnabled ? "btn-sound-on" : "btn-sound-off")"
                 @onclick="OnToggleSound"
                 disabled="@SoundDisabled"
-                title="@(SoundDisabled ? "Sound not available in Comparison Mode" : SoundEnabled ? "Sound ON" : "Sound OFF")">
+                title="@(SoundDisabled ? L["playback.soundNotAvailable"] : SoundEnabled ? L["playback.soundOn"] : L["playback.soundOff"])">
             @if (SoundEnabled)
             {
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">

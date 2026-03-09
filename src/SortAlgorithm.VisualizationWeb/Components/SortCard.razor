@@ -1,6 +1,7 @@
 @using SortAlgorithm.VisualizationWeb.Models
 @using SortAlgorithm.VisualizationWeb.Services
 @inject AlgorithmRegistry AlgorithmRegistry
+@inject LocalizationService L
 @implements IDisposable
 
 <div class="sort-card @(State.IsSortCompleted ? "sort-card--completed" : "")">
@@ -31,7 +32,7 @@
             {
                 <button class="btn-remove-grid"
                         @onclick="HandleRemove"
-                        title="Remove">
+                        title="@L["common.remove"]">
                     ✖
                 </button>
             }
@@ -44,7 +45,7 @@
         {
             <div class="sort-card__empty">
                 <p class="sort-card__empty-icon">@ModeIcon</p>
-                <p>Click "Add &amp; Generate" to start visualization</p>
+                <p>@L["sortCard.clickToStart"]</p>
             </div>
         }
         else if (VisualizationMode == VisualizationMode.BarChart)

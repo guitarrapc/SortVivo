@@ -17,5 +17,10 @@ window.stateStorage = {
         for (const [key, value] of Object.entries(entries)) {
             localStorage.setItem(key, String(value));
         }
+    },
+
+    /** ブラウザの言語設定を取得する */
+    getBrowserLanguage: () => {
+        return navigator.language || 'en';
     }
 };

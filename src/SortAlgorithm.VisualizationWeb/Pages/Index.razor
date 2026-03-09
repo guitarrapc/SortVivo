@@ -13,6 +13,7 @@
 @inject NavigationManager NavigationManager
 @inject NavigationStateService NavigationState
 @inject IJSRuntime JS
+@inject LocalizationService L
 @implements IDisposable
 
 <PageTitle>SortViz</PageTitle>
@@ -22,14 +23,14 @@
         <div class="header__left"></div>
         <h1 class="header__title">SORTVIZ</h1>
         <div class="header__actions">
-            <button class="header__icon-btn" @onclick='() => NavigationManager.NavigateTo($"tutorial/{Uri.EscapeDataString(SelectedAlgorithm)}")' title="Tutorial">
+            <button class="header__icon-btn" @onclick='() => NavigationManager.NavigateTo($"tutorial/{Uri.EscapeDataString(SelectedAlgorithm)}")' title="@L["nav.tutorial"]">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="12" cy="12" r="10"></circle>
                     <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
                     <line x1="12" y1="17" x2="12.01" y2="17"></line>
                 </svg>
             </button>
-            <button class="header__icon-btn" @onclick="() => _settingsOpen = true" title="Settings">
+            <button class="header__icon-btn" @onclick="() => _settingsOpen = true" title="@L["settings.title"]">
                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
                     <path d="m370-80-16-128q-13-5-24.5-12T307-235l-119 50L78-375l103-78q-1-7-1-13.5v-27q0-6.5 1-13.5L78-585l110-190 119 50q11-8 23-15t24-12l16-128h220l16 128q13 5 24.5 12t22.5 15l119-50 110 190-103 78q1 7 1 13.5v27q0 6.5-2 13.5l103 78-110 190-118-50q-11 8-23 15t-24 12L590-80H370Zm70-80h79l14-106q31-8 57.5-23.5T639-327l99 41 39-68-86-65q5-14 7-29.5t2-31.5q0-16-2-31.5t-7-29.5l86-65-39-68-99 42q-22-23-48.5-38.5T533-694l-13-106h-79l-14 106q-31 8-57.5 23.5T321-633l-99-41-39 68 86 64q-5 15-7 30t-2 32q0 16 2 31t7 30l-86 65 39 68 99-42q22 23 48.5 38.5T427-266l13 106Zm42-180q58 0 99-41t41-99q0-58-41-99t-99-41q-59 0-99.5 41T342-480q0 58 40.5 99t99.5 41Zm-2-140Z" />
                 </svg>
@@ -185,13 +186,13 @@
         {
             // ComparisonModeServiceでアルゴリズム追加中の場合
             if (ComparisonMode.IsAddingAlgorithm && !string.IsNullOrEmpty(ComparisonMode.State.ProcessingAlgorithmName))
-                return $"⏳ Processing: {ComparisonMode.State.ProcessingAlgorithmName}...";
+                return L["index.processingAlgo", ComparisonMode.State.ProcessingAlgorithmName];
 
             // その他のローディング状態
             return _loadingState switch
             {
-                LoadingState.AddingAlgorithm => "⏳ Processing...",
-                LoadingState.LoadingImage => "⏳ Loading image...",
+                LoadingState.AddingAlgorithm => L["common.processing"],
+                LoadingState.LoadingImage => L["index.loadingImage"],
                 _ => "",
             };
         }
@@ -628,9 +629,9 @@
     private string? GetComparisonStatusText()
     {
         if (!ComparisonMode.State.Instances.Any()) return null;
-        if (ComparisonMode.State.AllCompleted) return "✅ All Completed!";
+        if (ComparisonMode.State.AllCompleted) return L["index.allCompleted"];
         var completedCount = ComparisonMode.State.Instances.Count(x => x.State.IsSortCompleted);
-        return $"{completedCount}/{ComparisonMode.State.Instances.Count} completed";
+        return L["index.completedCount", completedCount, ComparisonMode.State.Instances.Count];
     }
 
     private int GetArraySize()
@@ -690,4 +691,3 @@
         ComparisonMode.OnStateChanged -= OnStateChanged;
     }
 }
-

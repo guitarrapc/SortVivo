@@ -825,6 +825,7 @@ public class AlgorithmRegistry
             RecommendedSize = recommendedSize,
             SortAction = sortAction,
             Description = description,
+            AlgorithmId = ToId(name),
             TutorialDescription = tutorialDescription,
             TutorialArrayType = tutorialArrayType,
             ExcludeFromTutorial = excludeFromTutorial,
@@ -832,5 +833,17 @@ public class AlgorithmRegistry
             TutorialLsdRadix = tutorialLsdRadix,
             GitHubSourceUrl = gitHubSourceUrl,
         });
+    }
+
+    private static string ToId(string name)
+    {
+        var parts = System.Text.RegularExpressions.Regex.Split(name, @"[^a-zA-Z0-9]+")
+            .Where(p => !string.IsNullOrEmpty(p))
+            .ToArray();
+        if (parts.Length == 0) return string.Empty;
+        return string.Concat(
+            char.ToLowerInvariant(parts[0][0]) + (parts[0].Length > 1 ? parts[0][1..] : ""),
+            parts.Skip(1).Select(p => char.ToUpperInvariant(p[0]) + (p.Length > 1 ? p[1..] : ""))
+        );
     }
 }

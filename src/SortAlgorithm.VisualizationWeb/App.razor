@@ -1,5 +1,6 @@
 @namespace SortAlgorithm.VisualizationWeb
 @inject IJSRuntime JS
+@inject SortAlgorithm.VisualizationWeb.Services.LocalizationService L
 
 <Router AppAssembly="@typeof(Program).Assembly">
     <Found Context="routeData">
@@ -19,7 +20,9 @@
     {
         if (firstRender)
         {
+            await L.InitializeAsync(JS);
             await JS.InvokeVoidAsync("loadingHelper.fadeOutLoadingScreen");
+            StateHasChanged();
         }
     }
 }

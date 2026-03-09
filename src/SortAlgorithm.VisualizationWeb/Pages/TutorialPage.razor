@@ -8,17 +8,18 @@
 @inject NavigationManager Navigation
 @inject NavigationStateService NavigationState
 @inject IJSRuntime JS
+@inject LocalizationService L
 @implements IDisposable
 
-<PageTitle>Tutorial</PageTitle>
+<PageTitle>@L["tutorial.title"]</PageTitle>
 
 <div class="tutorial-page" @onkeydown="OnKeyDown" tabindex="0" @ref="_containerRef">
 
     <div class="header">
         <div class="header__left"></div>
-        <h1 class="tutorial__title">TUTORIAL</h1>
+        <h1 class="tutorial__title">@L["tutorial.title"]</h1>
         <div class="header__actions">
-            <button class="tutorial-close-btn" @onclick="NavigateToHome" title="Close">✕</button>
+            <button class="tutorial-close-btn" @onclick="NavigateToHome" title="@L["common.close"]">✕</button>
         </div>
     </div>
 
@@ -29,9 +30,9 @@
 
             @* ── Sort Target ── *@
             <div class="ui-card">
-                <span class="ui-card__title">Sort Target</span>
+                <span class="ui-card__title">@L["tutorial.sortTarget"]</span>
                 <div class="qap__item">
-                    <span class="stat-label">Algorithm</span>
+                    <span class="stat-label">@L["tutorial.algorithm"]</span>
                     <select value="@(_selectedAlgorithm?.Name ?? "")"
                             @onchange="OnAlgorithmChanged">
                         @foreach (var category in GetTutorialCategories())
@@ -49,11 +50,11 @@
 
             @* ── Speed ── *@
             <div class="ui-card">
-                <span class="ui-card__title">Speed</span>
+                <span class="ui-card__title">@L["tutorial.speed"]</span>
                 <div class="qap__item qap__item--vertical">
                     <div class="qap__slider-header">
                         <span class="stat-value qap__slider-value">@GetSpeedLabel()</span>
-                        <span class="stat-label">(@(_autoPlaySpeedMs) ms)</span>
+                        <span class="stat-label">@L["tutorial.speedMs", _autoPlaySpeedMs]</span>
                     </div>
                     <input type="range" min="0" max="4" step="1"
                            value="@_speedIndex"
@@ -75,18 +76,18 @@
         @* ─── 再生コントロールバー ──────────────────────────────────────── *@
         <div class="tutorial-play-control-bar">
             <div class="ctrl-buttons">
-                <button class="ctrl-btn" title="First (Home)" @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">
+                <button class="ctrl-btn" title="@L["tutorial.firstHome"]" @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <rect x="4" y="4" width="2" height="16" rx="1"></rect>
                         <polygon points="19 4 7 12 19 20 19 4"></polygon>
                     </svg>
                 </button>
-                <button class="ctrl-btn" title="Previous (←)" @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">
+                <button class="ctrl-btn" title="@L["tutorial.previousLeft"]" @onclick="GoToPrevious" disabled="@(noSteps || _currentStepIndex <= -1)">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <polygon points="19 4 5 12 19 20 19 4"></polygon>
                     </svg>
                 </button>
-                <button class="ctrl-btn ctrl-play" title="@(_isAutoPlaying ? "Pause (Space)" : "Play (Space)")" @onclick="ToggleAutoPlay" disabled="@noSteps">
+                <button class="ctrl-btn ctrl-play" title="@(L[_isAutoPlaying ? "playback.pause" : "playback.play"]) (Space)" @onclick="ToggleAutoPlay" disabled="@noSteps">
                     @if (_isAutoPlaying)
                     {
                         <svg viewBox="0 0 24 24" fill="currentColor">
@@ -101,19 +102,19 @@
                         </svg>
                     }
                 </button>
-                <button class="ctrl-btn" title="Next (→)" @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">
+                <button class="ctrl-btn" title="@L["tutorial.nextRight"]" @onclick="GoToNext" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <polygon points="5 4 19 12 5 20 5 4"></polygon>
                     </svg>
                 </button>
-                <button class="ctrl-btn" title="Last (End)" @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">
+                <button class="ctrl-btn" title="@L["tutorial.lastEnd"]" @onclick="GoToLast" disabled="@(noSteps || _currentStepIndex >= _steps.Count - 1)">
                     <svg viewBox="0 0 24 24" fill="currentColor">
                         <polygon points="5 4 17 12 5 20 5 4"></polygon>
                         <rect x="18" y="4" width="2" height="16" rx="1"></rect>
                     </svg>
                 </button>
             </div>
-            <span class="tutorial-keyboard-hint">← → Space · Home · End</span>
+            <span class="tutorial-keyboard-hint">@L["tutorial.keyboardHints"]</span>
         </div>
 
 
@@ -122,15 +123,15 @@
         @if (_isLoading)
         {
             <div class="tutorial-loading">
-                <span class="loading-spinner">⏳</span> Computing...
+                <span class="loading-spinner">⏳</span> @L["tutorial.computing"]
             </div>
         }
         else if (_selectedAlgorithm == null)
         {
             <div class="tutorial-empty">
                 <div class="empty-icon">🎓</div>
-                <div class="empty-text">Select an algorithm from the panel on the left.</div>
-                <div class="empty-hint">Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.</div>
+                <div class="empty-text">@L["tutorial.selectAlgorithm"]</div>
+                <div class="empty-hint">@L["tutorial.selectAlgorithmHint"]</div>
             </div>
         }
         else
@@ -140,7 +141,7 @@
                 <div class="tdp-header">
                     <div class="tdp-header__left">
                         <div class="desc-name">@_selectedAlgorithm.Name</div>
-                        <a href="@GetTryThisAlgorithmUrl()" class="tutorial-try-btn">▶ Try this</a>
+                        <a href="@GetTryThisAlgorithmUrl()" class="tutorial-try-btn">@L["tutorial.tryThis"]</a>
                         <div class="desc-meta">
                             @if (!string.IsNullOrEmpty(_selectedAlgorithm.GitHubSourceUrl))
                             {
@@ -151,7 +152,7 @@
                         </div>
                     </div>
                     <div class="tdp-header__right">
-                        <button class="tdp-toggle" @onclick="() => _descExpanded = !_descExpanded" title="@(_descExpanded ? "Collapse" : "Expand")">
+                        <button class="tdp-toggle" @onclick="() => _descExpanded = !_descExpanded" title="@(_descExpanded ? L["common.collapse"] : L["common.expand"])">
                             @(_descExpanded ? "▲" : "▼")
                         </button>
                     </div>
@@ -159,7 +160,7 @@
                 @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
                 {
                     <div class="tdp-body @(_descExpanded ? "" : "tdp-body--hidden")">
-                        <div class="desc-body">@RenderDescription(_selectedAlgorithm.TutorialDescription)</div>
+                        <div class="desc-body">@RenderDescription(_selectedAlgorithm.GetLocalizedTutorial(L))</div>
                     </div>
                 }
             </div>
@@ -167,7 +168,7 @@
             @if (_steps.Count == 0)
             {
                 <div class="tutorial-empty">
-                    <div class="empty-text">No recorded operations for this algorithm.</div>
+                    <div class="empty-text">@L["tutorial.noOperations"]</div>
                 </div>
             }
             else
@@ -185,11 +186,11 @@
                         <div class="narrative-badge">
                             @if (_currentStepIndex < 0)
                             {
-                                <span>Initial State</span>
+                                <span>@L["tutorial.initialState"]</span>
                             }
                             else
                             {
-                                <span>Step @(_currentStepIndex + 1) / @_steps.Count</span>
+                                <span>@L["tutorial.stepOf", _currentStepIndex + 1, _steps.Count]</span>
                             }
                         </div>
                         <div class="narrative-text">@GetCurrentNarrative()</div>
@@ -203,7 +204,7 @@
                         <button class="toggle-btn @(!_showTreeView && !_showBucketView && !_showNetworkView ? "toggle-btn--active" : "")"
                                 @onclick="() => { _showTreeView = false; _showBucketView = false; _showNetworkView = false; }">
                             <svg viewBox="0 0 20 20" fill="currentColor" width="14" height="14"><circle cx="10" cy="10" r="7" /></svg>
-                            Marble
+                            @L["tutorial.marble"]
                         </button>
                         @if (HasTreeView())
                         {
@@ -222,7 +223,7 @@
                                     <rect x="8" y="5" width="4" height="13" rx="1" />
                                     <rect x="14" y="11" width="4" height="7" rx="1" />
                                 </svg>
-                                Buckets
+                                @L["tutorial.buckets"]
                             </button>
                         }
                         @if (HasNetworkView())
@@ -236,7 +237,7 @@
                                     <circle cx="10" cy="6" r="2" />
                                     <circle cx="10" cy="14" r="2" />
                                 </svg>
-                                Network
+                                @L["tutorial.network"]
                             </button>
                         }
                     </div>
@@ -250,7 +251,7 @@
                         <NetworkDiagramRenderer Snapshot="@GetCurrentNetwork()"
                                                 MaxValue="@_maxValue"
                                                 StepIndex="@_currentStepIndex"
-                                                Label="Sorting Network" />
+                                                Label="@L["tutorial.sortingNetwork"]" />
                     }
                     else if (_showBucketView && HasBucketView())
                     {
@@ -265,10 +266,10 @@
                                         StepIndex="@_currentStepIndex"
                                         ShellGap="@GetCurrentShellGap()"
                                         Roles="@GetCurrentRoles()"
-                                        Label="Main Array" />
+                                        Label="@L["tutorial.mainArray"]" />
                         <DistributionBucketRenderer MaxValue="@_maxValue"
                                                     StepIndex="@_currentStepIndex"
-                                                    Label="Buckets" />
+                                                    Label="@L["tutorial.buckets"]" />
                     }
                     else if (_showTreeView && HasTreeView())
                     {
@@ -278,14 +279,14 @@
                                                    MaxValue="@_maxValue"
                                                    StepIndex="@_currentStepIndex"
                                                    HorizScale="@GetRecursionHorizScale()"
-                                                   Label="Recursion Tree" />
+                                                   Label="@L["tutorial.recursionTree"]" />
                         }
                         else if (IsBstView())
                         {
                             <BstTreeRenderer Bst="@GetCurrentBst()"
                                              MaxValue="@_maxValue"
                                              StepIndex="@_currentStepIndex"
-                                             Label="BST" />
+                                             Label="@L["tutorial.bst"]" />
                         }
                         else
                         {
@@ -312,7 +313,7 @@
                                         StepIndex="@_currentStepIndex"
                                         ShellGap="@GetCurrentShellGap()"
                                         Roles="@GetCurrentRoles()"
-                                        Label="Main Array" />
+                                        Label="@L["tutorial.mainArray"]" />
                     }
 
                     @if (!_showBucketView && !_showNetworkView)
@@ -325,7 +326,7 @@
                                             CompareResult="@GetCurrentCompareResult()"
                                             MaxValue="@_maxValue"
                                             StepIndex="@_currentStepIndex"
-                                            Label="@($"Buffer {bufferId}")"
+                                            Label="@L["tutorial.buffer", bufferId]"
                                             IsBuffer="true" />
                         }
                     }
@@ -647,12 +648,12 @@
     private string GetTreeToggleLabel()
         => _selectedAlgorithm?.TutorialVisualizationHint switch
         {
-            TutorialVisualizationHint.TernaryHeapTree => "Ternary Heap",
-            TutorialVisualizationHint.WeakHeapTree => "Weak Heap",
-            TutorialVisualizationHint.BstTree => "BST",
-            TutorialVisualizationHint.AvlTree => "AVL Tree",
-            TutorialVisualizationHint.RecursionTree => "Recursion Tree",
-            _ => "Heap Tree"
+            TutorialVisualizationHint.TernaryHeapTree => L["tutorial.ternaryHeap"],
+            TutorialVisualizationHint.WeakHeapTree => L["tutorial.weakHeap"],
+            TutorialVisualizationHint.BstTree => L["tutorial.bst"],
+            TutorialVisualizationHint.AvlTree => L["tutorial.avlTree"],
+            TutorialVisualizationHint.RecursionTree => L["tutorial.recursionTree"],
+            _ => L["tutorial.heapTree"]
         };
 
     private bool[]? GetCurrentWeakHeapReverseBits()
@@ -908,5 +909,13 @@
         return $"background:linear-gradient(to right,var(--color-accent) 0%,var(--color-accent) {pct:F1}%,#4A4A4A {pct:F1}%,#4A4A4A 100%)";
     }
 
-    private string GetSpeedLabel() => SpeedSteps[_speedIndex].Label;
+    private string GetSpeedLabel() => _speedIndex switch
+    {
+        0 => L["tutorial.fastest"],
+        1 => L["tutorial.fast"],
+        2 => L["tutorial.normal"],
+        3 => L["tutorial.slow"],
+        4 => L["tutorial.slowest"],
+        _ => SpeedSteps[_speedIndex].Label
+    };
 }

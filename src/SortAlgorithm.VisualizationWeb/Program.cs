@@ -18,5 +18,7 @@ builder.Services.AddSingleton<DebugSettings>();
 builder.Services.AddSingleton<RenderSettings>();
 builder.Services.AddSingleton<PictureImageService>();
 builder.Services.AddSingleton<NavigationStateService>();
+builder.Services.AddSingleton<LocalizationService>(_ =>
+    new LocalizationService(new HttpClient { BaseAddress = new Uri(builder.HostEnvironment.BaseAddress) }));
 
 await builder.Build().RunAsync();

@@ -2,6 +2,7 @@
 @using SortAlgorithm.VisualizationWeb.Services
 @inject AlgorithmRegistry AlgorithmRegistry
 @inject ArrayPatternRegistry ArrayPatternRegistry
+@inject LocalizationService L
 
 <div class="qap">
     <div class="qap__content">
@@ -16,10 +17,10 @@
             <div class="algorithm-description-card">
                 <div class="algorithm-description-card__header">
                     <div>
-                        <span class="algorithm-description-card__label">CURRENT ALGORITHM</span>
+                        <span class="algorithm-description-card__label">@L["quickAccess.currentAlgorithm"]</span>
                         <h2 class="algorithm-description-card__title">@SelectedAlgorithm</h2>
                     </div>
-                    <button class="algorithm-description-card__toggle" @onclick="() => _descriptionCollapsed = !_descriptionCollapsed" title="@(_descriptionCollapsed ? "Expand" : "Collapse")">
+                    <button class="algorithm-description-card__toggle" @onclick="() => _descriptionCollapsed = !_descriptionCollapsed" title="@(_descriptionCollapsed ? L["common.expand"] : L["common.collapse"])">
                         @(_descriptionCollapsed ? "▼" : "▲")
                     </button>
                 </div>
@@ -34,7 +35,7 @@
             @* ── Sort Setup ── *@
             <div class="ui-card @(_sortSetupCollapsed ? "ui-card--collapsed" : "")">
                 <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleSortSetup">
-                    Sort Setup
+                    @L["quickAccess.sortSetup"]
                     <span class="ui-card__toggle-icon @(_sortSetupCollapsed ? "ui-card__toggle-icon--collapsed" : "")">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"></polyline>
@@ -46,8 +47,8 @@
                     <div class="qap__item">
                         <div class="qap__label-row">
                             <div class="qap__label-group">
-                                <span class="stat-label">Algorithm</span>
-                                <a href="tutorial/@Uri.EscapeDataString(SelectedAlgorithm)" class="qap__help-link" title="Learn about this algorithm">?</a>
+                                <span class="stat-label">@L["quickAccess.algorithm"]</span>
+                                <a href="tutorial/@Uri.EscapeDataString(SelectedAlgorithm)" class="qap__help-link" title="@L["quickAccess.learnAbout"]">?</a>
                             </div>
                             <span class="stat-value qap__complexity">@GetComplexity()</span>
                         </div>
@@ -66,7 +67,7 @@
                     </div>
 
                     <div class="qap__item">
-                        <span class="stat-label">Array Size @GetArraySizeLabel()</span>
+                        <span class="stat-label">@L["quickAccess.arraySize"] @GetArraySizeLabel()</span>
                         <select value="@Math.Min(ArraySize, GetEffectiveMaxSize())"
                                 @onchange="e => HandleArraySizeChange(int.Parse((string)e.Value!))">
                             @foreach (var size in GetFilteredSizes())
@@ -77,7 +78,7 @@
                     </div>
 
                     <div class="qap__item">
-                        <span class="stat-label">Scramble Pattern</span>
+                        <span class="stat-label">@L["quickAccess.scramblePattern"]</span>
                         <select value="@SelectedPatternName"
                                 @onchange="e => HandlePatternChange((string)e.Value!)">
                             @foreach (var group in GetPatternsByCategory())
@@ -85,7 +86,7 @@
                                 <optgroup label="@group.Key">
                                     @foreach (var pattern in group)
                                     {
-                                        <option value="@pattern.Name">@pattern.Name</option>
+                                        <option value="@pattern.Name">@pattern.GetLocalizedName(L)</option>
                                     }
                                 </optgroup>
                             }
@@ -98,24 +99,24 @@
                         var atMaxAndNotPresent = instanceCount >= ComparisonState.MaxComparisons && !algoAlreadyPresent;
                         var addDisabled = atMaxAndNotPresent || ComparisonMode.IsAddingAlgorithm;
                         var buttonTitle = ComparisonMode.IsAddingAlgorithm
-                        ? "Processing..."
+                        ? L["common.processing"]
                         : atMaxAndNotPresent
-                        ? $"Maximum {ComparisonState.MaxComparisons} algorithms reached. Remove one to add a new algorithm."
+                        ? L["index.maxAlgorithmsReached", ComparisonState.MaxComparisons]
                         : algoAlreadyPresent
-                        ? "Regenerate array and re-run all algorithms"
-                        : "Add this algorithm to comparison";
+                        ? L["index.regenerateTooltip"]
+                        : L["index.addToComparison"];
                     }
                     <div class="qap__item qap__item--action-group">
                         <button class="primary qap__btn-full"
                                 @onclick="() => OnAddAndGenerate.InvokeAsync()"
                                 disabled="@addDisabled"
                                 title="@buttonTitle">
-                            @(ComparisonMode.IsAddingAlgorithm ? "Processing..." : algoAlreadyPresent ? "Regenerate" : "Add & Generate")
+                            @(ComparisonMode.IsAddingAlgorithm ? L["common.processing"] : algoAlreadyPresent ? L["index.regenerate"] : L["index.addGenerate"])
                         </button>
                     </div>
 
                     <div class="qap__item qap__item--status">
-                        <span class="qap__count-label">Algorithms:</span>
+                        <span class="qap__count-label">@L["quickAccess.algorithms"]</span>
                         <span class="qap__count @(instanceCount >= ComparisonState.MaxComparisons ? "qap__count--max" : "")">
                             @instanceCount / @ComparisonState.MaxComparisons
                         </span>
@@ -127,7 +128,7 @@
             @* ── Appearance ── *@
             <div class="ui-card @(_appearanceCollapsed ? "ui-card--collapsed" : "")">
                 <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleAppearance">
-                    Appearance
+                    @L["quickAccess.appearance"]
                     <span class="ui-card__toggle-icon @(_appearanceCollapsed ? "ui-card__toggle-icon--collapsed" : "")">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"></polyline>
@@ -137,16 +138,16 @@
                 <div class="ui-card__body @(_appearanceCollapsed ? "ui-card__body--collapsed" : "")">
 
                     <div class="qap__item">
-                        <span class="stat-label">Visualization Mode</span>
+                        <span class="stat-label">@L["quickAccess.visualizationMode"]</span>
                         <select value="@SelectedVisualizationMode" @onchange="e => HandleVisualizationModeChange((string)e.Value!)">
-                            <option value="@VisualizationMode.DisparityChords">Disparity Chords</option>
-                            <option value="@VisualizationMode.PictureRow">Picture Row</option>
-                            <option value="@VisualizationMode.PictureColumn">Picture Column</option>
-                            <option value="@VisualizationMode.PictureBlock">Picture Block</option>
-                            <option value="@VisualizationMode.BarChart">Bar Chart</option>
-                            <option value="@VisualizationMode.Circular">Circular</option>
-                            <option value="@VisualizationMode.Spiral">Spiral</option>
-                            <option value="@VisualizationMode.DotPlot">Dot Plot</option>
+                            <option value="@VisualizationMode.DisparityChords">@L["quickAccess.modeDisparityChords"]</option>
+                            <option value="@VisualizationMode.PictureRow">@L["quickAccess.modePictureRow"]</option>
+                            <option value="@VisualizationMode.PictureColumn">@L["quickAccess.modePictureColumn"]</option>
+                            <option value="@VisualizationMode.PictureBlock">@L["quickAccess.modePictureBlock"]</option>
+                            <option value="@VisualizationMode.BarChart">@L["quickAccess.modeBarChart"]</option>
+                            <option value="@VisualizationMode.Circular">@L["quickAccess.modeCircular"]</option>
+                            <option value="@VisualizationMode.Spiral">@L["quickAccess.modeSpiral"]</option>
+                            <option value="@VisualizationMode.DotPlot">@L["quickAccess.modeDotPlot"]</option>
                         </select>
                     </div>
 
@@ -156,7 +157,7 @@
             @* ── Speed ── *@
             <div class="ui-card @(_speedCollapsed ? "ui-card--collapsed" : "")">
                 <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleSpeed">
-                    Speed
+                    @L["quickAccess.speed"]
                     <span class="ui-card__toggle-icon @(_speedCollapsed ? "ui-card__toggle-icon--collapsed" : "")">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <polyline points="6 9 12 15 18 9"></polyline>
@@ -167,10 +168,10 @@
 
                     <div class="qap__item qap__item--vertical">
                         <div class="qap__slider-header">
-                            <span class="stat-label">Ops Per Frame</span>
+                            <span class="stat-label">@L["quickAccess.opsPerFrame"]</span>
                             <span class="stat-value qap__slider-value">
                                 @Playback.OperationsPerFrame
-                                <span class="qap__fps">ops/frame</span>
+                                <span class="qap__fps">@L["quickAccess.opsPerFrameUnit"]</span>
                             </span>
                         </div>
                         <input type="range" min="1" max="1000"
@@ -182,10 +183,10 @@
 
                     <div class="qap__item qap__item--vertical">
                         <div class="qap__slider-header">
-                            <span class="stat-label">Speed</span>
+                            <span class="stat-label">@L["quickAccess.speed"]</span>
                             <span class="stat-value qap__slider-value">
                                 @Playback.SpeedMultiplier.ToString("F1")x
-                                <span class="qap__fps">(@EffectiveFPS FPS)</span>
+                                <span class="qap__fps">@L["quickAccess.fpsFormat", EffectiveFPS]</span>
                             </span>
                         </div>
                         <input type="range" min="0.5" max="100" step="0.5"
@@ -310,7 +311,7 @@
     {
         var effectiveMax = GetEffectiveMaxSize();
         if (effectiveMax < AvailableSizes[^1])
-            return $"(Max: {effectiveMax})";
+            return L["quickAccess.max", effectiveMax];
         return GetSizeRecommendation();
     }
 
@@ -318,7 +319,7 @@
     {
         var algo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
         return (algo != null && algo.RecommendedSize != ArraySize)
-            ? $"(Recommended: {algo.RecommendedSize})"
+            ? L["quickAccess.recommended", algo.RecommendedSize]
             : string.Empty;
     }
 

@@ -1,3 +1,22 @@
 @inherits LayoutComponentBase
+@inject SortAlgorithm.VisualizationWeb.Services.LocalizationService L
+@implements IDisposable
+
 @Body
 
+@code {
+    protected override void OnInitialized()
+    {
+        L.OnLanguageChanged += OnLanguageChanged;
+    }
+
+    private void OnLanguageChanged()
+    {
+        InvokeAsync(StateHasChanged);
+    }
+
+    public void Dispose()
+    {
+        L.OnLanguageChanged -= OnLanguageChanged;
+    }
+}
