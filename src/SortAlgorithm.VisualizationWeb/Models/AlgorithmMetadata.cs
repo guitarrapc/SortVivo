@@ -32,16 +32,13 @@ public record AlgorithmMetadata
     /// <summary>ローカライズ用アルゴリズムID (JSON キー)</summary>
     public string AlgorithmId { get; init; } = string.Empty;
 
-    /// <summary>チュートリアルでの説明文（日本語、2〜3文）</summary>
-    public string TutorialDescription { get; init; } = string.Empty;
-
-    /// <summary>ローカライズされたチュートリアル説明文を返す。JSONにキーがなければC#の説明文にフォールバック。</summary>
+    /// <summary>ローカライズされたチュートリアル説明文を返す。</summary>
     public string GetLocalizedTutorial(LocalizationService l)
     {
-        if (string.IsNullOrEmpty(AlgorithmId)) return TutorialDescription;
+        if (string.IsNullOrEmpty(AlgorithmId)) return string.Empty;
         var key = $"algorithmDescriptions.{AlgorithmId}.tutorial";
         var result = l[key];
-        return result == key ? TutorialDescription : result;
+        return result == key ? string.Empty : result;
     }
 
     /// <summary>

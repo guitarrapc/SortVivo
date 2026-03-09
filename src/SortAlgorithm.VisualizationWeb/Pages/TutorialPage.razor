@@ -157,7 +157,7 @@
                         </button>
                     </div>
                 </div>
-                @if (!string.IsNullOrEmpty(_selectedAlgorithm.TutorialDescription))
+                @if (!string.IsNullOrEmpty(_selectedAlgorithm.GetLocalizedTutorial(L)))
                 {
                     <div class="tdp-body @(_descExpanded ? "" : "tdp-body--hidden")">
                         <div class="desc-body">@RenderDescription(_selectedAlgorithm.GetLocalizedTutorial(L))</div>
