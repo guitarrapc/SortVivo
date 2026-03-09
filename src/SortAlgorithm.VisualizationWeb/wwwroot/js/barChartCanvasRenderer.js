@@ -23,6 +23,10 @@ window.barChartCanvasRenderer = {
   // キャッシュされた Canvas サイズ（getBoundingClientRect をフレーム毎に呼ばないため）
   cachedSizes: new Map(), // canvasId → { width: number, height: number }
 
+  // HSL カラー LUT（Canvas 2D fallback 用）
+  _colorLUTMax: -1,
+  _colorLUT: null,
+
   // 色定義
   colors: {
     normal: '#3B82F6',      // 青
@@ -381,6 +385,16 @@ window.barChartCanvasRenderer = {
     this.rafId = requestAnimationFrame(tick);
   },
 
+  _buildColorLUT: function (maxValue) {
+    if (this._colorLUTMax === maxValue) return;
+    this._colorLUTMax = maxValue;
+    this._colorLUT = new Array(maxValue + 1);
+    for (let v = 0; v <= maxValue; v++) {
+      const hue = (v / maxValue) * 360;
+      this._colorLUT[v] = `hsl(${hue.toFixed(1)}, 70%, 60%)`;
+    }
+  },
+
   /**
    * 内部描画処理（実際のCanvas描画）
    * @param {string} canvasId - Canvas要素のID
@@ -498,6 +512,7 @@ window.barChartCanvasRenderer = {
       }
     } else {
       // 通常描画: インデックスを色バケツに振り分けてから色ごとに一括描画
+      this._buildColorLUT(maxValue);
       const swapBucket = [];
       const compareBucket = [];
       const writeBucket = [];
@@ -513,15 +528,24 @@ window.barChartCanvasRenderer = {
       }
 
       // 描画順: normal → compare → write → read → swap（ハイライトを前面に重ねる）
-      const buckets = [
-        [normalBucket, this.colors.normal],
+      // normal バー: 値に応じた HSL 色で 1 本ずつ描画
+      for (const i of normalBucket) {
+        ctx.fillStyle = this._colorLUT[array[i]];
+        const barHeight = (array[i] / maxValue) * usableHeight;
+        ctx.fillRect(
+          i * totalBarWidth + (gap / 2),
+          mainArrayY + (sectionHeight - barHeight),
+          barWidth, barHeight
+        );
+      }
+      // ハイライトバー: 色ごとにバッチ描画
+      const highlightBuckets = [
         [compareBucket, this.colors.compare],
         [writeBucket, this.colors.write],
         [readBucket, this.colors.read],
         [swapBucket, this.colors.swap],
       ];
-
-      for (const [indices, color] of buckets) {
+      for (const [indices, color] of highlightBuckets) {
         if (indices.length === 0) continue;
         ctx.fillStyle = color;
         for (const i of indices) {

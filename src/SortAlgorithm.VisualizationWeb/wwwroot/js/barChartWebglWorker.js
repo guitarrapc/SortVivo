@@ -50,7 +50,50 @@ const colors = {
   sorted: '#10B981',
 };
 
-// 配列状態
+// ── HSL カラー LUT ──────────────────────────────────────────────
+
+function hslToRgb(h, s, l) {
+  s /= 100; l /= 100;
+  const c = (1 - Math.abs(2 * l - 1)) * s;
+  const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+  const m = l - c / 2;
+  let r, g, b;
+  if      (h < 60)  { r = c; g = x; b = 0; }
+  else if (h < 120) { r = x; g = c; b = 0; }
+  else if (h < 180) { r = 0; g = c; b = x; }
+  else if (h < 240) { r = 0; g = x; b = c; }
+  else if (h < 300) { r = x; g = 0; b = c; }
+  else              { r = c; g = 0; b = x; }
+  return [r + m, g + m, b + m];
+}
+
+// RGB float LUT（WebGL 用: [r,g,b, ...]）
+let rgbLUTMax = -1;
+let rgbLUT = null;
+
+function buildRgbLUT(maxValue) {
+  if (rgbLUTMax === maxValue) return;
+  rgbLUTMax = maxValue;
+  rgbLUT = new Float32Array((maxValue + 1) * 3);
+  for (let v = 0; v <= maxValue; v++) {
+    const [r, g, b] = hslToRgb((v / maxValue) * 360, 70, 60);
+    rgbLUT[v * 3] = r; rgbLUT[v * 3 + 1] = g; rgbLUT[v * 3 + 2] = b;
+  }
+}
+
+// HSL カラー LUT（Canvas 2D フォールバック用）
+let colorLUTMax = -1;
+let colorLUT = null;
+
+function buildColorLUT(maxValue) {
+  if (colorLUTMax === maxValue) return;
+  colorLUTMax = maxValue;
+  colorLUT = new Array(maxValue + 1);
+  for (let v = 0; v <= maxValue; v++) {
+    const hue = (v / maxValue) * 360;
+    colorLUT[v] = `hsl(${hue.toFixed(1)}, 70%, 60%)`;
+  }
+}
 let arrays = { main: null, buffers: new Map() };
 let renderParams = null;
 let isDirty = false;
@@ -418,11 +461,11 @@ function drawWebGL() {
     }
   } else {
     // 通常描画: 各バーに色を割り当て
+    buildRgbLUT(maxValue);
     const cmpSet = new Set(compareIndices);
     const swpSet = new Set(swapIndices);
     const rdSet = new Set(readIndices);
     const wrSet = new Set(writeIndices);
-    const [nr, ng, nb] = COLORS.normal;
     const [cr, cg, cb] = COLORS.compare;
     const [sr, sg, sb] = COLORS.swap;
     const [wr, wg, wb] = COLORS.write;
@@ -436,7 +479,10 @@ function drawWebGL() {
       else if (cmpSet.has(i)) { instanceData[base + 1] = cr; instanceData[base + 2] = cg; instanceData[base + 3] = cb; }
       else if (wrSet.has(i)) { instanceData[base + 1] = wr; instanceData[base + 2] = wg; instanceData[base + 3] = wb; }
       else if (rdSet.has(i)) { instanceData[base + 1] = rr; instanceData[base + 2] = rg; instanceData[base + 3] = rb; }
-      else { instanceData[base + 1] = nr; instanceData[base + 2] = ng; instanceData[base + 3] = nb; }
+      else {
+        const off = array[i] * 3;
+        instanceData[base + 1] = rgbLUT[off]; instanceData[base + 2] = rgbLUT[off + 1]; instanceData[base + 3] = rgbLUT[off + 2];
+      }
     }
   }
 
@@ -537,6 +583,7 @@ function drawCanvas2D() {
       );
     }
   } else {
+    buildColorLUT(maxValue);
     const swapBucket = [];
     const compareBucket = [];
     const writeBucket = [];
@@ -551,15 +598,24 @@ function drawCanvas2D() {
       else normalBucket.push(i);
     }
 
-    const buckets = [
-      [normalBucket, colors.normal],
+    // normal バー: 値に応じた HSL 色で 1 本ずつ描画
+    for (const i of normalBucket) {
+      ctx.fillStyle = colorLUT[array[i]];
+      const barHeight = (array[i] / maxValue) * usableHeight;
+      ctx.fillRect(
+        i * totalBarWidth + gap / 2,
+        mainArrayY + sectionHeight - barHeight,
+        barWidth, barHeight
+      );
+    }
+    // ハイライトバー: 色ごとにバッチ描画
+    const highlightBuckets = [
       [compareBucket, colors.compare],
       [writeBucket, colors.write],
       [readBucket, colors.read],
       [swapBucket, colors.swap],
     ];
-
-    for (const [indices, color] of buckets) {
+    for (const [indices, color] of highlightBuckets) {
       if (indices.length === 0) continue;
       ctx.fillStyle = color;
       for (const i of indices) {

@@ -19,6 +19,20 @@ const colors = {
   sorted: '#10B981'   // 緑 - ソート完了
 };
 
+// HSL カラー LUT
+let colorLUTMax = -1;
+let colorLUT = null;
+
+function buildColorLUT(maxValue) {
+  if (colorLUTMax === maxValue) return;
+  colorLUTMax = maxValue;
+  colorLUT = new Array(maxValue + 1);
+  for (let v = 0; v <= maxValue; v++) {
+    const hue = (v / maxValue) * 360;
+    colorLUT[v] = `hsl(${hue.toFixed(1)}, 70%, 60%)`;
+  }
+}
+
 // requestAnimationFrame が Worker で利用可能か確認（利用不可の場合は setTimeout でフォールバック）
 const _raf = typeof requestAnimationFrame !== 'undefined'
   ? (cb) => requestAnimationFrame(cb)
@@ -200,6 +214,7 @@ function draw() {
     }
   } else {
     // 通常描画: インデックスを色バケツに振り分けてから色ごとに一括描画
+    buildColorLUT(maxValue);
     const swapBucket = [];
     const compareBucket = [];
     const writeBucket = [];
@@ -214,16 +229,24 @@ function draw() {
       else normalBucket.push(i);
     }
 
-    // 描画順: normal → compare → write → read → swap（ハイライトを前面に重ねる）
-    const buckets = [
-      [normalBucket, colors.normal],
+    // normal バー: 値に応じた HSL 色で 1 本ずつ描画
+    for (const i of normalBucket) {
+      ctx.fillStyle = colorLUT[array[i]];
+      const barHeight = (array[i] / maxValue) * usableHeight;
+      ctx.fillRect(
+        i * totalBarWidth + gap / 2,
+        mainArrayY + sectionHeight - barHeight,
+        barWidth, barHeight
+      );
+    }
+    // ハイライトバー: 色ごとにバッチ描画
+    const highlightBuckets = [
       [compareBucket, colors.compare],
       [writeBucket, colors.write],
       [readBucket, colors.read],
       [swapBucket, colors.swap],
     ];
-
-    for (const [indices, color] of buckets) {
+    for (const [indices, color] of highlightBuckets) {
       if (indices.length === 0) continue;
       ctx.fillStyle = color;
       for (const i of indices) {
