@@ -10,7 +10,7 @@
         @* ── Current Algorithm 説明カード ── *@
         @{
             var currentAlgo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
-            var howItWorks = GetHowItWorksDescription(currentAlgo?.TutorialDescription ?? "");
+            var howItWorks = GetHowItWorksDescription(currentAlgo is not null ? currentAlgo.GetLocalizedTutorial(L) : "");
         }
         @if (!string.IsNullOrEmpty(howItWorks))
         {
@@ -373,17 +373,15 @@
         if (string.IsNullOrWhiteSpace(tutorialDescription))
             return string.Empty;
 
-        // "How it works:" で始まる最初のパラグラフを抽出
-        var lines = tutorialDescription.Split('\n', StringSplitOptions.TrimEntries);
-        var howItWorksIndex = Array.FindIndex(lines, l => l.StartsWith("How it works:", StringComparison.OrdinalIgnoreCase));
+        // CRLF (C# raw string) と LF (JSON) の両方に対応するため正規化してから分割
+        var normalized = tutorialDescription.Replace("\r\n", "\n");
+        var firstParagraph = normalized.Split(["\n\n"], 2, StringSplitOptions.None)[0].Trim();
 
-        if (howItWorksIndex == -1)
-            return string.Empty;
+        // "How it works:" / "動作原理:" のような先頭ラベルを除去
+        var colonIndex = firstParagraph.IndexOf(':');
+        if (colonIndex >= 0 && colonIndex < 20)
+            firstParagraph = firstParagraph[(colonIndex + 1)..].Trim();
 
-        // "How it works:" の後の説明文を取得（次の空行または"Key property:"まで）
-        var descriptionLine = lines[howItWorksIndex];
-        var description = descriptionLine["How it works:".Length..].Trim();
-
-        return description;
+        return firstParagraph;
     }
 }
