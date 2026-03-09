@@ -4,10 +4,6 @@
 @inject DebugSettings DebugSettings
 @inject LocalizationService L
 
-<button class="cst-trigger-btn" @onclick="TogglePanel" title="@L["comparisonStats.title"]">
-    📊 Stats
-</button>
-
 @if (IsOpen)
 {
     <div class="cst-overlay" @onclick="CloseModal">

@@ -87,6 +87,18 @@
     min-height: 300px;
 }
 
+/* SeekBar / Stats ボタン 共有行 */
+.seek-stats-row {
+    display: flex;
+    align-items: center;
+    min-height: 36px;
+    gap: 10px;
+}
+
+.seek-stats-row ::deep .seek-bar {
+    flex: 1;
+}
+
 /* タブレット/モバイル: カードパネルを上段に、メインエリアを下段にシフト */
 @media (max-width: 1279px) {
     .visualization-page {

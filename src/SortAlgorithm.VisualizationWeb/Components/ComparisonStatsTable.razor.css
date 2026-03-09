@@ -1,32 +1,5 @@
 /* ─── ComparisonStatsTable — カードリスト + バーチャート モーダル ──────── */
 
-/* トリガーボタン（fixed, 右下） */
-.cst-trigger-btn {
-    position: fixed;
-    bottom: 1.5rem;
-    right: 1.5rem;
-    padding: 0.55rem 1rem;
-    background: #3B82F6;
-    color: white;
-    border: none;
-    border-radius: 20px;
-    cursor: pointer;
-    font-size: 0.95em;
-    font-weight: 500;
-    z-index: 900;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
-    transition: background 0.2s, transform 0.1s;
-}
-
-    .cst-trigger-btn:hover {
-        background: #2563EB;
-        transform: translateY(-1px);
-    }
-
-    .cst-trigger-btn:active {
-        transform: translateY(0);
-    }
-
 /* モーダルオーバーレイ */
 .cst-overlay {
     position: fixed;
