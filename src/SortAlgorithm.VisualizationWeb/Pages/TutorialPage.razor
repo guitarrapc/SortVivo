@@ -34,7 +34,8 @@
                 <div class="qap__item">
                     <span class="stat-label">@L["tutorial.algorithm"]</span>
                     <select value="@(_selectedAlgorithm?.Name ?? "")"
-                            @onchange="OnAlgorithmChanged">
+                            @onchange="OnAlgorithmChanged"
+                            @onkeydown:stopPropagation>
                         @foreach (var category in GetTutorialCategories())
                         {
                             <optgroup label="@category">
@@ -458,6 +459,7 @@
         {
             _isLoading = false;
             StateHasChanged();
+            await _containerRef.FocusAsync();
         }
     }
 
@@ -560,7 +562,7 @@
 
     // ─── キーボード ────────────────────────────────────────────────────────
 
-    private void OnKeyDown(KeyboardEventArgs e)
+    private async Task OnKeyDown(KeyboardEventArgs e)
     {
         switch (e.Key)
         {
@@ -569,6 +571,12 @@
                 break;
             case "ArrowRight":
                 GoToNext();
+                break;
+            case "ArrowUp":
+                await SelectAdjacentAlgorithm(-1);
+                break;
+            case "ArrowDown":
+                await SelectAdjacentAlgorithm(1);
                 break;
             case " ":
                 ToggleAutoPlay();
@@ -580,6 +588,21 @@
                 GoToLast();
                 break;
         }
+    }
+
+    private async Task SelectAdjacentAlgorithm(int direction)
+    {
+        var algos = GetTutorialAlgorithms().ToList();
+        if (algos.Count == 0) return;
+
+        var currentIndex = _selectedAlgorithm != null
+            ? algos.FindIndex(a => a.Name == _selectedAlgorithm.Name)
+            : -1;
+
+        var nextIndex = currentIndex + direction;
+        if (nextIndex < 0 || nextIndex >= algos.Count) return;
+
+        await LoadAlgorithm(algos[nextIndex]);
     }
 
     // ─── 現在ステップのデータ取得 ──────────────────────────────────────────
