@@ -425,14 +425,12 @@
 
     // ─── アルゴリズム選択 ──────────────────────────────────────────────────
 
-    private async Task OnAlgorithmChanged(ChangeEventArgs e)
+    private void OnAlgorithmChanged(ChangeEventArgs e)
     {
         var name = e.Value?.ToString();
         if (string.IsNullOrEmpty(name)) return;
 
-        var algo = GetTutorialAlgorithms().FirstOrDefault(a => a.Name == name);
-        if (algo != null)
-            await LoadAlgorithm(algo);
+        Navigation.NavigateTo($"/tutorial/{Uri.EscapeDataString(name)}");
     }
 
     private async Task LoadAlgorithm(AlgorithmMetadata algo)
@@ -602,7 +600,7 @@
         var nextIndex = currentIndex + direction;
         if (nextIndex < 0 || nextIndex >= algos.Count) return;
 
-        await LoadAlgorithm(algos[nextIndex]);
+        Navigation.NavigateTo($"/tutorial/{Uri.EscapeDataString(algos[nextIndex].Name)}");
     }
 
     // ─── 現在ステップのデータ取得 ──────────────────────────────────────────
