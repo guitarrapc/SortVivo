@@ -243,11 +243,13 @@
         DebugSettings.OnChanged += OnStateChanged;
 
         // URL Query String からコンテンツ状態を復元
-        var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
-        var qs = uri.Query.TrimStart('?');
-        if (!string.IsNullOrEmpty(qs))
+        try
         {
-            var parsedCards = new List<string>();
+            var uri = NavigationManager.ToAbsoluteUri(NavigationManager.Uri);
+            var qs = uri.Query.TrimStart('?');
+            if (!string.IsNullOrEmpty(qs))
+            {
+                var parsedCards = new List<string>();
                 var seenKeys = new HashSet<string>(StringComparer.OrdinalIgnoreCase);
                 foreach (var pair in qs.Split('&'))
                 {
@@ -289,9 +291,14 @@
                                     .Cast<string>());
                             break;
                     }
+                }
+                // 複数 cards パラメータの重複を排除して確定
+                _initialCardAlgorithms = parsedCards.Distinct().ToList();
             }
-            // 複数 cards パラメータの重複を排除して確定
-            _initialCardAlgorithms = parsedCards.Distinct().ToList();
+        }
+        catch (UriFormatException)
+        {
+            // 不正なパーセントエンコードは無視してデフォルト値で続行
         }
     }
 

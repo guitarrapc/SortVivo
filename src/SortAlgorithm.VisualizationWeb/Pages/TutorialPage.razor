@@ -382,12 +382,19 @@
     {
         if (string.IsNullOrEmpty(AlgorithmName)) return;
 
-        var decoded = Uri.UnescapeDataString(AlgorithmName);
-        var algo = GetTutorialAlgorithms()
-            .FirstOrDefault(a => string.Equals(a.Name, decoded, StringComparison.OrdinalIgnoreCase));
+        try
+        {
+            var decoded = Uri.UnescapeDataString(AlgorithmName);
+            var algo = GetTutorialAlgorithms()
+                .FirstOrDefault(a => string.Equals(a.Name, decoded, StringComparison.OrdinalIgnoreCase));
 
-        if (algo != null && algo != _selectedAlgorithm)
-            await LoadAlgorithm(algo);
+            if (algo != null && algo != _selectedAlgorithm)
+                await LoadAlgorithm(algo);
+        }
+        catch (UriFormatException)
+        {
+            // 不正なパーセントエンコードは無視してデフォルト値で続行
+        }
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
