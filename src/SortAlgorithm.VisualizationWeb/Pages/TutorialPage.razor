@@ -391,10 +391,12 @@
 
             if (algo != null && algo != _selectedAlgorithm)
                 await LoadAlgorithm(algo);
+            else if (algo == null)
+                Navigation.NavigateTo("/", replace: true);
         }
         catch (UriFormatException)
         {
-            // 不正なパーセントエンコードは無視してデフォルト値で続行
+            Navigation.NavigateTo("/", replace: true);
         }
     }
 
