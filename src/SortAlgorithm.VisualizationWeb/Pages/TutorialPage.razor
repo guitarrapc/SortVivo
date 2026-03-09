@@ -11,13 +11,13 @@
 @inject LocalizationService L
 @implements IDisposable
 
-<PageTitle>@L["tutorial.title"]</PageTitle>
+<PageTitle>Tutorial</PageTitle>
 
 <div class="tutorial-page" @onkeydown="OnKeyDown" tabindex="0" @ref="_containerRef">
 
     <div class="header">
         <div class="header__left"></div>
-        <h1 class="tutorial__title">@L["tutorial.title"]</h1>
+        <h1 class="tutorial__title">TUTORIAL</h1>
         <div class="header__actions">
             <button class="tutorial-close-btn" @onclick="NavigateToHome" title="@L["common.close"]">✕</button>
         </div>
@@ -145,14 +145,14 @@
                         <div class="desc-meta">
                             @if (!string.IsNullOrEmpty(_selectedAlgorithm.GitHubSourceUrl))
                             {
-                                <a href="@_selectedAlgorithm.GitHubSourceUrl" target="_blank" rel="noopener noreferrer" class="tutorial-source-btn">&lt;/&gt; Source</a>
+                                <a href="@_selectedAlgorithm.GitHubSourceUrl" target="_blank" rel="noopener noreferrer" class="tutorial-source-btn">&lt;/&gt; @L["tutorial.source"]</a>
                             }
                             <span class="desc-badge">@_selectedAlgorithm.TimeComplexity</span>
                             <span class="desc-badge">@_selectedAlgorithm.Category</span>
                         </div>
                     </div>
                     <div class="tdp-header__right">
-                        <button class="tdp-toggle" @onclick="() => _descExpanded = !_descExpanded" title="@(_descExpanded ? L["common.collapse"] : L["common.expand"])">
+                        <button class="tdp-toggle" @onclick="() => _descExpanded = !_descExpanded" title="@(_descExpanded? L["common.collapse"] : L["common.expand"])">
                             @(_descExpanded ? "▲" : "▼")
                         </button>
                     </div>

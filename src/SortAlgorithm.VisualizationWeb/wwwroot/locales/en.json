@@ -114,6 +114,7 @@
     "selectAlgorithm": "Select an algorithm from the panel on the left.",
     "selectAlgorithmHint": "Each algorithm is demonstrated step by step using a fixed array. Some algorithms use a dedicated array suited for the explanation.",
     "tryThis": "\u25B6 Try this",
+    "source": "Source",
     "initialState": "Initial State",
     "stepOf": "Step {current} / {total}",
     "initialStateDescription": "This is the array before sorting. Follow {name} step by step.",
