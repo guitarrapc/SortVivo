@@ -34,6 +34,11 @@
     z-index: 1;
 }
 
+/* ページタイトルリンク */
+.header__title-link {
+    text-decoration: none;
+}
+
 /* ページタイトル */
 .header__title {
     margin: 0;
