@@ -22,6 +22,30 @@
         <div class="settings-modal__body">
 
             @* ────────────────────────────────────
+               🌐 Language
+               ──────────────────────────────────── *@
+            <section class="settings-section">
+                <h3 class="settings-section__title">@L["settings.language"]</h3>
+                <div class="settings-section__body">
+
+                    <div class="settings-row settings-row--vertical">
+                        <span class="settings-label">@L["settings.languageHint"]</span>
+                        <div class="settings-segment">
+                            @foreach (var lang in LocalizationService.SupportedLanguages)
+                            {
+                                var captured = lang;
+                                <button class="settings-segment__btn @(L.CurrentLanguage == lang ? "settings-segment__btn--active" : "")"
+                                        @onclick="() => ChangeLanguageAsync(captured)">
+                                    @LocalizationService.GetDisplayName(lang)
+                                </button>
+                            }
+                        </div>
+                    </div>
+
+                </div>
+            </section>
+
+            @* ────────────────────────────────────
                🎨 Rendering
                ──────────────────────────────────── *@
             <section class="settings-section">
@@ -107,31 +131,6 @@
                                     @onclick='() => HandleSoundTypeChanged("cutePop")'>
                                 @L["settings.soundTypeCutePop"]
                             </button>
-                        </div>
-                        <span class="settings-hint">@L["settings.soundTypePokoHint"]</span>
-                    </div>
-
-                </div>
-            </section>
-
-            @* ────────────────────────────────────
-               🌐 Language
-               ──────────────────────────────────── *@
-            <section class="settings-section">
-                <h3 class="settings-section__title">@L["settings.language"]</h3>
-                <div class="settings-section__body">
-
-                    <div class="settings-row settings-row--vertical">
-                        <span class="settings-label">@L["settings.languageHint"]</span>
-                        <div class="settings-segment">
-                            @foreach (var lang in LocalizationService.SupportedLanguages)
-                            {
-                                var captured = lang;
-                                <button class="settings-segment__btn @(L.CurrentLanguage == lang ? "settings-segment__btn--active" : "")"
-                                        @onclick="() => ChangeLanguageAsync(captured)">
-                                    @LocalizationService.GetDisplayName(lang)
-                                </button>
-                            }
                         </div>
                     </div>
 

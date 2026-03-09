@@ -64,7 +64,6 @@
     "soundTypeSine": "Sine",
     "soundTypePoko": "Poko",
     "soundTypeCutePop": "CutePop",
-    "soundTypePokoHint": "Poko is a soft, round sound with a gentle pitch drop.",
     "advanced": "\uD83D\uDD27 Advanced",
     "scrollOnGenerate": "Scroll to Sort Panel after Add & Generate",
     "tabletMobile": "(Tablet / Mobile)",
@@ -78,7 +77,7 @@
     "aboutPrivacy": "\uD83D\uDD12 Privacy First",
     "aboutPrivacyText": "Your data never leaves your device. Picture sorting processes images entirely in the browser. No uploads, no tracking, no external requests.",
     "aboutBuiltWith": "\u26A1 Built With C#",
-    "aboutBuiltWithText": "Blazor WebAssembly, .NET 10, Canvas 2D / WebGL, AOT",
+    "aboutBuiltWithText": "Blazor WebAssembly, .NET, Canvas 2D / WebGL, AOT",
     "aboutOpenSource": "\uD83D\uDCD6 Open Source",
     "aboutViewOnGitHub": "View on GitHub"
   },
