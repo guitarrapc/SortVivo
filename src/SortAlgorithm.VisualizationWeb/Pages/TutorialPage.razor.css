@@ -1,4 +1,9 @@
 /* ページ全体（グリッドレイアウト） */
+.tutorial-page:focus,
+.tutorial-page:focus-visible {
+    outline: none;
+}
+
 .tutorial-page {
     display: grid;
     grid-template-columns: 280px 1fr;
