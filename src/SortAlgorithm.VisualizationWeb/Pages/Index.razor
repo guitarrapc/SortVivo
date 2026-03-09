@@ -128,8 +128,9 @@
         </div>
 
         <div class="seek-stats-row">
-            <SeekBar CurrentIndex="GetSeekState().CurrentOperationIndex"
-                 TotalOperations="GetSeekState().TotalOperations"
+            <SeekBar CurrentIndex="@GetSeekCurrentIndex()"
+                 TotalOperations="@GetSeekMaxOps()"
+                 Markers="@GetSeekMarkers()"
                  OnSeek="OnSeek" />
             <button class="header__icon-btn stats-icon-btn" @onclick="() => _statsTableOpen = !_statsTableOpen" title="@L["comparisonStats.title"]" disabled="@(ComparisonMode.State.Instances.Count == 0)">
                 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
@@ -572,16 +573,35 @@
 
     private void OnSeek(int index)
     {
-        if (ComparisonMode.State.Instances.Count == 1)
+        var n = ComparisonMode.State.Instances.Count;
+        if (n == 1)
             ComparisonMode.State.Instances[0].Playback.SeekTo(index, throttle: true);
-        else
-            Playback.SeekTo(index, throttle: true);
+        else if (n > 1)
+            ComparisonMode.SeekAll(index);
     }
 
-    private VisualizationState GetSeekState() =>
-        ComparisonMode.State.Instances.Count == 1
-            ? ComparisonMode.State.Instances[0].Playback.State
-            : Playback.State;
+    private int GetSeekCurrentIndex()
+    {
+        var n = ComparisonMode.State.Instances.Count;
+        if (n == 1) return ComparisonMode.State.Instances[0].Playback.State.CurrentOperationIndex;
+        if (n > 1) return ComparisonMode.GlobalSeekIndex;
+        return Playback.State.CurrentOperationIndex;
+    }
+
+    private int GetSeekMaxOps()
+    {
+        var n = ComparisonMode.State.Instances.Count;
+        if (n == 1) return ComparisonMode.State.Instances[0].Playback.State.TotalOperations;
+        if (n > 1) return ComparisonMode.MaxOps;
+        return Playback.State.TotalOperations;
+    }
+
+    private IReadOnlyList<SeekBarMarker> GetSeekMarkers()
+    {
+        if (ComparisonMode.State.Instances.Count > 1)
+            return ComparisonMode.GetCompletionMarkers();
+        return [];
+    }
 
     private void OnVisualizationModeChanged()
     {

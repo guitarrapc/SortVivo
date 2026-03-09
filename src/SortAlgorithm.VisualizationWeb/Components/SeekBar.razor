@@ -7,6 +7,20 @@
         <div class="seek-progress" style="width: @ProgressPercentage%">
             <div class="seek-handle"></div>
         </div>
+        @foreach (var group in ComputeMarkerGroups())
+        {
+            var first = group[0];
+            var pct = MarkerPercent(first);
+            var tooltip = group.Count == 1
+                ? $"{first.AlgorithmName}: {first.CompletionOps:N0} ops"
+                : string.Join(", ", group.Select(m => m.AlgorithmName));
+            <div class="seek-marker" style="left: @pct%; background-color: @first.Color;" title="@tooltip">
+                @if (group.Count > 1)
+                {
+                    <span class="seek-marker__badge" style="background: @first.Color;">+@(group.Count - 1)</span>
+                }
+            </div>
+        }
     </div>
     <span class="time-display">@ProgressText</span>
 </div>
@@ -14,23 +28,58 @@
 @code {
     [Parameter]
     public int CurrentIndex { get; set; }
-    
+
     [Parameter]
     public int TotalOperations { get; set; }
-    
+
+    [Parameter]
+    public IReadOnlyList<SeekBarMarker> Markers { get; set; } = [];
+
     [Parameter]
     public EventCallback<int> OnSeek { get; set; }
-    
+
     private ElementReference _sliderRef;
     private string _sliderId = $"seekbar-{Guid.NewGuid():N}";
     private DotNetObjectReference<SeekBar>? _dotNetHelper;
-    
-    private double ProgressPercentage => TotalOperations > 0 
-        ? (double)CurrentIndex / TotalOperations * 100 
+
+    private double ProgressPercentage => TotalOperations > 0
+        ? (double)CurrentIndex / TotalOperations * 100
         : 0;
-    
+
     private string ProgressText => $"{CurrentIndex:N0} / {TotalOperations:N0} ops ({ProgressPercentage:F1}%)";
-    
+
+    private double MarkerPercent(SeekBarMarker marker) =>
+        TotalOperations > 0 ? (double)marker.CompletionOps / TotalOperations * 100 : 0;
+
+    private List<List<SeekBarMarker>> ComputeMarkerGroups()
+    {
+        if (Markers.Count == 0 || TotalOperations <= 0) return [];
+
+        const double ClusterThreshold = 3.0;
+        var sorted = Markers.OrderBy(m => m.CompletionOps).ToList();
+        var groups = new List<List<SeekBarMarker>>();
+
+        double groupStartPct = double.MinValue;
+        List<SeekBarMarker>? currentGroup = null;
+
+        foreach (var marker in sorted)
+        {
+            var pct = (double)marker.CompletionOps / TotalOperations * 100;
+            if (currentGroup is null || pct - groupStartPct > ClusterThreshold)
+            {
+                currentGroup = [marker];
+                groupStartPct = pct;
+                groups.Add(currentGroup);
+            }
+            else
+            {
+                currentGroup.Add(marker);
+            }
+        }
+
+        return groups;
+    }
+
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)

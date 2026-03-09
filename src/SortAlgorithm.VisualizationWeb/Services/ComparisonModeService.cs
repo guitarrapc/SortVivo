@@ -11,6 +11,16 @@ public class ComparisonModeService : IDisposable
     private readonly List<PlaybackService> _playbackServices = new();
     private bool _completionLogged;
 
+    private static readonly string[] AlgorithmColors =
+    [
+        "#60a5fa", // blue
+        "#f87171", // red
+        "#34d399", // green
+        "#fbbf24", // amber
+        "#a78bfa", // purple
+        "#fb923c", // orange
+    ];
+
     public ComparisonState State => _state;
     public event Action? OnStateChanged;
 
@@ -22,6 +32,12 @@ public class ComparisonModeService : IDisposable
 
     /// <summary>インスタンスが 1 件以上あるときの先頭インスタンスのサウンド ON/OFF 状態。</summary>
     public bool SoundEnabled => _playbackServices.Count > 0 && _playbackServices[0].SoundEnabled;
+
+    /// <summary>N>1 時のシークバー位置（最後に SeekAll で設定したグローバル位置）。</summary>
+    public int GlobalSeekIndex { get; private set; }
+
+    /// <summary>全インスタンス中の最大総 ops 数（シークバーの max 値）。</summary>
+    public int MaxOps => _playbackServices.Count == 0 ? 0 : _playbackServices.Max(p => p.State.TotalOperations);
 
     public ComparisonModeService(SortExecutor executor, DebugSettings debug, IJSRuntime js)
     {
@@ -212,7 +228,11 @@ public class ComparisonModeService : IDisposable
     public void Play()
     {
         _completionLogged = false;
-        foreach (var p in _playbackServices) p.Play();
+        foreach (var p in _playbackServices)
+        {
+            if (!p.State.IsSortCompleted)
+                p.Play();
+        }
         NotifyStateChanged();
     }
 
@@ -225,14 +245,24 @@ public class ComparisonModeService : IDisposable
     public void Stop()
     {
         foreach (var p in _playbackServices) p.Stop();
+        GlobalSeekIndex = 0;
         NotifyStateChanged();
     }
 
     public void Reset() => Stop();
 
-    public void SeekAll(int i)
+    /// <summary>
+    /// 全インスタンスを指定グローバル位置にシークする。
+    /// 各インスタンスの総 ops を上限としてキャップする。
+    /// </summary>
+    public void SeekAll(int globalIndex)
     {
-        foreach (var p in _playbackServices) p.SeekTo(i, false);
+        GlobalSeekIndex = globalIndex;
+        foreach (var p in _playbackServices)
+        {
+            var target = Math.Min(globalIndex, p.State.TotalOperations);
+            p.SeekTo(target, throttle: true);
+        }
         NotifyStateChanged();
     }
 
@@ -335,6 +365,7 @@ public class ComparisonModeService : IDisposable
     private void ClearAllInstances()
     {
         Stop();
+        GlobalSeekIndex = 0;
         _completionLogged = false;
         foreach (var p in _playbackServices)
         {
@@ -347,6 +378,8 @@ public class ComparisonModeService : IDisposable
 
     private void OnPlaybackStateChanged()
     {
+        if (_playbackServices.Count > 0)
+            GlobalSeekIndex = _playbackServices.Max(p => p.State.CurrentOperationIndex);
         CheckCompletionStatus();
         NotifyStateChanged();
     }
@@ -366,6 +399,22 @@ public class ComparisonModeService : IDisposable
     }
 
     private void NotifyStateChanged() => OnStateChanged?.Invoke();
+
+    /// <summary>
+    /// N>1 時のシークバー完了マーカー一覧を返す。
+    /// 各インスタンスの完了 ops 位置にマーカーを配置する（TotalOperations が確定済みのもの）。
+    /// </summary>
+    public IReadOnlyList<SeekBarMarker> GetCompletionMarkers()
+    {
+        var result = new List<SeekBarMarker>(_state.Instances.Count);
+        for (var i = 0; i < _state.Instances.Count; i++)
+        {
+            var p = _playbackServices[i];
+            if (p.State.TotalOperations > 0)
+                result.Add(new SeekBarMarker(_state.Instances[i].AlgorithmName, p.State.TotalOperations, AlgorithmColors[i % AlgorithmColors.Length]));
+        }
+        return result;
+    }
 
     public void Dispose()
     {

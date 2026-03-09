@@ -52,3 +52,31 @@
         padding: 6px 8px;
     }
 }
+
+/* ─── 完了マーカー ────────────────────────────────────────────────────── */
+
+.seek-marker {
+    position: absolute;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: 4px;
+    height: 20px;
+    border-radius: 2px;
+    z-index: 3;
+    cursor: default;
+    pointer-events: auto;
+}
+
+.seek-marker__badge {
+    position: absolute;
+    top: -14px;
+    left: 50%;
+    transform: translateX(-50%);
+    font-size: 0.5rem;
+    padding: 1px 3px;
+    border-radius: 3px;
+    color: #111;
+    white-space: nowrap;
+    line-height: 1;
+    font-weight: bold;
+}
