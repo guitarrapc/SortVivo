@@ -28,6 +28,7 @@
     <File Path="Docs/VisualizationWeb/VisualizationWeb_tutorial.md" />
     <File Path="Docs/VisualizationWeb/VisualizationWeb_tutorial_additional_visualizations.md" />
     <File Path="Docs/VisualizationWeb/VisualizationWeb_UIUX_Spec.md" />
+    <File Path="Docs/VisualizationWeb/VisualizationWeb_URL_Input_Security.md" />
   </Folder>
   <Folder Name="/sandbox/">
     <Project Path="sandbox/AntiQuickSortDemo/AntiQuickSortDemo.csproj" />
