@@ -50,6 +50,8 @@
 
 .time-display--compact {
     display: none;
+    min-width: 6ch;
+    text-align: right;
 }
 
 /* ─── スマホ ──────────────────────────────────────────────────────────── */
@@ -63,7 +65,7 @@
     }
 
     .time-display--compact {
-        display: inline;
+        display: inline-block;
     }
 }
 
