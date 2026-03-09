@@ -4,9 +4,8 @@
 
 <div class="seek-bar">
     <div id="@_sliderId" class="seek-slider-container" @ref="_sliderRef">
-        <div class="seek-progress" style="width: @ProgressPercentage%">
-            <div class="seek-handle"></div>
-        </div>
+        <div class="seek-progress" style="width: @ProgressPercentage%"></div>
+        <div class="seek-handle" style="left: @ProgressPercentage%"></div>
         @foreach (var group in ComputeMarkerGroups())
         {
             var first = group[0];
