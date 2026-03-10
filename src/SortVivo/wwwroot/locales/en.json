@@ -49,6 +49,7 @@
   },
   "settings": {
     "title": "Settings",
+    "general": "\u2699\uFE0F General",
     "rendering": "\uD83C\uDFA8 Rendering",
     "renderer": "Renderer",
     "canvas2d": "Canvas 2D",
@@ -68,13 +69,12 @@
     "scrollOnGenerate": "Scroll to Sort Panel after Add & Generate",
     "tabletMobile": "(Tablet / Mobile)",
     "autoRecommendedSize": "Auto Switch to Recommended Size",
-    "debugLog": "\uD83D\uDC1B Debug Log",
-    "language": "\uD83C\uDF10 Language",
-    "languageHint": "UI display language",
-    "about": "\u2139\uFE0F About",
-    "aboutBrowserBased": "\uD83C\uDF10 100% Browser-Based",
+    "debugLog": "Debug Log",
+    "language": "Language",
+    "about": "About",
+    "aboutBrowserBased": "100% Browser-Based",
     "aboutBrowserBasedText": "All sorting runs locally in your browser using WebAssembly. No server communication after initial load, works offline.",
-    "aboutPrivacy": "\uD83D\uDD12 Privacy First",
+    "aboutPrivacy": "Privacy First",
     "aboutPrivacyText": "Your data never leaves your device. Picture sorting processes images entirely in the browser. No uploads, no tracking, no external requests."
   },
   "stats": {

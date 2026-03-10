@@ -104,6 +104,9 @@
 }
 
 .settings-section__title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
     font-size: 0.78rem;
     font-weight: 600;
     text-transform: uppercase;
