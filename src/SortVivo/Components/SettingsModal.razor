@@ -36,17 +36,14 @@
 
                     <div class="settings-row">
                         <span class="settings-label">@L["settings.language"]</span>
-                        <div class="settings-segment settings-segment--fit">
+                        <select class="settings-select"
+                                value="@L.CurrentLanguage"
+                                @onchange="e => ChangeLanguageAsync(e.Value!.ToString()!)">
                             @foreach (var lang in LocalizationService.SupportedLanguages)
                             {
-                                var captured = lang;
-                                <button class="settings-segment__btn settings-segment__btn--lang @(L.CurrentLanguage == lang ? "settings-segment__btn--active" : "")"
-                                        @onclick="() => ChangeLanguageAsync(captured)">
-                                    <span class="lang-flag">@LocalizationService.GetFlagEmoji(lang)</span>
-                                    <span class="lang-name">@LocalizationService.GetDisplayName(lang)</span>
-                                </button>
+                                <option value="@lang">@LocalizationService.GetFlagEmoji(lang) @LocalizationService.GetDisplayName(lang)</option>
                             }
-                        </div>
+                        </select>
                     </div>
 
                     <div class="settings-row">
@@ -124,20 +121,13 @@
 
                     <div class="settings-row">
                         <span class="settings-label">@L["settings.soundType"]</span>
-                        <div class="settings-segment settings-segment--fit">
-                            <button class="settings-segment__btn @(Playback.SoundType == "sine" ? "settings-segment__btn--active" : "")"
-                                    @onclick='() => HandleSoundTypeChanged("sine")'>
-                                @L["settings.soundTypeSine"]
-                            </button>
-                            <button class="settings-segment__btn @(Playback.SoundType == "poko" ? "settings-segment__btn--active" : "")"
-                                    @onclick='() => HandleSoundTypeChanged("poko")'>
-                                @L["settings.soundTypePoko"]
-                            </button>
-                            <button class="settings-segment__btn @(Playback.SoundType == "cutePop" ? "settings-segment__btn--active" : "")"
-                                    @onclick='() => HandleSoundTypeChanged("cutePop")'>
-                                @L["settings.soundTypeCutePop"]
-                            </button>
-                        </div>
+                        <select class="settings-select"
+                                value="@Playback.SoundType"
+                                @onchange="e => HandleSoundTypeChanged(e.Value!.ToString()!)">
+                            <option value="sine">@L["settings.soundTypeSine"]</option>
+                            <option value="poko">@L["settings.soundTypePoko"]</option>
+                            <option value="cutePop">@L["settings.soundTypeCutePop"]</option>
+                        </select>
                     </div>
 
                 </div>
