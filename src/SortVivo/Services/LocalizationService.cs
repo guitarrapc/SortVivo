@@ -28,6 +28,14 @@ public sealed class LocalizationService
         _ => lang,
     };
 
+    /// <summary>各言語の国旗 emoji。</summary>
+    public static string GetFlagEmoji(string lang) => lang switch
+    {
+        "en" => "🇺🇸",
+        "ja" => "🇯🇵",
+        _ => "🌐",
+    };
+
     /// <summary>言語変更イベント。購読コンポーネントは StateHasChanged を呼ぶこと。</summary>
     public event Action? OnLanguageChanged;
 

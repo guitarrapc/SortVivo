@@ -199,6 +199,7 @@
     cursor: pointer;
     transition: background 0.15s, color 0.15s;
     border-right: 1px solid #4A4A4A;
+    white-space: nowrap;
 }
 
     .settings-segment__btn:last-child {
@@ -214,6 +215,33 @@
     background: var(--color-accent);
     color: #fff;
     font-weight: 600;
+}
+
+/* コンパクト幅セグメント（横並び行で使用） */
+.settings-segment--fit {
+    margin-top: 0;
+    width: auto;
+    min-width: 176px;
+    flex-shrink: 0;
+}
+
+/* 言語選択ボタン */
+.settings-segment__btn--lang {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 14px;
+    min-width: 68px;
+}
+
+.lang-flag {
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.lang-name {
+    font-size: 0.73rem;
 }
 
 /* Toggle Switch Styles */
@@ -267,6 +295,50 @@
 .toggle-label {
     font-size: 0.95rem;
     color: var(--text-light);
+}
+
+/* ─── WebGL Renderer コントロール ────────────────────────────────────── */
+.webgl-control {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    flex-shrink: 0;
+}
+
+.webgl-info-btn {
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    border: 1px solid #4A4A4A;
+    background: transparent;
+    color: var(--text-gray);
+    font-size: 0.7rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    transition: border-color 0.15s, color 0.15s;
+    padding: 0;
+    line-height: 1;
+}
+
+    .webgl-info-btn:hover,
+    .webgl-info-btn--active {
+        border-color: var(--color-accent);
+        color: var(--color-accent);
+    }
+
+@keyframes hintFadeIn {
+    from { opacity: 0; transform: translateY(-3px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+
+.settings-row--hint {
+    padding-top: 2px;
+    padding-bottom: 10px;
+    border-bottom: none;
+    animation: hintFadeIn 0.15s ease forwards;
 }
 
 /* ─── スマホ: フルスクリーンモーダル ──────────────────────────────────── */

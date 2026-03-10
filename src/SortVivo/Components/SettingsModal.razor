@@ -28,15 +28,16 @@
                 <h3 class="settings-section__title">@L["settings.language"]</h3>
                 <div class="settings-section__body">
 
-                    <div class="settings-row settings-row--vertical">
+                    <div class="settings-row">
                         <span class="settings-label">@L["settings.languageHint"]</span>
-                        <div class="settings-segment">
+                        <div class="settings-segment settings-segment--fit">
                             @foreach (var lang in LocalizationService.SupportedLanguages)
                             {
                                 var captured = lang;
-                                <button class="settings-segment__btn @(L.CurrentLanguage == lang ? "settings-segment__btn--active" : "")"
+                                <button class="settings-segment__btn settings-segment__btn--lang @(L.CurrentLanguage == lang ? "settings-segment__btn--active" : "")"
                                         @onclick="() => ChangeLanguageAsync(captured)">
-                                    @LocalizationService.GetDisplayName(lang)
+                                    <span class="lang-flag">@LocalizationService.GetFlagEmoji(lang)</span>
+                                    <span class="lang-name">@LocalizationService.GetDisplayName(lang)</span>
                                 </button>
                             }
                         </div>
@@ -51,21 +52,33 @@
             <section class="settings-section">
                 <h3 class="settings-section__title">@L["settings.rendering"]</h3>
                 <div class="settings-section__body">
-
-                    <div class="settings-row settings-row--vertical">
+                    <div class="settings-row">
                         <span class="settings-label">@L["settings.renderer"]</span>
-                        <div class="settings-segment">
-                            <button class="settings-segment__btn @(!RenderSettings.UseWebGL ? "settings-segment__btn--active" : "")"
-                                    @onclick="() => RenderSettings.UseWebGL = false">
-                                @L["settings.canvas2d"]
+                        <div class="webgl-control">
+                            <button class="webgl-info-btn @(_showWebGLHint ? "webgl-info-btn--active" : "")"
+                                    @onclick="() => _showWebGLHint = !_showWebGLHint"
+                                    @onclick:stopPropagation
+                                    title="@L["settings.webglHint"]">
+                                ⓘ
                             </button>
-                            <button class="settings-segment__btn @(RenderSettings.UseWebGL ? "settings-segment__btn--active" : "")"
-                                    @onclick="() => RenderSettings.UseWebGL = true">
-                                @L["settings.webgl"]
-                            </button>
+                            <div class="settings-segment settings-segment--fit">
+                                <button class="settings-segment__btn @(!RenderSettings.UseWebGL ? "settings-segment__btn--active" : "")"
+                                        @onclick="() => RenderSettings.UseWebGL = false">
+                                    @L["settings.canvas2d"]
+                                </button>
+                                <button class="settings-segment__btn @(RenderSettings.UseWebGL ? "settings-segment__btn--active" : "")"
+                                        @onclick="() => RenderSettings.UseWebGL = true">
+                                    @L["settings.webgl"]
+                                </button>
+                            </div>
                         </div>
-                        <span class="settings-hint">@L["settings.webglHint"]</span>
                     </div>
+                    @if (_showWebGLHint)
+                    {
+                        <div class="settings-row settings-row--hint">
+                            <span class="settings-hint">@L["settings.webglHint"]</span>
+                        </div>
+                    }
 
                 </div>
             </section>
@@ -116,9 +129,9 @@
                                style="@RangeTrackStyle(Playback.SoundVolume, 0, 1)" />
                     </div>
 
-                    <div class="settings-row settings-row--vertical">
+                    <div class="settings-row">
                         <span class="settings-label">@L["settings.soundType"]</span>
-                        <div class="settings-segment">
+                        <div class="settings-segment settings-segment--fit">
                             <button class="settings-segment__btn @(Playback.SoundType == "sine" ? "settings-segment__btn--active" : "")"
                                     @onclick='() => HandleSoundTypeChanged("sine")'>
                                 @L["settings.soundTypeSine"]
@@ -196,22 +209,6 @@
                                 @L["settings.aboutPrivacyText"]
                             </p>
                         </div>
-
-                        <div class="about-item">
-                            <h4 class="about-item__title">@L["settings.aboutBuiltWith"]</h4>
-                            <p class="about-item__text">
-                                @L["settings.aboutBuiltWithText"]
-                            </p>
-                        </div>
-
-                        <div class="about-item">
-                            <h4 class="about-item__title">@L["settings.aboutOpenSource"]</h4>
-                            <p class="about-item__text">
-                                <a href="https://github.com/guitarrapc/SortVivo" target="_blank" rel="noopener noreferrer" class="about-link">
-                                    @L["settings.aboutViewOnGitHub"]
-                                </a>
-                            </p>
-                        </div>
                     </div>
 
                 </div>
@@ -231,6 +228,7 @@
     [Parameter, EditorRequired] public ComparisonModeService ComparisonMode { get; set; } = default!;
 
     private bool _isClosing = false;
+    private bool _showWebGLHint = false;
 
     [Parameter] public bool AutoSwitchToRecommendedSize { get; set; }
     [Parameter] public EventCallback<bool> AutoSwitchToRecommendedSizeChanged { get; set; }
