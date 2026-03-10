@@ -382,7 +382,20 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (string.IsNullOrEmpty(AlgorithmName)) return;
+        if (string.IsNullOrEmpty(AlgorithmName))
+        {
+            // AlgorithmName が指定されていない場合は、最初のチュートリアルアルゴリズムにリダイレクト
+            var firstAlgo = GetTutorialAlgorithms().FirstOrDefault();
+            if (firstAlgo != null)
+            {
+                Navigation.NavigateTo($"/tutorial/{Uri.EscapeDataString(firstAlgo.Name)}", replace: true);
+            }
+            else
+            {
+                Navigation.NavigateTo("/", replace: true);
+            }
+            return;
+        }
 
         try
         {
@@ -391,13 +404,36 @@
                 .FirstOrDefault(a => string.Equals(a.Name, decoded, StringComparison.OrdinalIgnoreCase));
 
             if (algo != null && algo != _selectedAlgorithm)
+            {
                 await LoadAlgorithm(algo);
+            }
             else if (algo == null)
-                Navigation.NavigateTo("/", replace: true);
+            {
+                // 指定されたアルゴリズムが見つからない（チュートリアルから除外されている等）場合は、
+                // 最初のチュートリアルアルゴリズムにリダイレクト
+                var firstAlgo = GetTutorialAlgorithms().FirstOrDefault();
+                if (firstAlgo != null)
+                {
+                    Navigation.NavigateTo($"/tutorial/{Uri.EscapeDataString(firstAlgo.Name)}", replace: true);
+                }
+                else
+                {
+                    Navigation.NavigateTo("/", replace: true);
+                }
+            }
         }
         catch (UriFormatException)
         {
-            Navigation.NavigateTo("/", replace: true);
+            // URIフォーマットエラーの場合も、最初のチュートリアルアルゴリズムにリダイレクト
+            var firstAlgo = GetTutorialAlgorithms().FirstOrDefault();
+            if (firstAlgo != null)
+            {
+                Navigation.NavigateTo($"/tutorial/{Uri.EscapeDataString(firstAlgo.Name)}", replace: true);
+            }
+            else
+            {
+                Navigation.NavigateTo("/", replace: true);
+            }
         }
     }
 
