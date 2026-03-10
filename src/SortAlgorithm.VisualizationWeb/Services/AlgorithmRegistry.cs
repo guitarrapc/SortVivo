@@ -183,8 +183,7 @@ public class AlgorithmRegistry
             tutorialVisualizationHint: TutorialVisualizationHint.DigitBucketLsd,
             tutorialLsdRadix: 10);
         Add("LSD Radix sort (b=256)", "DISTRIBUTION", "O(nk)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => RadixLSD256Sort.Sort(arr, ctx),
-            gitHubSourceUrl: Src("Distribution", "RadixLSD256Sort"),
-            excludeFromTutorial: true);
+            gitHubSourceUrl: Src("Distribution", "RadixLSD256Sort"));
         Add("MSD Radix sort (b=4)", "DISTRIBUTION", "O(nk)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => RadixMSD4Sort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Distribution", "RadixMSD4Sort"),
             tutorialVisualizationHint: TutorialVisualizationHint.DigitBucketMsd,
