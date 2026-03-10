@@ -185,7 +185,7 @@
 
 .cst-algo-name {
     font-weight: 600;
-    color: #3B82F6;
+    color: var(--color-tutorial-accent);
     font-size: 0.95em;
     flex: 1;
     min-width: 0;
