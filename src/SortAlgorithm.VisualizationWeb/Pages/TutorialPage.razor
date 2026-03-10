@@ -382,7 +382,20 @@
 
     protected override async Task OnParametersSetAsync()
     {
-        if (string.IsNullOrEmpty(AlgorithmName)) return;
+        if (string.IsNullOrEmpty(AlgorithmName))
+        {
+            // AlgorithmName が指定されていない場合は、最初のチュートリアルアルゴリズムにリダイレクト
+            var firstAlgo = GetTutorialAlgorithms().FirstOrDefault();
+            if (firstAlgo != null)
+            {
+                Navigation.NavigateTo($"/tutorial/{Uri.EscapeDataString(firstAlgo.Name)}", replace: true);
+            }
+            else
+            {
+                Navigation.NavigateTo("/", replace: true);
+            }
+            return;
+        }
 
         try
         {
