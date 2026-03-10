@@ -182,8 +182,13 @@
         gap: 3px;
     }
 
+    /* Full モード（6 項目）は 3 列 × 2 行に収める */
+    .sort-stats-summary--full .sss__compact {
+        grid-template-columns: repeat(3, 1fr);
+    }
+
     .stat-mini {
-        padding: 3px 3px;
+        padding: 3px 4px;
         gap: 1px;
         min-height: 36px;
     }
@@ -194,6 +199,6 @@
     }
 
     .stat-mini .value {
-        font-size: 0.72rem;
+        font-size: 0.65rem;
     }
 }
