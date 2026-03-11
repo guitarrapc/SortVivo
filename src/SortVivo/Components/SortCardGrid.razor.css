@@ -31,12 +31,7 @@
     background-color: rgba(74, 158, 255, 0.1);
 }
 
-/* ドラッグプレビュー */
-::deep .sort-card--drag-preview {
-    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
-    cursor: grabbing;
-    user-select: none;
-}
+/* ドラッグプレビューのスタイルは app.css でグローバルに定義 */
 
 /* ドットインジケーター: PC/タブレット では非表示 */
 .carousel-dots {

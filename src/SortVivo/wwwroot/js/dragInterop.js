@@ -120,6 +120,12 @@ class DragManager {
         preview.style.margin = '0';
         preview.style.left = '0';
         preview.style.top = '0';
+        // ボーダーとアニメーションを確実に適用（インラインスタイル）
+        preview.style.border = '3px solid var(--color-accent, #7fa86f)';
+        preview.style.borderRadius = '8px';
+        preview.style.boxShadow = '0 8px 24px rgba(0, 0, 0, 0.3)';
+        preview.style.cursor = 'grabbing';
+        preview.style.animation = 'drag-pulse 1.5s ease-in-out infinite';
         document.body.appendChild(preview);
         this.dragState.preview = preview;
 
