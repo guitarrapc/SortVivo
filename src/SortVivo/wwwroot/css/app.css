@@ -848,3 +848,26 @@ fieldset.controls-fieldset:disabled *,
 fieldset.controls-fieldset[disabled] * {
     cursor: not-allowed;
 }
+
+/* ─── ドラッグ＆ドロップ プレビュー（グローバルスタイル） ─────────────────── */
+/* プレビューは document.body に追加されるため、スコープ付きCSSではなくグローバルCSSで定義 */
+
+.sort-card--drag-preview {
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    cursor: grabbing;
+    user-select: none;
+    border: 3px solid var(--color-accent, #7fa86f) !important;
+    border-radius: 8px;
+    animation: drag-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes drag-pulse {
+    0%, 100% {
+        border-color: var(--color-accent, #7fa86f);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(127, 168, 111, 0.7);
+    }
+    50% {
+        border-color: rgba(127, 168, 111, 0.8);
+        box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(127, 168, 111, 0.3);
+    }
+}

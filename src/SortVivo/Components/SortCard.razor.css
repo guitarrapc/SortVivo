@@ -20,15 +20,36 @@
 
 .sort-card__header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
-    padding: 0.75rem 1rem;
+    padding: 0.75rem 0.5rem;
     background: #252525;
     border-bottom: 1px solid #333;
     flex-shrink: 0;
+    gap: 0.3rem;
+}
+
+.sort-card__drag-handle {
+    touch-action: none;
+    cursor: grab;
+    color: #555;
+    font-size: 1.1em;
+    line-height: 1;
+    padding: 0 0;
+    flex-shrink: 0;
+    user-select: none;
+    transition: color 0.15s;
+}
+
+.sort-card__drag-handle:hover {
+    color: #999;
+}
+
+.sort-card__drag-handle:active {
+    cursor: grabbing;
 }
 
 .sort-card__algorithm-name {
+    flex: 1;
     font-size: 1em;
     color: #e0e0e0;
     font-weight: 600;
@@ -36,6 +57,7 @@
 
 /* アルゴリズム選択 select（[Algo ▾] スタイル） */
 .sort-card__algo-select {
+    flex: 1;
     font-size: 1em;
     font-weight: 600;
     color: #e0e0e0;
@@ -46,7 +68,8 @@
     cursor: pointer;
     appearance: auto;
     outline: none;
-    max-width: 180px;
+    min-width: 100px;
+    max-width: 270px;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -67,6 +90,7 @@
     display: flex;
     align-items: center;
     gap: 0.5rem;
+    margin-left: auto;
 }
 
 .sort-card__visualization {

@@ -125,6 +125,7 @@
                               VisualizationMode="SelectedVisualizationMode"
                               OnRemove="RemoveAlgorithmFromComparison"
                               OnReplaceAlgorithm="@(args => ReplaceAlgorithmInCard(args.index, args.algoName))"
+                              OnInstancesReordered="HandleInstancesReordered"
                               OnVisualizationClick="OnComparisonVisualizationClick" />
             }
         </div>
@@ -584,6 +585,29 @@
         ApplySavedSoundSettings();
         UpdateContentStateUrl();
         StateHasChanged();
+    }
+
+    private async Task HandleInstancesReordered(int[] newOrder)
+    {
+        DebugSettings.Log($"[Index] HandleInstancesReordered called with order: [{string.Join(", ", newOrder)}]");
+
+        if (newOrder == null || newOrder.Length != ComparisonMode.State.Instances.Count)
+        {
+            DebugSettings.Log("[Index] Invalid newOrder array");
+            return;
+        }
+
+        // 新しい順序でインスタンスを並び替え
+        var reordered = newOrder.Select(i => ComparisonMode.State.Instances[i]).ToList();
+        ComparisonMode.State.Instances.Clear();
+        ComparisonMode.State.Instances.AddRange(reordered);
+
+        DebugSettings.Log($"[Index] Instances reordered: {string.Join(", ", ComparisonMode.State.Instances.Select(i => i.AlgorithmName))}");
+
+        UpdateContentStateUrl();
+
+        // 非同期でStateHasChangedを呼び出して、ビジュアライゼーションの再レンダリングを確実にする
+        await InvokeAsync(StateHasChanged);
     }
 
     private void HandleClearAll()

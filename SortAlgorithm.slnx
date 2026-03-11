@@ -14,6 +14,7 @@
     <File Path="Docs/Sorts/SortArchitecture_Release_ButStatistics.md" />
   </Folder>
   <Folder Name="/docs/SortVivo/">
+    <File Path="Docs/SortVivo/SortVivo_Card_Reordering_Spec.md" />
     <File Path="Docs/SortVivo/SortVivo_ComparisonMode_Implementation_Status.md" />
     <File Path="Docs/SortVivo/SortVivo_ComparisonMode_Performance.md" />
     <File Path="Docs/SortVivo/SortVivo_ExecutionTimeVisualization.md" />
@@ -24,6 +25,7 @@
     <File Path="Docs/SortVivo/SortVivo_Performance_Analysis.md" />
     <File Path="Docs/SortVivo/SortVivo_PictureRow_Bug_Analysis.md" />
     <File Path="Docs/SortVivo/SortVivo_Rendering_Performance_Improvement.md" />
+    <File Path="Docs/SortVivo/SortVivo_ShareButton_Spec.md" />
     <File Path="Docs/SortVivo/SortVivo_Sound_Spec.md" />
     <File Path="Docs/SortVivo/SortVivo_tutorial.md" />
     <File Path="Docs/SortVivo/SortVivo_tutorial_additional_visualizations.md" />

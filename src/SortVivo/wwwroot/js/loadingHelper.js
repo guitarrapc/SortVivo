@@ -101,7 +101,8 @@ window.loadingHelper = {
                     // エラーでもカウントを進める
                     loadedResources++;
                     updateProgress();
-                    throw error;
+                    // エラー時はデフォルトのローディングメカニズムにフォールバック
+                    return null;
                 });
             }
         });

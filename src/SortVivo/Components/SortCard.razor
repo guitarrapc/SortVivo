@@ -7,6 +7,7 @@
 <div class="sort-card @(State.IsSortCompleted ? "sort-card--completed" : "")">
     @* カードヘッダー *@
     <div class="sort-card__header">
+        <span class="sort-card__drag-handle" aria-hidden="true">⠿</span>
         @if (OnAlgorithmSelected.HasDelegate)
         {
             <select class="sort-card__algo-select"
@@ -27,7 +28,7 @@
             <span class="sort-card__algorithm-name">@AlgorithmName</span>
         }
         <div class="sort-card__header-right">
-            <span class="complexity-badge">@Complexity</span>
+            <span class="complexity-badge" title="@Complexity">@(Complexity.StartsWith("O(") && Complexity.EndsWith(")") ? Complexity[2..^1] : Complexity)</span>
             @if (ShowRemoveButton)
             {
                 <button class="btn-remove-grid"

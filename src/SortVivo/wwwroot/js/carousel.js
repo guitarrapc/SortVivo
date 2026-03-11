@@ -42,5 +42,21 @@ window.carouselInterop = {
         const cardWidth = cards[0].offsetWidth;
         const gap = 12;
         el.scrollTo({ left: index * (cardWidth + gap), behavior: 'smooth' });
+    },
+
+    disableScroll: function (id) {
+        const reg = this._registrations[id];
+        if (reg && reg.el) {
+            reg.el.style.overflowX = 'hidden';
+            reg.el.style.touchAction = 'none';
+        }
+    },
+
+    enableScroll: function (id) {
+        const reg = this._registrations[id];
+        if (reg && reg.el) {
+            reg.el.style.overflowX = '';
+            reg.el.style.touchAction = '';
+        }
     }
 };
