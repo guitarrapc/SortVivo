@@ -24,8 +24,11 @@
 
 /* ドラッグ中のカード（元の位置） */
 ::deep .sort-card--dragging {
-    opacity: 0.5;
+    opacity: 0.3;
     z-index: 1000;
+    outline: 2px dashed var(--color-accent, #4a9eff);
+    outline-offset: -2px;
+    background-color: rgba(74, 158, 255, 0.1);
 }
 
 /* ドラッグプレビュー */

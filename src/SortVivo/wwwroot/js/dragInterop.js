@@ -38,7 +38,11 @@ class DragManager {
             startY: 0,
             preview: null,
             longPressTimer: null,
-            draggedCard: null
+            draggedCard: null,
+            originalCardWidth: 0,
+            originalCardHeight: 0,
+            initialOffsetX: 0,
+            initialOffsetY: 0
         };
 
         this._boundOnPointerDown = this._onPointerDown.bind(this);
@@ -71,12 +75,19 @@ class DragManager {
         const index = cards.indexOf(card);
         if (index === -1) return;
 
+        // カード内のクリック位置（相対オフセット）を計算
+        const rect = card.getBoundingClientRect();
+        const offsetX = e.clientX - rect.left;
+        const offsetY = e.clientY - rect.top;
+
         // 長押しタイマー開始（300ms）
         this.dragState.draggedIndex = index;
         this.dragState.currentIndex = index;
         this.dragState.draggedCard = card;
         this.dragState.startX = e.clientX;
         this.dragState.startY = e.clientY;
+        this.dragState.initialOffsetX = offsetX;
+        this.dragState.initialOffsetY = offsetY;
 
         this.dragState.longPressTimer = setTimeout(() => {
             this._startDrag(card, e.clientX, e.clientY);
@@ -89,6 +100,11 @@ class DragManager {
     _startDrag(card, x, y) {
         this.dragState.isDragging = true;
 
+        // 元のカードのサイズを保存（プレビュー位置計算用）
+        const rect = card.getBoundingClientRect();
+        this.dragState.originalCardWidth = rect.width;
+        this.dragState.originalCardHeight = rect.height;
+
         // カードに dragging クラス追加
         card.classList.add('sort-card--dragging');
 
@@ -99,11 +115,16 @@ class DragManager {
         preview.style.position = 'fixed';
         preview.style.pointerEvents = 'none';
         preview.style.zIndex = '2000';
-        preview.style.width = card.offsetWidth + 'px';
-        preview.style.height = card.offsetHeight + 'px';
-        this._updatePreviewPosition(preview, x, y);
+        preview.style.width = this.dragState.originalCardWidth + 'px';
+        preview.style.height = this.dragState.originalCardHeight + 'px';
+        preview.style.margin = '0';
+        preview.style.left = '0';
+        preview.style.top = '0';
         document.body.appendChild(preview);
         this.dragState.preview = preview;
+
+        // 初期位置を設定（DOM追加後）
+        this._updatePreviewPosition(preview, x, y);
 
         // カルーセルスクロール無効化
         if (window.carouselInterop && window.carouselInterop.disableScroll) {
@@ -169,9 +190,13 @@ class DragManager {
 
     _updatePreviewPosition(preview, x, y) {
         if (!preview) return;
-        const offsetX = preview.offsetWidth / 2;
-        const offsetY = preview.offsetHeight / 2;
-        preview.style.transform = `translate3d(${x - offsetX}px, ${y - offsetY}px, 0) scale(1.05)`;
+
+        // クリックした位置のオフセットを維持する（等倍表示）
+        const scale = 1.0;
+        const scaledOffsetX = this.dragState.initialOffsetX * scale;
+        const scaledOffsetY = this.dragState.initialOffsetY * scale;
+
+        preview.style.transform = `translate3d(${x - scaledOffsetX}px, ${y - scaledOffsetY}px, 0) scale(${scale})`;
     }
 
     _calculateDropIndex(x, y) {
@@ -313,7 +338,11 @@ class DragManager {
             startY: 0,
             preview: null,
             longPressTimer: null,
-            draggedCard: null
+            draggedCard: null,
+            originalCardWidth: 0,
+            originalCardHeight: 0,
+            initialOffsetX: 0,
+            initialOffsetY: 0
         };
     }
 
