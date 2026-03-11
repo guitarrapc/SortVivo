@@ -587,7 +587,7 @@
         StateHasChanged();
     }
 
-    private void HandleInstancesReordered(int[] newOrder)
+    private async Task HandleInstancesReordered(int[] newOrder)
     {
         DebugSettings.Log($"[Index] HandleInstancesReordered called with order: [{string.Join(", ", newOrder)}]");
 
@@ -605,7 +605,9 @@
         DebugSettings.Log($"[Index] Instances reordered: {string.Join(", ", ComparisonMode.State.Instances.Select(i => i.AlgorithmName))}");
 
         UpdateContentStateUrl();
-        StateHasChanged();
+
+        // 非同期でStateHasChangedを呼び出して、ビジュアライゼーションの再レンダリングを確実にする
+        await InvokeAsync(StateHasChanged);
     }
 
     private void HandleClearAll()

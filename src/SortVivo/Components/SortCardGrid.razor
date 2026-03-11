@@ -102,6 +102,9 @@
         {
             await OnInstancesReordered.InvokeAsync(newOrder);
         }
+
+        // 並び替え後、確実に再レンダリングを行う
+        await InvokeAsync(StateHasChanged);
     }
 
     private async Task ScrollToCard(int index)
