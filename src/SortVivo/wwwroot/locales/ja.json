@@ -93,7 +93,11 @@
     "soundNotAvailable": "比較モードではサウンドを使用できません"
   },
   "sortCard": {
-    "clickToStart": "「追加 & 生成」をクリックして可視化を開始"
+    "clickToStart": "「追加 & 生成」をクリックして可視化を開始",
+    "reorderButton": "\u21c5 並び替え",
+    "reorderDoneButton": "\u2713 完了",
+    "reorderButtonTitle": "カードを並び替え",
+    "reorderDoneTitle": "並び替え完了"
   },
   "tutorial": {
     "title": "Tutorial",

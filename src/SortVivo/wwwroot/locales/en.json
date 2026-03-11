@@ -93,7 +93,11 @@
     "soundNotAvailable": "Sound not available in Comparison Mode"
   },
   "sortCard": {
-    "clickToStart": "Click \u201cAdd & Generate\u201d to start visualization"
+    "clickToStart": "Click \u201cAdd & Generate\u201d to start visualization",
+    "reorderButton": "\u21c5 Reorder",
+    "reorderDoneButton": "\u2713 Done",
+    "reorderButtonTitle": "Reorder cards",
+    "reorderDoneTitle": "Done reordering"
   },
   "tutorial": {
     "title": "TUTORIAL",

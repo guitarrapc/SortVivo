@@ -83,7 +83,7 @@
     justify-content: stretch;
     background-color: #1A1A1A;
     border-radius: 8px;
-    overflow: hidden;
+    overflow: auto;
     min-height: 300px;
 }
 

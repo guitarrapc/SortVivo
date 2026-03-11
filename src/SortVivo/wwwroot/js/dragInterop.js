@@ -16,6 +16,16 @@ window.dragInterop = {
             instance.dispose();
             this._instances.delete(gridId);
         }
+    },
+
+    enterEditMode: function (gridId) {
+        const instance = this._instances.get(gridId);
+        if (instance) instance.setEditMode(true);
+    },
+
+    exitEditMode: function (gridId) {
+        const instance = this._instances.get(gridId);
+        if (instance) instance.setEditMode(false);
     }
 };
 
@@ -29,6 +39,8 @@ class DragManager {
             console.warn(`[dragInterop] Grid element not found: ${gridId}`);
             return;
         }
+
+        this.editMode = false;
 
         this.dragState = {
             isDragging: false,
@@ -129,8 +141,8 @@ class DragManager {
         // 初期位置を設定（DOM追加後）
         this._updatePreviewPosition(preview, x, y);
 
-        // カルーセルスクロール無効化
-        if (window.carouselInterop && window.carouselInterop.disableScroll) {
+        // カルーセルスクロール無効化（編集モード時はすでにカルーセルが無効なのでスキップ）
+        if (!this.editMode && window.carouselInterop && window.carouselInterop.disableScroll) {
             window.carouselInterop.disableScroll(this.gridId);
         }
 
@@ -319,8 +331,8 @@ class DragManager {
             this.dotNetRef.invokeMethodAsync('OnReorder', newOrder);
         }
 
-        // カルーセル再有効化
-        if (window.carouselInterop && window.carouselInterop.enableScroll) {
+        // カルーセル再有効化（編集モード時はスキップ）
+        if (!this.editMode && window.carouselInterop && window.carouselInterop.enableScroll) {
             window.carouselInterop.enableScroll(this.gridId);
         }
 
@@ -342,8 +354,8 @@ class DragManager {
             card.style.transition = '';
         });
 
-        // カルーセル再有効化
-        if (window.carouselInterop && window.carouselInterop.enableScroll) {
+        // カルーセル再有効化（編集モード時はスキップ）
+        if (!this.editMode && window.carouselInterop && window.carouselInterop.enableScroll) {
             window.carouselInterop.enableScroll(this.gridId);
         }
 
@@ -357,6 +369,10 @@ class DragManager {
         const [moved] = order.splice(fromIndex, 1);
         order.splice(toIndex, 0, moved);
         return order;
+    }
+
+    setEditMode(enabled) {
+        this.editMode = enabled;
     }
 
     _getGridColumns() {
