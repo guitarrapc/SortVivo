@@ -749,7 +749,7 @@
         return Playback.State.MainArray.Length;
     }
 
-    private async Task HandleToggleSound()
+    private void HandleToggleSound()
     {
         if (ComparisonMode.State.Instances.Count >= 1)
         {
@@ -758,10 +758,14 @@
             // グローバルPlaybackにも同期（localStorageへの保存用）
             Playback.SoundEnabled = ComparisonMode.SoundEnabled;
             // サウンドON時にAudioContextを初期化（ブラウザAutoplay Policy対応）
+            // AudioContext はグローバルに1つなので、initAudio / setSoundType は1回で十分。
+            // fire-and-forget: initAudio は AudioContext の生成/resume のみ、setSoundType は
+            // 文字列の代入のみ。次の rAF（音再生タイミング）までに確実に完了する。
+            // await を排除することで Blazor の中間レンダリング（各 await 境界で発生）を防止。
             if (ComparisonMode.SoundEnabled)
             {
-                foreach (var instance in ComparisonMode.State.Instances)
-                    await instance.Playback.InitSoundAsync();
+                _ = JS.InvokeVoidAsync("soundEngine.initAudio");
+                _ = JS.InvokeVoidAsync("soundEngine.setSoundType", Playback.SoundType);
             }
         }
         else

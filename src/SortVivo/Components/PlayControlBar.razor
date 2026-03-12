@@ -112,4 +112,33 @@
 
     [Parameter]
     public EventCallback OnClearAll { get; set; }
+
+    private bool _lastIsPlaying;
+    private bool _lastSoundEnabled;
+    private bool _lastPlayDisabled;
+    private bool _lastStopDisabled;
+    private bool _lastClearAllDisabled;
+    private string _lastStatusText = "";
+    private int _lastArraySize;
+
+    protected override bool ShouldRender()
+    {
+        var changed = _lastIsPlaying != IsPlaying
+                   || _lastSoundEnabled != SoundEnabled
+                   || _lastPlayDisabled != PlayDisabled
+                   || _lastStopDisabled != StopDisabled
+                   || _lastClearAllDisabled != ClearAllDisabled
+                   || _lastStatusText != StatusText
+                   || _lastArraySize != ArraySize;
+
+        _lastIsPlaying = IsPlaying;
+        _lastSoundEnabled = SoundEnabled;
+        _lastPlayDisabled = PlayDisabled;
+        _lastStopDisabled = StopDisabled;
+        _lastClearAllDisabled = ClearAllDisabled;
+        _lastStatusText = StatusText;
+        _lastArraySize = ArraySize;
+
+        return changed;
+    }
 }
