@@ -92,14 +92,17 @@ public class AlgorithmRegistry
             gitHubSourceUrl: Src("Merge", "RotateMergeSort"));
         Add("SymMerge sort", "MERGE", "O(n log² n)", MAX_SIZE_NLOGN, 1024, (arr, ctx) => SymMergeSort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Merge", "SymMergeSort"));
-        Add("Powersort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => PowerSort.Sort(arr, ctx),
-            gitHubSourceUrl: Src("Merge", "PowerSort"),
-            tutorialArrayType: TutorialArrayType.MultiRun);
         Add("ShiftSort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => ShiftSort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Merge", "ShiftSort"),
             tutorialArrayType: TutorialArrayType.MultiRun);
+        Add("Natural merge sort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => NaturalMergeSort.Sort(arr, ctx),
+            gitHubSourceUrl: Src("Merge", "NaturalMergeSort"),
+            tutorialArrayType: TutorialArrayType.MultiRun);
         Add("Timsort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => TimSort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Merge", "TimSort"),
+            tutorialArrayType: TutorialArrayType.MultiRun);
+        Add("Powersort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => PowerSort.Sort(arr, ctx),
+            gitHubSourceUrl: Src("Merge", "PowerSort"),
             tutorialArrayType: TutorialArrayType.MultiRun);
 
         // Heap Sorts - O(n log n) - 推奨2048
