@@ -90,7 +90,10 @@
     "clearAll": "すべて削除",
     "soundOn": "サウンド ON",
     "soundOff": "サウンド OFF",
-    "soundNotAvailable": "比較モードではサウンドを使用できません"
+    "soundNotAvailable": "比較モードではサウンドを使用できません",
+    "record": "録画",
+    "recording": "録画中...",
+    "recordStop": "録画停止"
   },
   "sortCard": {
     "clickToStart": "「追加 & 生成」をクリックして可視化を開始",

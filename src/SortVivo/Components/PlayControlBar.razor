@@ -65,6 +65,24 @@
                 </svg>
             }
         </button>
+
+        <button class="play-control-btn @(IsRecording ? "btn-record-active" : "btn-record")"
+                @onclick="OnToggleRecord"
+                disabled="@RecordDisabled"
+                title="@(IsRecording ? L["playback.recordStop"] : L["playback.record"])">
+            @if (IsRecording)
+            {
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <rect x="6" y="6" width="12" height="12" rx="2"></rect>
+                </svg>
+            }
+            else
+            {
+                <svg viewBox="0 0 24 24" fill="currentColor">
+                    <circle cx="12" cy="12" r="8"></circle>
+                </svg>
+            }
+        </button>
     </div>
 
     <div class="play-control-info">
@@ -113,11 +131,22 @@
     [Parameter]
     public EventCallback OnClearAll { get; set; }
 
+    [Parameter]
+    public bool IsRecording { get; set; }
+
+    [Parameter]
+    public bool RecordDisabled { get; set; }
+
+    [Parameter]
+    public EventCallback OnToggleRecord { get; set; }
+
     private bool _lastIsPlaying;
     private bool _lastSoundEnabled;
     private bool _lastPlayDisabled;
     private bool _lastStopDisabled;
     private bool _lastClearAllDisabled;
+    private bool _lastIsRecording;
+    private bool _lastRecordDisabled;
     private string _lastStatusText = "";
     private int _lastArraySize;
 
@@ -129,7 +158,9 @@
                    || _lastStopDisabled != StopDisabled
                    || _lastClearAllDisabled != ClearAllDisabled
                    || _lastStatusText != StatusText
-                   || _lastArraySize != ArraySize;
+                   || _lastArraySize != ArraySize
+                   || _lastIsRecording != IsRecording
+                   || _lastRecordDisabled != RecordDisabled;
 
         _lastIsPlaying = IsPlaying;
         _lastSoundEnabled = SoundEnabled;
@@ -138,6 +169,8 @@
         _lastClearAllDisabled = ClearAllDisabled;
         _lastStatusText = StatusText;
         _lastArraySize = ArraySize;
+        _lastIsRecording = IsRecording;
+        _lastRecordDisabled = RecordDisabled;
 
         return changed;
     }

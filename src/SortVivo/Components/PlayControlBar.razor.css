@@ -157,6 +157,44 @@
         border-color: #4b5563;
     }
 
+.btn-record {
+    background-color: rgba(239, 68, 68, 0.15);
+    color: #f87171;
+    border-color: rgba(239, 68, 68, 0.4);
+}
+
+    .btn-record:hover:not(:disabled) {
+        background-color: rgba(239, 68, 68, 0.3);
+        border-color: #ef4444;
+    }
+
+    .btn-record:active:not(:disabled) {
+        background-color: rgba(239, 68, 68, 0.45);
+        border-color: #dc2626;
+    }
+
+.btn-record-active {
+    background-color: rgba(239, 68, 68, 0.35);
+    color: #ff4444;
+    border-color: #ef4444;
+    animation: record-pulse 1.2s ease-in-out infinite;
+}
+
+    .btn-record-active:hover:not(:disabled) {
+        background-color: rgba(239, 68, 68, 0.5);
+        border-color: #f87171;
+    }
+
+    .btn-record-active:active:not(:disabled) {
+        background-color: rgba(239, 68, 68, 0.6);
+        border-color: #dc2626;
+    }
+
+@keyframes record-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.6; }
+}
+
 .play-control-status {
     font-size: 0.9rem;
     color: #F59E0B;

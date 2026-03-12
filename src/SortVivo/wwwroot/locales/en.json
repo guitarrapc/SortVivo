@@ -90,7 +90,10 @@
     "clearAll": "Clear All",
     "soundOn": "Sound ON",
     "soundOff": "Sound OFF",
-    "soundNotAvailable": "Sound not available in Comparison Mode"
+    "soundNotAvailable": "Sound not available in Comparison Mode",
+    "record": "Record",
+    "recording": "Recording...",
+    "recordStop": "Stop Recording"
   },
   "sortCard": {
     "clickToStart": "Click \u201cAdd & Generate\u201d to start visualization",
