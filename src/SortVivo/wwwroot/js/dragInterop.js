@@ -137,21 +137,20 @@ class DragManager {
         // カードに dragging クラス追加
         card.classList.add('sort-card--dragging');
 
-        // プレビュー作成
-        const preview = card.cloneNode(true);
-        preview.classList.add('sort-card--drag-preview');
-        preview.classList.remove('sort-card--dragging');
-        preview.style.position = 'fixed';
-        preview.style.pointerEvents = 'none';
-        preview.style.zIndex = '2000';
-        preview.style.width = this.dragState.originalCardWidth + 'px';
-        preview.style.height = this.dragState.originalCardHeight + 'px';
-        preview.style.margin = '0';
-        preview.style.left = '0';
-        preview.style.top = '0';
-        // transform/transitionをクリア（元カードから継承された可能性があるため）
-        preview.style.transform = '';
-        preview.style.transition = '';
+        // 軽量プレビュー作成（cloneNode(true) はcanvas/select等を含み非常に重いため避ける）
+        const preview = document.createElement('div');
+        preview.className = 'sort-card sort-card--drag-preview';
+        const algoName = card.querySelector('.sort-card__algo-select, .sort-card__algorithm-name');
+        if (algoName) {
+            const header = document.createElement('div');
+            header.className = 'sort-card__header';
+            const label = document.createElement('span');
+            label.className = 'sort-card__algorithm-name';
+            label.textContent = algoName.value || algoName.textContent || '';
+            header.appendChild(label);
+            preview.appendChild(header);
+        }
+        preview.style.cssText = `position:fixed;pointer-events:none;z-index:2000;width:${this.dragState.originalCardWidth}px;height:${this.dragState.originalCardHeight}px;margin:0;left:0;top:0;opacity:0.85;`;
         document.body.appendChild(preview);
         this.dragState.preview = preview;
 
@@ -163,17 +162,8 @@ class DragManager {
             window.carouselInterop.disableScroll(this.gridId);
         }
 
-        // transition を追加（他のカードのアニメーション用）
-        cards.forEach(c => {
-            if (c !== card) {
-                c.style.transition = 'transform 200ms ease-out';
-            }
-        });
-
-        // ブラウザにリフローを強制（transition が確実に適用されるように）
-        if (cards.length > 0) {
-            void cards[0].offsetHeight;
-        }
+        // ドラッグ中クラスをグリッドに追加（CSSでsiblingのtransitionを一括指定）
+        this.grid.classList.add('sort-card-grid--dragging');
     }
 
     _onPointerMove(e) {
@@ -329,10 +319,10 @@ class DragManager {
         }
 
         // dragging クラス削除と transform リセット
+        this.grid.classList.remove('sort-card-grid--dragging');
         this.dragState.cards.forEach(card => {
             card.classList.remove('sort-card--dragging');
             card.style.transform = '';
-            card.style.transition = '';
         });
 
         // C# へ新しい順序を通知（変更があった場合のみ）
@@ -363,11 +353,11 @@ class DragManager {
         }
 
         // 全カードの transform をリセット
+        this.grid.classList.remove('sort-card-grid--dragging');
         const cards = this.dragState.cards ?? Array.from(this.grid.querySelectorAll('.sort-card'));
         cards.forEach(card => {
             card.classList.remove('sort-card--dragging');
             card.style.transform = '';
-            card.style.transition = '';
         });
 
         // カルーセル再有効化（編集モード時はスキップ）

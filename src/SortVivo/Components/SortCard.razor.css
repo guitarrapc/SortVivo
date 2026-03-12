@@ -11,6 +11,7 @@
     overflow: hidden;
     transition: border-color 0.3s;
     min-height: 0;
+    contain: layout style paint;
 }
 
 .sort-card--completed {

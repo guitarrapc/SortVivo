@@ -22,6 +22,11 @@
 
 /* ─── ドラッグ＆ドロップ スタイル ──────────────────────────────────────── */
 
+/* ドラッグ中: sibling カードの移動アニメーション（JS側でgrid要素にクラス付与） */
+.sort-card-grid--dragging > ::deep .sort-card:not(.sort-card--dragging) {
+    transition: transform 200ms ease-out;
+}
+
 /* ドラッグ中のカード（元の位置） */
 ::deep .sort-card--dragging {
     opacity: 0.3;
