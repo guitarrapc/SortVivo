@@ -46,7 +46,7 @@ public class MergeBenchmark
         SortAlgorithm.Algorithms.MergeSort.Sort(_mergeArray.AsSpan());
     }
 
-    [Benchmark(Baseline = true)]
+    [Benchmark]
     public void NaturalMergeSort()
     {
         SortAlgorithm.Algorithms.NaturalMergeSort.Sort(_naturalmergeArray.AsSpan());
