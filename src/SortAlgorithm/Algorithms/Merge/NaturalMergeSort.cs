@@ -146,7 +146,9 @@ public static class NaturalMergeSort
     }
 
     /// <summary>
-    /// Scans the array and records the start index of each maximal non-decreasing run.
+    /// Scans the array and records the start index of each natural run.
+    /// Detects both ascending (non-decreasing) and strictly descending runs.
+    /// Descending runs are reversed in-place to become ascending, preserving stability.
     /// </summary>
     /// <param name="s">The SortSpan wrapping the array to scan</param>
     /// <param name="runs">Output buffer. runs[i] = start of run i; runs[runCount] = length (sentinel).</param>
@@ -157,23 +159,60 @@ public static class NaturalMergeSort
         where TContext : ISortContext
     {
         var runCount = 0;
-        runs[0] = 0; // First run always starts at index 0
+        var i = 0;
 
-        for (var i = 0; i < length - 1; i++)
+        while (i < length)
         {
-            if (s.Compare(i, i + 1) > 0)
+            runs[runCount] = i;
+            var runEnd = i + 1;
+
+            if (runEnd < length)
             {
-                // Break in non-decreasing order: new run starts at i+1
-                runCount++;
-                runs[runCount] = i + 1;
+                if (s.Compare(i, runEnd) > 0)
+                {
+                    // Strictly descending run
+                    while (runEnd < length && s.Compare(runEnd - 1, runEnd) > 0)
+                    {
+                        runEnd++;
+                    }
+                    // Reverse to make ascending (strictly descending ensures stability)
+                    ReverseRun(s, i, runEnd - 1);
+                }
+                else
+                {
+                    // Ascending run (non-decreasing, allowing equals for stability)
+                    while (runEnd < length && s.Compare(runEnd - 1, runEnd) <= 0)
+                    {
+                        runEnd++;
+                    }
+                }
             }
+
+            runCount++;
+            i = runEnd;
         }
 
-        // Close the last run with a sentinel
-        runCount++;
+        // Close with sentinel
         runs[runCount] = length;
 
         return runCount;
+    }
+
+    /// <summary>
+    /// Reverses the elements between indices <paramref name="lo"/> and <paramref name="hi"/> (inclusive) in-place.
+    /// Used to convert a strictly descending run into ascending order.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ReverseRun<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, int lo, int hi)
+        where TComparer : IComparer<T>
+        where TContext : ISortContext
+    {
+        while (lo < hi)
+        {
+            s.Swap(lo, hi);
+            lo++;
+            hi--;
+        }
     }
 
     /// <summary>
