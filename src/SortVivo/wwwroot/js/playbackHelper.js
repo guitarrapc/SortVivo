@@ -38,6 +38,11 @@ window.playbackHelper = {
   },
 
   _startLoop: function () {
+    // isInputPending: ユーザー入力が待機中なら true を返す（Chromium のみ、他ブラウザは常に false）
+    const isInputPending = navigator.scheduling?.isInputPending
+      ? () => navigator.scheduling.isInputPending()
+      : () => false;
+
     const tick = () => {
       if (this._instances.size === 0) {
         this._rafId = null;
@@ -46,7 +51,14 @@ window.playbackHelper = {
 
       const toStop = [];
 
-      this._instances.forEach((dotNetRef, id) => {
+      for (const [id, dotNetRef] of this._instances) {
+        // ユーザー入力が待機中なら残りのインスタンスを次フレームに延期する。
+        // これにより pointerdown 等の入力イベントが即座にディスパッチされ、
+        // INP の input delay を大幅に削減できる。
+        if (toStop.length === 0 && isInputPending()) {
+          break;
+        }
+
         try {
           // invokeMethod（同期）は Blazor WASM 専用 API。
           // C# の OnAnimationFrame() を同期呼び出しし bool を受け取る。
@@ -59,7 +71,7 @@ window.playbackHelper = {
           // ObjectDisposedException など、インスタンスが無効になった場合は除去
           toStop.push(id);
         }
-      });
+      }
 
       toStop.forEach(id => this._instances.delete(id));
 

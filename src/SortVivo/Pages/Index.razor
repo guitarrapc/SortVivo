@@ -224,6 +224,8 @@
     // 比較プレイ中フラグ（OnStateChanged で同期）
     private bool _isComparisonPlaying = false;
     private bool _statsTableOpen = false;
+    private int _indexFrameCounter = 0;
+    private const int IndexUpdateFrameInterval = 6; // 再生中は ~10fps で Index 再描画（SeekBar 更新等）
 
     // Settings モーダル
     private bool _settingsOpen = false;
@@ -662,6 +664,23 @@
     {
         if (ComparisonMode.State.Instances.Any())
             _isComparisonPlaying = ComparisonMode.IsPlaying();
+
+        // 再生中は Index の再描画をスロットルする。
+        // Canvas 描画は各レンダラーが PlaybackService.StateChanged を直接購読して行うため、
+        // Index の StateHasChanged は SeekBar 位置やステータス文字列の更新のみが目的。
+        // 毎フレーム × N インスタンス分呼ばれるのを IndexUpdateFrameInterval に 1 回に削減し、
+        // Blazor の仮想 DOM 差分コストを低減する。
+        if (_isComparisonPlaying)
+        {
+            _indexFrameCounter++;
+            if (_indexFrameCounter % IndexUpdateFrameInterval != 0)
+                return;
+        }
+        else
+        {
+            _indexFrameCounter = 0;
+        }
+
         InvokeAsync(StateHasChanged);
     }
 

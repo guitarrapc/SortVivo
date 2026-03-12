@@ -7,7 +7,7 @@
 <div class="sort-card @(State.IsSortCompleted ? "sort-card--completed" : "")">
     @* カードヘッダー *@
     <div class="sort-card__header">
-        <span class="sort-card__drag-handle" aria-hidden="true">⠿</span>
+        <span class="sort-card__drag-handle" @onclick:stopPropagation="true" aria-hidden="true">⠿</span>
         @if (OnAlgorithmSelected.HasDelegate)
         {
             <select class="sort-card__algo-select"
