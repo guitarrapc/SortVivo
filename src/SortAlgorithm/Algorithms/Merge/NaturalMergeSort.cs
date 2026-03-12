@@ -119,7 +119,7 @@ public static class NaturalMergeSort
         {
             // Phase 1: Detect all natural runs
             s.Context.OnPhase(SortPhase.MergeRunDetect);
-            var runCount = DetectRuns(s, runs, length);
+            var runCount = DetectNaturalRuns(s, runs, length);
 
             // If only one run covers the entire array, sorting is complete
             if (runCount <= 1)
@@ -154,7 +154,7 @@ public static class NaturalMergeSort
     /// <param name="runs">Output buffer. runs[i] = start of run i; runs[runCount] = length (sentinel).</param>
     /// <param name="length">The number of elements in the array</param>
     /// <returns>The number of natural runs detected.</returns>
-    private static int DetectRuns<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, Span<int> runs, int length)
+    private static int DetectNaturalRuns<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, Span<int> runs, int length)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
@@ -175,7 +175,8 @@ public static class NaturalMergeSort
                     {
                         runEnd++;
                     }
-                    // Reverse to make ascending (strictly descending ensures stability)
+                    // Reverse to ascending.
+                    // Because the run is strictly descending, it contains no equal adjacent elements, so reversing does not violate stability.
                     ReverseRun(s, i, runEnd - 1);
                 }
                 else

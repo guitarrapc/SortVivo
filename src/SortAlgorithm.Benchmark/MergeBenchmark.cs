@@ -12,6 +12,7 @@ public class MergeBenchmark
 
     private int[] _bottomupmergeArray = default!;
     private int[] _mergeArray = default!;
+    private int[] _naturalmergeArray = default!;
     private int[] _powerArray = default!;
     private int[] _rotatemergeRecursiveArray = default!;
     private int[] _rotatemergeArray = default!;
@@ -24,6 +25,7 @@ public class MergeBenchmark
     {
         _bottomupmergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _mergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _naturalmergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _powerArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _rotatemergeRecursiveArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _rotatemergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
@@ -42,6 +44,12 @@ public class MergeBenchmark
     public void MergeSort()
     {
         SortAlgorithm.Algorithms.MergeSort.Sort(_mergeArray.AsSpan());
+    }
+
+    [Benchmark(Baseline = true)]
+    public void NaturalMergeSort()
+    {
+        SortAlgorithm.Algorithms.NaturalMergeSort.Sort(_naturalmergeArray.AsSpan());
     }
 
     [Benchmark]
