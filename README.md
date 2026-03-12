@@ -55,6 +55,7 @@ You can check various benchmark patterns at [GitHub Actions/Benchmark](https://g
 ### Merge
 - [Bottom-Up Merge Sort](./src/SortAlgorithm/Algorithms/Merge/BottomupMergeSort.cs)
 - [Merge Sort](./src/SortAlgorithm/Algorithms/Merge/MergeSort.cs)
+- [Natural Merge Sort](./src/SortAlgorithm/Algorithms/Merge/NaturalMergeSort.cs)
 - [Power Sort](./src/SortAlgorithm/Algorithms/Merge/PowerSort.cs)
 - [Rotate Merge Sort](./src/SortAlgorithm/Algorithms/Merge/RotateMergeSort.cs)
 - [Shift Sort](./src/SortAlgorithm/Algorithms/Merge/ShiftSort.cs)
