@@ -44,7 +44,13 @@ jobs:
       - name: dotnet build
         run: dotnet build -c Release
       - name: benchmark
-        run: dotnet run -c Release --no-build --no-launch-profile --project ./src/SortAlgorithm.Benchmark/SortAlgorithm.Benchmark.csproj -- --filter "${{ inputs.benchmark }}"
+        id: benchmark
+        run: |
+          dotnet run -c Release --no-build --no-launch-profile --project ./src/SortAlgorithm.Benchmark/SortAlgorithm.Benchmark.csproj -- --filter "${{ inputs.benchmark }}"
+          echo "result=success" >> $GITHUB_OUTPUT
+      - name: Check benchmark result
+        if: ${{ steps.benchmark.outputs.result != 'success' }}
+        run: exit 1
 
       - name: Upload artifacts
         uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f #v6.0.0
