@@ -12,26 +12,28 @@ public class MergeBenchmark
 
     private int[] _bottomupmergeArray = default!;
     private int[] _mergeArray = default!;
-    private int[] _naturalmergeArray = default!;
-    private int[] _powerArray = default!;
+    private int[] _pingpongmergeArray = default!;
     private int[] _rotatemergeRecursiveArray = default!;
     private int[] _rotatemergeArray = default!;
-    private int[] _shiftArray = default!;
     private int[] _symmergeArray = default!;
+    private int[] _naturalmergeArray = default!;
     private int[] _timArray = default!;
+    private int[] _powerArray = default!;
+    private int[] _shiftArray = default!;
 
     [IterationSetup]
     public void Setup()
     {
         _bottomupmergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _mergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _naturalmergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _powerArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _pingpongmergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _rotatemergeRecursiveArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _rotatemergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _shiftArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _symmergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _naturalmergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _timArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _powerArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _shiftArray = BenchmarkData.GenerateIntArray(Size, Pattern);
     }
 
     [Benchmark]
@@ -47,15 +49,9 @@ public class MergeBenchmark
     }
 
     [Benchmark]
-    public void NaturalMergeSort()
+    public void PingpongMergeSort()
     {
-        SortAlgorithm.Algorithms.NaturalMergeSort.Sort(_naturalmergeArray.AsSpan());
-    }
-
-    [Benchmark]
-    public void PowerSort()
-    {
-        SortAlgorithm.Algorithms.PowerSort.Sort(_powerArray.AsSpan());
+        SortAlgorithm.Algorithms.PingpongMergeSort.Sort(_rotatemergeArray.AsSpan());
     }
 
     [Benchmark]
@@ -83,8 +79,20 @@ public class MergeBenchmark
     }
 
     [Benchmark]
+    public void NaturalMergeSort()
+    {
+        SortAlgorithm.Algorithms.NaturalMergeSort.Sort(_naturalmergeArray.AsSpan());
+    }
+
+    [Benchmark]
     public void TimSort()
     {
         SortAlgorithm.Algorithms.TimSort.Sort(_timArray.AsSpan());
+    }
+
+    [Benchmark]
+    public void PowerSort()
+    {
+        SortAlgorithm.Algorithms.PowerSort.Sort(_powerArray.AsSpan());
     }
 }
