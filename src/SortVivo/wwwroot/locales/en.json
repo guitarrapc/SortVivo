@@ -93,7 +93,8 @@
     "soundNotAvailable": "Sound not available in Comparison Mode",
     "record": "Record",
     "recording": "Recording...",
-    "recordStop": "Stop Recording"
+    "recordStop": "Stop Recording",
+    "resolution": "Resolution"
   },
   "sortCard": {
     "clickToStart": "Click \u201cAdd & Generate\u201d to start visualization",

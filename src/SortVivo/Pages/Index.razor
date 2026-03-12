@@ -82,6 +82,8 @@
                         SoundDisabled="false"
                         IsRecording="@_isRecording"
                         RecordDisabled="@(ComparisonMode.State.Instances.Count == 0)"
+                        RecordingResolution="@_recordingResolution"
+                        RecordingResolutionChanged="HandleRecordingResolutionChanged"
                         StatusText="@GetComparisonStatusText()"
                         ArraySize="@GetArraySize()"
                         OnTogglePlayPause="HandleTogglePlayPause"
@@ -235,6 +237,7 @@
 
     // 録画状態
     private bool _isRecording = false;
+    private int _recordingResolution = 720;
 
     // 環境設定ダーティフラグ（OnAfterRenderAsync で localStorage に保存）
     private bool _preferencesDirty = false;
@@ -388,6 +391,8 @@
                 DebugSettings.IsEnabled = dl == "true";
             if (prefs.TryGetValue("sortvis.scrollOnGenerate", out var sog))
                 RenderSettings.ScrollOnGenerate = sog == "true";
+            if (prefs.TryGetValue("sortvis.recordingResolution", out var rr) && int.TryParse(rr, out var rrVal) && (rrVal == 480 || rrVal == 720 || rrVal == 1080))
+                _recordingResolution = rrVal;
 
             StateHasChanged();
         }
@@ -416,6 +421,7 @@
                 ["sortvis.autoRecommendedSize"] = _autoSwitchToRecommendedSize ? "true" : "false",
                 ["sortvis.debugLog"] = DebugSettings.IsEnabled ? "true" : "false",
                 ["sortvis.scrollOnGenerate"] = RenderSettings.ScrollOnGenerate ? "true" : "false",
+                ["sortvis.recordingResolution"] = _recordingResolution.ToString(),
             });
         }
         catch (Exception ex)
@@ -793,16 +799,23 @@
         {
             // 録画停止 → WebM ダウンロード
             var algorithms = string.Join("-", ComparisonMode.State.Instances.Select(i => i.AlgorithmName));
-            var filename = $"sortvivo-{(string.IsNullOrEmpty(algorithms) ? SelectedAlgorithm : algorithms)}";
+            var filename = $"sortvivo-{(string.IsNullOrEmpty(algorithms) ? SelectedAlgorithm : algorithms)}-{_recordingResolution}p";
             await JS.InvokeVoidAsync("videoRecorder.stopRecording", filename);
             _isRecording = false;
         }
         else
         {
-            // 録画開始
-            var started = await JS.InvokeAsync<bool>("videoRecorder.startRecording", ".visualization-content", 30);
+            // 録画開始（解像度を渡す）
+            var started = await JS.InvokeAsync<bool>("videoRecorder.startRecording", ".visualization-content", 30, _recordingResolution);
             _isRecording = started;
         }
+        StateHasChanged();
+    }
+
+    private void HandleRecordingResolutionChanged(int resolution)
+    {
+        _recordingResolution = resolution;
+        _preferencesDirty = true;
         StateHasChanged();
     }
 

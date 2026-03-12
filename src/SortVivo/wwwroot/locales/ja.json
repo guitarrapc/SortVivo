@@ -93,7 +93,8 @@
     "soundNotAvailable": "比較モードではサウンドを使用できません",
     "record": "録画",
     "recording": "録画中...",
-    "recordStop": "録画停止"
+    "recordStop": "録画停止",
+    "resolution": "解像度"
   },
   "sortCard": {
     "clickToStart": "「追加 & 生成」をクリックして可視化を開始",

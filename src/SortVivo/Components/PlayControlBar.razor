@@ -83,6 +83,16 @@
                 </svg>
             }
         </button>
+
+        <select class="record-resolution-select"
+                value="@RecordingResolution"
+                @onchange="HandleResolutionChange"
+                disabled="@(RecordDisabled || IsRecording)"
+                title="@L["playback.resolution"]">
+            <option value="1080">1080p</option>
+            <option value="720">720p</option>
+            <option value="480">480p</option>
+        </select>
     </div>
 
     <div class="play-control-info">
@@ -140,6 +150,12 @@
     [Parameter]
     public EventCallback OnToggleRecord { get; set; }
 
+    [Parameter]
+    public int RecordingResolution { get; set; } = 720;
+
+    [Parameter]
+    public EventCallback<int> RecordingResolutionChanged { get; set; }
+
     private bool _lastIsPlaying;
     private bool _lastSoundEnabled;
     private bool _lastPlayDisabled;
@@ -147,6 +163,7 @@
     private bool _lastClearAllDisabled;
     private bool _lastIsRecording;
     private bool _lastRecordDisabled;
+    private int _lastRecordingResolution;
     private string _lastStatusText = "";
     private int _lastArraySize;
 
@@ -160,7 +177,8 @@
                    || _lastStatusText != StatusText
                    || _lastArraySize != ArraySize
                    || _lastIsRecording != IsRecording
-                   || _lastRecordDisabled != RecordDisabled;
+                   || _lastRecordDisabled != RecordDisabled
+                   || _lastRecordingResolution != RecordingResolution;
 
         _lastIsPlaying = IsPlaying;
         _lastSoundEnabled = SoundEnabled;
@@ -171,7 +189,16 @@
         _lastArraySize = ArraySize;
         _lastIsRecording = IsRecording;
         _lastRecordDisabled = RecordDisabled;
+        _lastRecordingResolution = RecordingResolution;
 
         return changed;
+    }
+
+    private async Task HandleResolutionChange(ChangeEventArgs e)
+    {
+        if (int.TryParse(e.Value?.ToString(), out var resolution))
+        {
+            await RecordingResolutionChanged.InvokeAsync(resolution);
+        }
     }
 }

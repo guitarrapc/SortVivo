@@ -21,10 +21,41 @@
 | API | `MediaRecorder` + `HTMLCanvasElement.captureStream()` |
 | 出力形式 | WebM（`.webm`） |
 | コーデック優先順位 | VP9 → VP8 → デフォルト |
-| ビットレート | 8 Mbps（`videoBitsPerSecond: 8_000_000`） |
+| ビットレート | 解像度に応じた動的計算（後述） |
 | フレームレート | 30 fps |
 | データ収集間隔 | 100 ms（`recorder.start(100)`） |
-| 解像度 | キャプチャ対象要素の表示サイズ（`getBoundingClientRect()`） |
+| 解像度 | ユーザー選択（1080p / 720p / 480p） |
+
+### 解像度選択
+
+プリセットは「長辺のターゲットピクセル数」として動作する。表示領域のアスペクト比に関わらず一貫した品質を保証し、ダウンスケールは行わない。
+
+| プリセット | 長辺ターゲット | ビットレート基準 |
+|-----------|-------------|---------------|
+| 1080p | 1920 px | ~20 Mbps |
+| 720p（デフォルト） | 1280 px | ~9 Mbps |
+| 480p | 854 px | ~4 Mbps |
+
+**スケーリング方式:**
+
+```
+longSideTargets = { 1080: 1920, 720: 1280, 480: 854 }
+targetLongSide = longSideTargets[preset]
+longerDisplaySide = max(displayWidth, displayHeight)
+scale = max(targetLongSide / longerDisplaySide, 1.0)   ← 常に ≥ 1（ダウンスケール禁止）
+videoWidth = round(displayWidth × scale / 2) × 2       ← 偶数保証
+videoHeight = round(displayHeight × scale / 2) × 2
+bitrate = 20_000_000 × (videoWidth × videoHeight) / (1920 × 1080)
+```
+
+**設計意図:**
+
+- 表示領域がターゲットより大きい場合（例: 1422×1683 で 1080p 選択）→ `scale = 1.14` でわずかにアップスケール、ダウンスケールしない
+- 表示領域がターゲットより小さい場合（例: 800×600 で 1080p 選択）→ `scale = 2.4` で高品質アップスケール
+- 長辺基準なのでポートレート/ランドスケープどちらでも一貫した品質
+- ビットレートは出力ピクセル数に比例して動的調整（1080p 基準 20 Mbps）
+- ソート canvas は `imageSmoothingEnabled = false`（最近傍補間）で描画し、離散要素（バー、ドット等）をシャープに維持
+- 設定値は `localStorage` に永続化（`sortvis.recordingResolution`）
 
 ### キャプチャ対象
 
@@ -101,6 +132,20 @@
 | 待機 | `playback.record` | "Record" | "録画" |
 | 録画中 | `playback.recordStop` | "Stop Recording" | "録画停止" |
 
+### 解像度セレクター
+
+録画ボタンの右隣に配置。`<select>` ドロップダウン。
+
+| 項目 | 仕様 |
+|------|------|
+| CSS クラス | `.record-resolution-select` |
+| 選択肢 | `1080p` / `720p` / `480p` |
+| デフォルト | `720p` |
+| 録画中 | 無効化（変更不可） |
+| インスタンス 0 個 | 無効化 |
+| スタイル | 録画ボタンに合わせた赤系テーマ |
+| 永続化 | `localStorage`（`sortvis.recordingResolution`） |
+
 ---
 
 ## 📁 ファイル名規則
@@ -153,7 +198,7 @@ sortvivo-{アルゴリズム名}.webm
 
 | C# → JS 呼び出し | 引数 | 戻り値 |
 |------------------|------|--------|
-| `videoRecorder.startRecording` | `selector: string`, `fps: number` | `bool`（成功/失敗） |
+| `videoRecorder.startRecording` | `selector: string`, `fps: number`, `targetHeight: number` | `bool`（成功/失敗） |
 | `videoRecorder.stopRecording` | `filename: string` | `void` |
 
 ### PlayControlBar パラメータ
@@ -163,6 +208,8 @@ sortvivo-{アルゴリズム名}.webm
 | `IsRecording` | `bool` | 録画中かどうか |
 | `RecordDisabled` | `bool` | ボタン無効化 |
 | `OnToggleRecord` | `EventCallback` | 録画トグルイベント |
+| `RecordingResolution` | `int` | 選択中の解像度（1080 / 720 / 480） |
+| `RecordingResolutionChanged` | `EventCallback<int>` | 解像度変更イベント |
 
 ### 録画開始の前提条件
 
@@ -191,7 +238,8 @@ sortvivo-{アルゴリズム名}.webm
   "playback": {
     "record": "Record / 録画",
     "recording": "Recording... / 録画中...",
-    "recordStop": "Stop Recording / 録画停止"
+    "recordStop": "Stop Recording / 録画停止",
+    "resolution": "Resolution / 解像度"
   }
 }
 ```

@@ -6,9 +6,17 @@
 //
 // Capture target: .visualization-content (sort cards only, no control bar / seek bar)
 //
+// Resolution strategy:
+//   The preset (1080/720/480) defines a "quality tier" — the target pixel count
+//   for the LONGER side of the output video:
+//     1080p → 1920 px,  720p → 1280 px,  480p → 854 px
+//   The scale factor is computed as max(target / longerDisplaySide, 1.0).
+//   This means the video is NEVER downscaled: if the display is already larger
+//   than the target, the video is recorded at native resolution (scale = 1).
+//
 // Flow:
-//   1. startRecording(selector, fps) — begins periodic sort-card compositing.
-//   2. stopRecording(filename)       — stops and triggers a .webm download.
+//   1. startRecording(selector, fps, targetHeight) — begins periodic sort-card compositing.
+//   2. stopRecording(filename)                     — stops and triggers a .webm download.
 
 window.videoRecorder = {
   _mediaRecorder: null,
@@ -21,11 +29,12 @@ window.videoRecorder = {
   /**
    * Start recording the specified DOM element.
    * The element should contain .sort-card elements with canvas visualizations.
-   * @param {string} selector - CSS selector for the content area (e.g. '.visualization-content')
-   * @param {number} fps      - Frames per second (default: 30)
+   * @param {string} selector     - CSS selector for the content area
+   * @param {number} fps          - Frames per second (default: 30)
+   * @param {number} targetHeight - Output video height in pixels (1080, 720, 480; default: 720)
    * @returns {boolean} true if recording started successfully
    */
-  startRecording: function (selector, fps) {
+  startRecording: function (selector, fps, targetHeight) {
     if (this._recording) return false;
 
     const target = document.querySelector(selector);
@@ -35,6 +44,7 @@ window.videoRecorder = {
     }
 
     fps = fps || 30;
+    targetHeight = targetHeight || 720;
 
     const canvases = target.querySelectorAll('canvas');
     if (canvases.length === 0) {
@@ -42,14 +52,28 @@ window.videoRecorder = {
       return false;
     }
 
-    // Use the target element's bounding rect for video dimensions
+    // Resolution presets: target pixel count for the LONGER side of the video.
+    // This ensures consistent quality regardless of portrait/landscape orientation
+    // and prevents downscaling when the display is already large.
+    const longSideTargets = { 1080: 1920, 720: 1280, 480: 854 };
+    const targetLongSide = longSideTargets[targetHeight] || 1920;
+
+    // Compute scale factor from display size → target resolution
     const rect = target.getBoundingClientRect();
-    const width = Math.round(rect.width);
-    const height = Math.round(rect.height);
+    const displayWidth = rect.width;
+    const displayHeight = rect.height;
+    const longerDisplaySide = Math.max(displayWidth, displayHeight);
+
+    // Scale up to reach target, but NEVER downscale (scale >= 1)
+    const scale = Math.max(targetLongSide / longerDisplaySide, 1.0);
+
+    // Ensure even dimensions (required by some video codecs)
+    const videoWidth = Math.round(displayWidth * scale / 2) * 2;
+    const videoHeight = Math.round(displayHeight * scale / 2) * 2;
 
     const offscreen = document.createElement('canvas');
-    offscreen.width = width;
-    offscreen.height = height;
+    offscreen.width = videoWidth;
+    offscreen.height = videoHeight;
     this._offscreen = offscreen;
 
     const ctx = offscreen.getContext('2d');
@@ -64,10 +88,15 @@ window.videoRecorder = {
         ? 'video/webm;codecs=vp8'
         : 'video/webm';
 
+    // Scale bitrate with resolution (base 20 Mbps at 1080p for crisp screen recording)
+    const bitrate = Math.round(20_000_000 * (videoWidth * videoHeight) / (1920 * 1080));
+
+    console.log(`[videoRecorder] Recording: ${videoWidth}x${videoHeight} (scale=${scale.toFixed(2)}, display=${Math.round(displayWidth)}x${Math.round(displayHeight)}, bitrate=${(bitrate/1_000_000).toFixed(1)}Mbps, codec=${mimeType})`);
+
     this._chunks = [];
     const recorder = new MediaRecorder(stream, {
       mimeType: mimeType,
-      videoBitsPerSecond: 8_000_000,
+      videoBitsPerSecond: bitrate,
     });
     recorder.ondataavailable = (e) => {
       if (e.data && e.data.size > 0) this._chunks.push(e.data);
@@ -75,14 +104,28 @@ window.videoRecorder = {
     this._mediaRecorder = recorder;
     recorder.start(100);
 
-    // Periodic compositing: paint each sort-card's elements onto the offscreen canvas
+    // Periodic compositing: paint each sort-card's elements onto the offscreen canvas.
+    // ctx.scale(scale, scale) is applied each frame so all CSS-pixel coordinates
+    // are automatically mapped to the target resolution.
+    //
+    // For canvas drawImage: imageSmoothingEnabled = false (nearest-neighbor) is used
+    // because sort visualizations are discrete elements (bars, dots, etc.) that look
+    // much crisper with pixel-perfect upscaling rather than bilinear interpolation.
     const intervalMs = 1000 / fps;
+    const dpr = window.devicePixelRatio || 1;
     this._captureInterval = setInterval(() => {
       const targetRect = target.getBoundingClientRect();
 
-      // Background
+      // Reset transform and clear
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.clearRect(0, 0, offscreen.width, offscreen.height);
+
+      // Apply scale for target resolution
+      ctx.setTransform(scale, 0, 0, scale, 0, 0);
+
+      // Background (use display dimensions; ctx.scale handles upscaling)
       ctx.fillStyle = '#0a0a1a';
-      ctx.fillRect(0, 0, offscreen.width, offscreen.height);
+      ctx.fillRect(0, 0, displayWidth, displayHeight);
 
       // Paint each sort-card: header background, card border, completion glow
       for (const card of target.querySelectorAll('.sort-card')) {
@@ -130,21 +173,29 @@ window.videoRecorder = {
       }
 
       // Canvas elements (the actual sort visualization)
+      // Use nearest-neighbor interpolation for crisp upscaling of discrete visualizations.
+      // The source canvases render at displaySize * devicePixelRatio internally,
+      // so we draw the full source bitmap into the scaled destination for maximum fidelity.
+      ctx.imageSmoothingEnabled = false;
       for (const canvas of target.querySelectorAll('canvas')) {
         if (canvas.width === 0 || canvas.height === 0) continue;
         const cRect = canvas.getBoundingClientRect();
+        const dx = cRect.left - targetRect.left;
+        const dy = cRect.top - targetRect.top;
         try {
+          // drawImage(source, sx, sy, sw, sh, dx, dy, dw, dh)
+          // Read full internal bitmap (canvas.width × canvas.height) and draw
+          // into the CSS-pixel destination rectangle (ctx.scale handles upscaling).
           ctx.drawImage(
             canvas,
-            cRect.left - targetRect.left,
-            cRect.top - targetRect.top,
-            cRect.width,
-            cRect.height
+            0, 0, canvas.width, canvas.height,
+            dx, dy, cRect.width, cRect.height
           );
         } catch (_) {
           // Ignore tainted canvas errors (e.g. picture mode with cross-origin images)
         }
       }
+      ctx.imageSmoothingEnabled = true;
 
       // Algorithm name labels
       // .sort-card__algorithm-name: N=1 text span

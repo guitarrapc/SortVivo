@@ -195,6 +195,40 @@
     50% { opacity: 0.6; }
 }
 
+.record-resolution-select {
+    height: 36px;
+    padding: 0 6px;
+    border: 1px solid rgba(239, 68, 68, 0.4);
+    border-radius: 6px;
+    background: rgba(239, 68, 68, 0.1);
+    color: #f87171;
+    font-size: 0.75rem;
+    font-family: 'Courier New', monospace;
+    font-weight: 600;
+    cursor: pointer;
+    appearance: none;
+    -webkit-appearance: none;
+    text-align: center;
+    min-width: 60px;
+    flex-shrink: 0;
+    transition: background-color 0.2s, border-color 0.2s, opacity 0.15s;
+}
+
+    .record-resolution-select:hover:not(:disabled) {
+        background: rgba(239, 68, 68, 0.2);
+        border-color: #ef4444;
+    }
+
+    .record-resolution-select:disabled {
+        opacity: 0.35;
+        cursor: not-allowed;
+    }
+
+    .record-resolution-select option {
+        background: #1a1a2e;
+        color: #e5e7eb;
+    }
+
 .play-control-status {
     font-size: 0.9rem;
     color: #F59E0B;
