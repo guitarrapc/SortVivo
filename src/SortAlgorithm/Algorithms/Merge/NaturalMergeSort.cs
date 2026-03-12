@@ -84,79 +84,95 @@ public static class NaturalMergeSort
 
         // Rent buffer from ArrayPool for O(n) auxiliary space
         var buffer = ArrayPool<T>.Shared.Rent(span.Length);
+        // Rent buffer for run boundaries (worst case: n runs of size 1 + 1 sentinel)
+        var runsBuffer = ArrayPool<int>.Shared.Rent(span.Length + 1);
         try
         {
             var s = new SortSpan<T, TComparer, TContext>(span, context, comparer, BUFFER_MAIN);
             var b = new SortSpan<T, TComparer, TContext>(buffer.AsSpan(0, span.Length), context, comparer, BUFFER_MERGE);
-            SortCore(s, b, span.Length);
+            SortCore(s, b, runsBuffer.AsSpan(), span.Length);
         }
         finally
         {
+            ArrayPool<int>.Shared.Return(runsBuffer);
             ArrayPool<T>.Shared.Return(buffer, clearArray: RuntimeHelpers.IsReferenceOrContainsReferences<T>());
         }
     }
 
     /// <summary>
     /// Core iterative natural merge sort implementation.
-    /// Repeatedly detects natural runs and merges adjacent pairs until a single run remains.
+    /// Each pass consists of two phases:
+    /// 1. Detect all natural runs (maximal non-decreasing subsequences)
+    /// 2. Merge adjacent pairs of runs using the fixed run boundaries
+    /// Repeats until only a single run remains.
     /// </summary>
     /// <param name="s">The SortSpan wrapping the span to sort</param>
     /// <param name="b">The SortSpan wrapping the auxiliary buffer for merging</param>
+    /// <param name="runs">Buffer to store run boundary indices. runs[i] is the start index of run i; runs[runCount] = length (sentinel).</param>
     /// <param name="length">The number of elements to sort</param>
-    private static void SortCore<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, SortSpan<T, TComparer, TContext> b, int length)
+    private static void SortCore<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, SortSpan<T, TComparer, TContext> b, Span<int> runs, int length)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
-        var pass = 0;
-
         while (true)
         {
-            pass++;
+            // Phase 1: Detect all natural runs
             s.Context.OnPhase(SortPhase.MergeRunDetect);
+            var runCount = DetectRuns(s, runs, length);
 
-            var left = 0;
-            var mergeCount = 0;
-
-            while (left < length)
+            // If only one run covers the entire array, sorting is complete
+            if (runCount <= 1)
             {
-                // Find end of first natural run [left..mid] (non-decreasing)
-                var mid = left;
-                while (mid + 1 < length && s.Compare(mid, mid + 1) <= 0)
-                {
-                    mid++;
-                }
+                break;
+            }
 
-                // If this run extends to the end, no second run to merge with
-                if (mid + 1 >= length)
-                {
-                    break;
-                }
+            // Phase 2: Merge adjacent pairs of runs using fixed boundaries
+            // Odd run at the end is carried forward unmerged to the next pass
+            for (var i = 0; i + 1 < runCount; i += 2)
+            {
+                var left = runs[i];
+                var mid = runs[i + 1] - 1;  // inclusive end of left run
+                var right = runs[i + 2] - 1; // inclusive end of right run
 
-                // Find end of second natural run [mid+1..right] (non-decreasing)
-                var right = mid + 1;
-                while (right + 1 < length && s.Compare(right, right + 1) <= 0)
-                {
-                    right++;
-                }
-
-                // Merge the two adjacent runs
                 s.Context.OnPhase(SortPhase.MergeSortMerge, left, mid, right);
                 s.Context.OnRole(left, BUFFER_MAIN, RoleType.LeftPointer);
                 s.Context.OnRole(right, BUFFER_MAIN, RoleType.RightPointer);
                 Merge(s, b, left, mid, right);
                 s.Context.OnRole(left, BUFFER_MAIN, RoleType.None);
                 s.Context.OnRole(right, BUFFER_MAIN, RoleType.None);
-                mergeCount++;
-
-                left = right + 1;
-            }
-
-            // If no merges were performed, the entire array is a single sorted run
-            if (mergeCount == 0)
-            {
-                break;
             }
         }
+    }
+
+    /// <summary>
+    /// Scans the array and records the start index of each maximal non-decreasing run.
+    /// </summary>
+    /// <param name="s">The SortSpan wrapping the array to scan</param>
+    /// <param name="runs">Output buffer. runs[i] = start of run i; runs[runCount] = length (sentinel).</param>
+    /// <param name="length">The number of elements in the array</param>
+    /// <returns>The number of natural runs detected.</returns>
+    private static int DetectRuns<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, Span<int> runs, int length)
+        where TComparer : IComparer<T>
+        where TContext : ISortContext
+    {
+        var runCount = 0;
+        runs[0] = 0; // First run always starts at index 0
+
+        for (var i = 0; i < length - 1; i++)
+        {
+            if (s.Compare(i, i + 1) > 0)
+            {
+                // Break in non-decreasing order: new run starts at i+1
+                runCount++;
+                runs[runCount] = i + 1;
+            }
+        }
+
+        // Close the last run with a sentinel
+        runCount++;
+        runs[runCount] = length;
+
+        return runCount;
     }
 
     /// <summary>
