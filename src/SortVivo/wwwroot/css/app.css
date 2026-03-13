@@ -490,7 +490,7 @@ input[type="range"]::-moz-range-track {
     top: 0.5rem;
 }
 
-/* ── Loading screen ── */
+/* Loading screen */
 .loading-screen {
     position: fixed;
     inset: 0;
@@ -862,10 +862,13 @@ fieldset.controls-fieldset[disabled] * {
 }
 
 @keyframes drag-pulse {
-    0%, 100% {
+
+    0%,
+    100% {
         border-color: var(--color-accent, #7fa86f);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 0 rgba(127, 168, 111, 0.7);
     }
+
     50% {
         border-color: rgba(127, 168, 111, 0.8);
         box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3), 0 0 0 4px rgba(127, 168, 111, 0.3);

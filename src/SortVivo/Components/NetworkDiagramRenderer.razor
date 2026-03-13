@@ -30,7 +30,7 @@
                 </filter>
             </defs>
 
-            @* ─── Wires (horizontal lines) ─── *@
+            @*─ Wires (horizontal lines)─ *@
             @for (int w = 0; w < wireCount; w++)
             {
                 var y = topMargin + w * wireSpacing;
@@ -57,7 +57,7 @@
                 }
             }
 
-            @* ─── Stage separators (vertical dashed lines) ─── *@
+            @*─ Stage separators (vertical dashed lines)─ *@
             @for (int s = 0; s <= stageCount; s++)
             {
                 var x = leftMargin + s * stageSpacing;
@@ -73,7 +73,7 @@
                 }
             }
 
-            @* ─── Comparators (vertical lines with dots) ─── *@
+            @*─ Comparators (vertical lines with dots)─ *@
             @for (int i = 0; i < Snapshot.Comparators.Length; i++)
             {
                 var comp = Snapshot.Comparators[i];

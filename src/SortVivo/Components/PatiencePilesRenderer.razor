@@ -21,7 +21,7 @@
     }
     else
     {
-        @* ── ディールフェーズ: 配置中の要素を山の上に浮かせて表示 ── *@
+        @* ディールフェーズ: 配置中の要素を山の上に浮かせて表示 *@
         @if (!Snapshot.IsMergePhase && Snapshot.ActiveValue >= 0)
         {
             <div class="patience-dealing-row">
@@ -33,7 +33,7 @@
             </div>
         }
 
-        @* ── マージフェーズ: 抽出中の要素を表示 ── *@
+        @* マージフェーズ: 抽出中の要素を表示 *@
         @if (Snapshot.IsMergePhase && Snapshot.ActiveValue >= 0)
         {
             <div class="patience-dealing-row">
@@ -45,7 +45,7 @@
             </div>
         }
 
-        @* ── パイル列 ── *@
+        @* パイル列 *@
         <div class="patience-piles">
             @for (int p = 0; p < Snapshot.PileValues.Length; p++)
             {
@@ -82,7 +82,7 @@
             }
         </div>
 
-        @* ── ソート済み出力（マージバッファ）── *@
+        @* ソート済み出力（マージバッファ）── *@
         @if (MergeBuffer != null && MergeBuffer.Length > 0)
         {
             int filledCount = MergeBuffer.Count(v => v != 0);

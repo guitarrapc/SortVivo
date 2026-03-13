@@ -31,7 +31,7 @@ public enum SortPhase
     /// <summary>Phase not set (hides tutorial phase bar)</summary>
     None = 0,
 
-    // ── Exchange family ────────────────────────────────────────────────────
+    // Exchange family──────────────────────────────────────────────────
 
     /// <summary>
     /// Bubble Sort pass.
@@ -75,7 +75,7 @@ public enum SortPhase
     /// </summary>
     OddEvenEvenPhase,
 
-    // ── Selection family ────────────────────────────────────────────────────
+    // Selection family──────────────────────────────────────────────────
 
     /// <summary>
     /// Selection Sort minimum value search.
@@ -101,7 +101,7 @@ public enum SortPhase
     /// </summary>
     PancakeFindMax,
 
-    // ── Insertion family ────────────────────────────────────────────────────
+    // Insertion family──────────────────────────────────────────────────
 
     /// <summary>
     /// Insertion Sort pass: inserting element at position i into sorted region.
@@ -151,7 +151,7 @@ public enum SortPhase
     /// </summary>
     PatienceSortMerge,
 
-    // ── Tree family ─────────────────────────────────────────────────────────
+    // Tree family───────────────────────────────────────────────────────
 
     /// <summary>
     /// Tree Sort insertion phase: inserting element at index i into the BST.
@@ -165,7 +165,7 @@ public enum SortPhase
     /// </summary>
     TreeSortExtract,
 
-    // ── Heap family ──────────────────────────────────────────────────────────
+    // Heap family────────────────────────────────────────────────────────
 
     /// <summary>
     /// Heap Sort build phase: constructing the max-heap from the input array.
@@ -179,7 +179,7 @@ public enum SortPhase
     /// </summary>
     HeapExtract,
 
-    // ── Merge family ─────────────────────────────────────────────────────────
+    // Merge family───────────────────────────────────────────────────────
 
     /// <summary>
     /// Merge Sort merge step: merging two sorted halves [left..mid] and [mid+1..right].
@@ -211,7 +211,7 @@ public enum SortPhase
     /// </summary>
     MergeRunCollapse,
 
-    // ── Adaptive family ──────────────────────────────────────────────────────
+    // Adaptive family────────────────────────────────────────────────────
 
     /// <summary>
     /// Drop Merge Sort: LNS (Longest Nondecreasing Subsequence) detection scan.
@@ -231,7 +231,7 @@ public enum SortPhase
     /// </summary>
     DropMergeMerge,
 
-    // ── Network family ───────────────────────────────────────────────────────
+    // Network family─────────────────────────────────────────────────────
 
     /// <summary>
     /// Bitonic Sort level: building a bitonic sequence of size k.
@@ -245,7 +245,7 @@ public enum SortPhase
     /// </summary>
     BitonicStage,
 
-    // ── Joke family ──────────────────────────────────────────────────────────
+    // Joke family────────────────────────────────────────────────────────
 
     /// <summary>
     /// Bogo Sort shuffle attempt.
@@ -265,7 +265,7 @@ public enum SortPhase
     /// </summary>
     StoogeSortPass,
 
-    // ── Distribution family ──────────────────────────────────────────────────
+    // Distribution family────────────────────────────────────────────────
 
     /// <summary>
     /// Radix Sort pass over one digit position.
@@ -291,7 +291,7 @@ public enum SortPhase
     /// </summary>
     DistributionWrite,
 
-    // ── Partition family ─────────────────────────────────────────────────────
+    // Partition family───────────────────────────────────────────────────
 
     /// <summary>
     /// Quick Sort partition step: partitioning [left..right] around a pivot.

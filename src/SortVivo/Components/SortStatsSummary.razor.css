@@ -11,7 +11,7 @@
     border-top: 1px solid var(--border-color, #374151);
 }
 
-/* ── コンパクト行（常時表示） ── */
+/* コンパクト行（常時表示） */
 .sss__compact {
     display: grid;
     grid-template-columns: repeat(4, 1fr);
@@ -19,7 +19,7 @@
     align-items: stretch;
 }
 
-/* ── 統計カード（各項目） ── */
+/* 統計カード（各項目） */
 .stat-mini {
     display: flex;
     flex-direction: column;
@@ -83,7 +83,7 @@
     margin-left: 0.15em; /* 数値との間に小さなスペース */
 }
 
-/* ── サイズバリエーション ── */
+/* サイズバリエーション */
 
 /* Small: 省略形表示（比較4枚以上 / モバイル） */
 .sort-stats-summary--small .sss__compact {
@@ -138,7 +138,7 @@
     font-size: 1.1rem;
 }
 
-/* ── レスポンシブ調整 ── */
+/* レスポンシブ調整 */
 
 /* タブレット（768px〜1279px） */
 @media (max-width: 1279px) {

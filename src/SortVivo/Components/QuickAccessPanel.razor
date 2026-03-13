@@ -7,7 +7,7 @@
 <div class="qap">
     <div class="qap__content">
 
-        @* ── Current Algorithm 説明カード ── *@
+        @* Current Algorithm 説明カード *@
         @{
             var currentAlgo = AlgorithmRegistry.GetAllAlgorithms().FirstOrDefault(a => a.Name == SelectedAlgorithm);
             var howItWorks = GetHowItWorksDescription(currentAlgo is not null ? currentAlgo.GetLocalizedTutorial(L) : "");
@@ -32,7 +32,7 @@
 
         <fieldset class="controls-fieldset" disabled="@IsLoading">
 
-            @* ── Sort Setup ── *@
+            @* Sort Setup *@
             <div class="ui-card @(_sortSetupCollapsed ? "ui-card--collapsed" : "")">
                 <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleSortSetup">
                     @L["quickAccess.sortSetup"]
@@ -125,7 +125,7 @@
                 </div>
             </div>
 
-            @* ── Appearance ── *@
+            @* Appearance *@
             <div class="ui-card @(_appearanceCollapsed ? "ui-card--collapsed" : "")">
                 <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleAppearance">
                     @L["quickAccess.appearance"]
@@ -154,7 +154,7 @@
                 </div>
             </div>
 
-            @* ── Speed ── *@
+            @* Speed *@
             <div class="ui-card @(_speedCollapsed ? "ui-card--collapsed" : "")">
                 <button class="ui-card__title ui-card__title--toggle" @onclick="ToggleSpeed">
                     @L["quickAccess.speed"]
@@ -205,7 +205,7 @@
 </div>
 
 @code {
-    // ── Quick Access 状態（@bind で Index.razor と同期） ──────────────────────
+    // Quick Access 状態（@bind で Index.razor と同期）
     [Parameter, EditorRequired] public string SelectedAlgorithm { get; set; } = string.Empty;
     [Parameter] public EventCallback<string> SelectedAlgorithmChanged { get; set; }
 
@@ -219,22 +219,22 @@
     [Parameter] public EventCallback<VisualizationMode> SelectedVisualizationModeChanged { get; set; }
 
 
-    // ── コンテキスト ──────────────────────────────────────────────────────────
+    // コンテキスト
     [Parameter] public bool IsLoading { get; set; }
 
-    // ── サービス（参照渡し） ──────────────────────────────────────────────────
+    // サービス（参照渡し）
     [Parameter, EditorRequired] public PlaybackService Playback { get; set; } = default!;
     [Parameter, EditorRequired] public ComparisonModeService ComparisonMode { get; set; } = default!;
     [Parameter, EditorRequired] public RenderSettings RenderSettings { get; set; } = default!;
     [Parameter, EditorRequired] public DebugSettings DebugSettings { get; set; } = default!;
 
-    // ── アクションコールバック ────────────────────────────────────────────────
+    // アクションコールバック
     [Parameter] public EventCallback OnAddAndGenerate { get; set; }
     [Parameter] public EventCallback OnAlgorithmChanged { get; set; }
     [Parameter] public EventCallback OnVisualizationModeChanged { get; set; }
     [Parameter] public EventCallback OnSpeedSettingsChanged { get; set; }
 
-    // ── 内部状態 ──────────────────────────────────────────────────────────────
+    // 内部状態
     [Parameter] public bool AutoSwitchToRecommendedSize { get; set; }
     [Parameter] public EventCallback<bool> AutoSwitchToRecommendedSizeChanged { get; set; }
 
@@ -242,7 +242,7 @@
 
     private int EffectiveFPS => (int)(60 * Playback.SpeedMultiplier);
 
-    // ── カード折りたたみ状態（タブレット・スマホのみ有効） ────────────────────
+    // カード折りたたみ状態（タブレット・スマホのみ有効）
     private bool _descriptionCollapsed = false;
     private bool _sortSetupCollapsed = false;
     private bool _appearanceCollapsed = true;
@@ -252,7 +252,7 @@
     private void ToggleAppearance() => _appearanceCollapsed = !_appearanceCollapsed;
     private void ToggleSpeed() => _speedCollapsed = !_speedCollapsed;
 
-    // ── Algorithm 変更 ───────────────────────────────────────────────────────
+    // Algorithm 変更
     private async Task HandleAlgorithmChange(string newValue)
     {
         await SelectedAlgorithmChanged.InvokeAsync(newValue);
@@ -267,19 +267,24 @@
         await OnAlgorithmChanged.InvokeAsync();
     }
 
-    // ── ArraySize 変更 ───────────────────────────────────────────────────────
+    // ArraySize 変更
     private async Task HandleArraySizeChange(int newValue)
     {
         await ArraySizeChanged.InvokeAsync(newValue);
     }
 
-    // ── Pattern 変更 ─────────────────────────────────────────────────────────
+    // Pattern 変更
     private async Task HandlePatternChange(string newValue)
     {
         await SelectedPatternNameChanged.InvokeAsync(newValue);
     }
 
-    // ── VisualizationMode 変更 ───────────────────────────────────────────────
+    private async Task HandlePatternChange(string newValue)
+    {
+        await SelectedPatternNameChanged.InvokeAsync(newValue);
+    }
+
+    // VisualizationMode 変更
     private async Task HandleVisualizationModeChange(string rawValue)
     {
         if (Enum.TryParse<VisualizationMode>(rawValue, out var mode))
@@ -289,13 +294,13 @@
         }
     }
 
-    // ── Speed 変更 ───────────────────────────────────────────────────────────
+    // Speed 変更
     private async Task HandleSpeedChanged()
     {
         await OnSpeedSettingsChanged.InvokeAsync();
     }
 
-    // ── Comparison Mode 変更 ─────────────────────────────────────────────────
+    // Comparison Mode 変更
     private int GetEffectiveMaxSize()
     {
         var comparisonMax = ComparisonState.MaxComparisonElements(ComparisonMode.State.Instances, SelectedAlgorithm);

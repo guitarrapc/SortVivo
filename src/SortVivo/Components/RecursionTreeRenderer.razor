@@ -60,7 +60,7 @@
                 </filter>
             </defs>
 
-            @* ─── Edges (drawn first, behind nodes) ─── *@
+            @* Edges (drawn first, behind nodes) *@
             @for (int edgeIdx = 0; edgeIdx < Snapshot.Nodes.Length; edgeIdx++)
             {
                 var node = Snapshot.Nodes[edgeIdx];
@@ -90,7 +90,7 @@
                 }
             }
 
-            @* ─── Nodes ─── *@
+            @* Nodes *@
             @for (int nodeIdx = 0; nodeIdx < Snapshot.Nodes.Length; nodeIdx++)
             {
                 var node = Snapshot.Nodes[nodeIdx];

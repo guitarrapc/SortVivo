@@ -46,9 +46,9 @@ public class ComparisonModeService : IDisposable
         _js = js;
     }
 
-    // ────────────────────────────────────────────────────────────────────────
+    //
     // Add & Generate（Upsert）
-    // ────────────────────────────────────────────────────────────────────────
+    //
 
     /// <summary>
     /// 新規配列を生成し、既存の全カードを再実行したうえで選択アルゴリズムを Upsert する。
@@ -107,9 +107,9 @@ public class ComparisonModeService : IDisposable
         }
     }
 
-    // ────────────────────────────────────────────────────────────────────────
+    //
     // 追加のみ（既存配列・既存カード維持、追加分だけ計測）
-    // ────────────────────────────────────────────────────────────────────────
+    //
 
     /// <summary>
     /// 既存配列と既存カードをそのまま維持し、選択アルゴリズムだけ追加計測する。
@@ -145,9 +145,9 @@ public class ComparisonModeService : IDisposable
         }
     }
 
-    // ────────────────────────────────────────────────────────────────────────
+    //
     // インライン切替（同じ配列、N 不変）
-    // ────────────────────────────────────────────────────────────────────────
+    //
 
     /// <summary>
     /// 指定インデックスのカードのアルゴリズムを差し替える。
@@ -205,9 +205,9 @@ public class ComparisonModeService : IDisposable
         }
     }
 
-    // ────────────────────────────────────────────────────────────────────────
+    //
     // カード削除
-    // ────────────────────────────────────────────────────────────────────────
+    //
 
     public void RemoveAlgorithm(int index)
     {
@@ -230,9 +230,9 @@ public class ComparisonModeService : IDisposable
         NotifyStateChanged();
     }
 
-    // ────────────────────────────────────────────────────────────────────────
+    //
     // 再生制御
-    // ────────────────────────────────────────────────────────────────────────
+    //
 
     public void Play()
     {
@@ -277,9 +277,9 @@ public class ComparisonModeService : IDisposable
 
     public bool IsPlaying() => _playbackServices.Any(p => p.State.PlaybackState == PlaybackState.Playing);
 
-    // ────────────────────────────────────────────────────────────────────────
+    //
     // 設定同期
-    // ────────────────────────────────────────────────────────────────────────
+    //
 
     public void SetSpeedForAll(int ops, double speed)
     {
@@ -326,9 +326,9 @@ public class ComparisonModeService : IDisposable
         await _js.InvokeVoidAsync("soundEngine.setSoundType", soundType);
     }
 
-    // ────────────────────────────────────────────────────────────────────────
+    //
     // プライベートヘルパー
-    // ────────────────────────────────────────────────────────────────────────
+    //
 
     private async Task AddAlgorithmInternalAsync(string algorithmName, AlgorithmMetadata metadata)
     {

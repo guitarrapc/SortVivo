@@ -61,7 +61,7 @@ wwwroot/locales/
 
 ```jsonc
 {
-  // ── 共通 ──
+  // 共通
   "common": {
     "close": "Close",
     "processing": "Processing...",
@@ -70,13 +70,13 @@ wwwroot/locales/
     "collapse": "Collapse"
   },
 
-  // ── ナビゲーション ──
+  // ナビゲーション
   "nav": {
     "home": "Home",
     "tutorial": "Tutorial"
   },
 
-  // ── メインページ (Index.razor) ──
+  // メインページ (Index.razor)
   "index": {
     "title": "SortVivo",
     "addGenerate": "Add & Generate",
@@ -90,7 +90,7 @@ wwwroot/locales/
     "regenerateTooltip": "Regenerate array and re-run all algorithms"
   },
 
-  // ── クイックアクセスパネル (QuickAccessPanel.razor) ──
+  // クイックアクセスパネル (QuickAccessPanel.razor)
   "quickAccess": {
     "currentAlgorithm": "CURRENT ALGORITHM",
     "sortSetup": "Sort Setup",
@@ -117,7 +117,7 @@ wwwroot/locales/
     "fpsFormat": "({fps} FPS)"
   },
 
-  // ── 設定モーダル (SettingsModal.razor) ──
+  // 設定モーダル (SettingsModal.razor)
   "settings": {
     "title": "Settings",
     "rendering": "Rendering",
@@ -142,7 +142,7 @@ wwwroot/locales/
     "languageHint": "UI display language"
   },
 
-  // ── ソート統計 (SortStatsSummary.razor) ──
+  // ソート統計 (SortStatsSummary.razor)
   "stats": {
     "time": "Time",
     "comparisons": "Comparisons",
@@ -154,7 +154,7 @@ wwwroot/locales/
     "swp": "Swp"
   },
 
-  // ── 再生コントロール (PlayControlBar.razor) ──
+  // 再生コントロール (PlayControlBar.razor)
   "playback": {
     "play": "Play",
     "pause": "Pause",
@@ -164,12 +164,12 @@ wwwroot/locales/
     "soundNotAvailable": "Sound not available in Comparison Mode"
   },
 
-  // ── ソートカード (SortCard.razor) ──
+  // ソートカード (SortCard.razor)
   "sortCard": {
     "clickToStart": "Click \"Add & Generate\" to start visualization"
   },
 
-  // ── チュートリアル (TutorialPage.razor) ──
+  // チュートリアル (TutorialPage.razor)
   "tutorial": {
     "title": "TUTORIAL",
     "sortTarget": "Sort Target",
@@ -208,13 +208,13 @@ wwwroot/locales/
     "buffer": "Buffer {id}"
   },
 
-  // ── 404 ページ (NotFound.razor) ──
+  // 404 ページ (NotFound.razor)
   "notFound": {
     "title": "Not Found",
     "message": "Sorry, the content you are looking for does not exist."
   },
 
-  // ── カテゴリ名 (翻訳予約、当面英語のまま) ──
+  // カテゴリ名 (翻訳予約、当面英語のまま)
   "categories": {
     "EXCHANGE": "EXCHANGE",
     "SELECTION": "SELECTION",
@@ -229,7 +229,7 @@ wwwroot/locales/
     "JOKE": "JOKE"
   },
 
-  // ── アルゴリズム説明文 (AlgorithmRegistry から外出し) ──
+  // アルゴリズム説明文 (AlgorithmRegistry から外出し)
   // キーは AlgorithmRegistry の algorithmId に対応
   "algorithmDescriptions": {
     "BubbleSort": {
@@ -238,7 +238,7 @@ wwwroot/locales/
     // ... 各アルゴリズム
   },
 
-  // ── 配列パターン (ArrayPatternRegistry から外出し) ──
+  // 配列パターン (ArrayPatternRegistry から外出し)
   // キーは ArrayPatternRegistry のパターン ID に対応
   "arrayPatterns": {
     "Random": {
@@ -248,7 +248,7 @@ wwwroot/locales/
     // ... 各パターン
   },
 
-  // ── 統計比較ダイアログ (ComparisonStatsTable.razor) ──
+  // 統計比較ダイアログ (ComparisonStatsTable.razor)
   "comparisonStats": {
     "title": "Statistics Comparison",
     "sortBy": "Sort by",

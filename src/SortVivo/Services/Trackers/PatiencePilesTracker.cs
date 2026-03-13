@@ -47,7 +47,7 @@ sealed class PatiencePilesTracker : IVisualizationTracker
         _n = initialArray.Length;
         _elementPileAssignment = new int[_n];
 
-        // ── オフラインシミュレーション: 各要素の配置先を事前計算 ──────────────
+        // オフラインシミュレーション: 各要素の配置先を事前計算 ──────────────
         var simPileTops = new List<int>(); // 各パイルのトップ要素インデックス
         for (int i = 0; i < _n; i++)
         {

@@ -173,7 +173,7 @@
 </div>
 
 @code {
-    // ── コンテンツ状態（URL Query String で保持） ─────────────────────────────
+    // コンテンツ状態（URL Query String で保持）
     private string _selectedAlgorithm = "Quicksort";
     private string SelectedAlgorithm
     {
@@ -276,7 +276,7 @@
         }
     }
 
-    // ── URL 読み込み（コンテンツ状態） ─────────────────────────────────────────
+    // URL 読み込み（コンテンツ状態）
     private void RestoreStateFromUrl()
     {
         var parsedCards = new List<string>();
@@ -341,7 +341,7 @@
         }
     }
 
-    // ── URL 更新（コンテンツ状態） ────────────────────────────────────────────
+    // URL 更新（コンテンツ状態）
     private void UpdateContentStateUrl()
     {
         if (_restoringFromUrl) return;
@@ -356,7 +356,7 @@
         NavigationManager.NavigateTo(url, replace: true);
     }
 
-    // ── localStorage 読み込み（初回レンダリング後） ──────────────────────────
+    // localStorage 読み込み（初回レンダリング後）
     private async Task LoadPreferencesAsync()
     {
         try
@@ -402,7 +402,7 @@
         }
     }
 
-    // ── localStorage 保存 ────────────────────────────────────────────────────
+    // localStorage 保存
     private async Task SavePreferencesAsync()
     {
         try
@@ -430,7 +430,7 @@
         }
     }
 
-    // ── URL cards パラメータからの比較カード自動復元（初回レンダリング後） ──
+    // URL cards パラメータからの比較カード自動復元（初回レンダリング後）
     private async Task RestoreCardsFromUrlAsync()
     {
         if (_initialCardAlgorithms.Count == 0) return;

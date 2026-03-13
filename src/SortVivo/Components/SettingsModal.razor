@@ -12,18 +12,16 @@
     @* モーダル本体: クリックが背景に伝播しないよう stopPropagation *@
     <div class="settings-modal @(_isClosing ? "settings-modal--leaving" : "")" @onclick:stopPropagation>
 
-        @* ── ヘッダー ── *@
+        @* ヘッダー *@
         <div class="settings-modal__header">
             <span class="settings-modal__title">@L["settings.title"]</span>
             <button class="settings-modal__close" @onclick="HandleClose" title="@L["common.close"]">✕</button>
         </div>
 
-        @* ── スクロール可能なボディ ── *@
+        @* スクロール可能なボディ *@
         <div class="settings-modal__body">
 
-            @* ────────────────────────────────────
-               ⚙️ General
-               ──────────────────────────────────── *@
+            @*⚙️ General *@
             <section class="settings-section">
                 <h3 class="settings-section__title">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16">
@@ -76,9 +74,7 @@
                 </div>
             </section>
 
-            @* ────────────────────────────────────
-               🔊 Sound
-               ──────────────────────────────────── *@
+            @* 🔊 Sound *@
             <section class="settings-section">
                 <h3 class="settings-section__title">
                     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -116,9 +112,7 @@
                 </div>
             </section>
 
-            @* ────────────────────────────────────
-               🔧 Advanced
-               ──────────────────────────────────── *@
+            @* 🔧 Advanced *@
             <section class="settings-section">
                 <h3 class="settings-section__title">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-tools" viewBox="0 0 16 16">
@@ -159,9 +153,7 @@
                 </div>
             </section>
 
-            @* ────────────────────────────────────
-               🔒 About
-               ──────────────────────────────────── *@
+            @* 🔒 About *@
             <section class="settings-section">
                 <h3 class="settings-section__title">
                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-lock" viewBox="0 0 16 16">

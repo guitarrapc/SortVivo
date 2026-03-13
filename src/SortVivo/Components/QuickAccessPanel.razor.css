@@ -1,4 +1,4 @@
-/* ─── QuickAccessPanel (qap) 専用スタイル ─────────────────────────────── */
+/* QuickAccessPanel (qap) 専用スタイル */
 /* 注: .qap__item, .stat-label, .stat-value, .ui-card 等は
    TutorialPage でも使用するため app.css に残します */
 
@@ -67,10 +67,10 @@
     transition: background 0.15s;
 }
 
-    .qap__help-link:hover {
-        background: var(--color-accent);
-        color: #fff;
-    }
+.qap__help-link:hover {
+    background: var(--color-accent);
+    color: #fff;
+}
 
 .qap__fps {
     font-size: 0.8rem;
@@ -123,7 +123,7 @@
     font-weight: 700;
 }
 
-/* ── アルゴリズム説明カード ── */
+/* アルゴリズム説明カード */
 .algorithm-description-card {
     background: linear-gradient(135deg, var(--color-tutorial-bg-start) 0%, var(--color-tutorial-bg-end) 100%);
     border: 1px solid rgba(127, 168, 111, 0.2);
@@ -180,18 +180,19 @@
     transition: background 0.15s;
 }
 
-    .algorithm-description-card__toggle:hover {
-        background: rgba(142, 192, 124, 0.25);
-        border-color: var(--color-tutorial-accent);
-    }
+.algorithm-description-card__toggle:hover {
+    background: rgba(142, 192, 124, 0.25);
+    border-color: var(--color-tutorial-accent);
+}
 
 /* 折りたたみ時にボディを隠す */
 .algorithm-description-card__body--hidden {
     display: none;
 }
 
-/* ─── タブレット/モバイル ─────────────────────────────────────────────── */
+/* タブレット/モバイル */
 @media (min-width: 768px) and (max-width: 1279px) {
+
     /* QuickAccessPanel は上段に配置 */
     .qap {
         grid-column: 1;
@@ -222,6 +223,7 @@
 }
 
 @media (max-width: 767px) {
+
     /* QuickAccessPanel は上段に配置 */
     .qap {
         grid-row: auto;
