@@ -55,7 +55,7 @@ sealed class RecursionTracker : IVisualizationTracker
 
         switch (op.Type)
         {
-            // Merge sort: Merge フェーズ開始シグナル ──────────────────────────
+            // Merge sort: Merge フェーズ開始シグナル
             // RangeCopy(main→buffer): src=left, len=leftLength
             // 等分割なら end = src + len * 2
             case OperationType.RangeCopy when op.BufferId1 == 0 && op.BufferId2 == 1:
@@ -65,7 +65,7 @@ sealed class RecursionTracker : IVisualizationTracker
                 allowCreate = true; // Merge フェーズ開始 → 新規ノード作成OK
                 break;
 
-            // Quicksort: パーティション中の Swap ───────────────────────────
+            // Quicksort: パーティション中の Swap
             // Swap(i, j, buf=0): 現在のパーティション作業範囲 [min..max+1) を推定
             case OperationType.Swap when op.BufferId1 == 0 && op.Index1 != op.Index2:
                 newStart = Math.Min(op.Index1, op.Index2);
@@ -74,7 +74,7 @@ sealed class RecursionTracker : IVisualizationTracker
                 allowCreate = true; // Quicksort パーティション → 新規ノード作成OK
                 break;
 
-            // Compare(i, j, buf(0,0)), i≥0, j≥0 ─────────────────────────
+            // Compare(i, j, buf(0,0)), i≥0, j≥0
             // Merge sort の SortCore early-exit check。
             // Compare(mid, mid+1) は親ノードの状態チェックであり、新ノードを作ってはいけない。
             // ノード検索のみ行い、存在しない場合は何もしない。
@@ -97,7 +97,7 @@ sealed class RecursionTracker : IVisualizationTracker
         _lastOpStart = newStart;
         _lastOpEnd = newEnd;
 
-        // ノードを特定してアクティブ化 ─────────────────────────────────────
+        // ノードを特定してアクティブ化
         var node = allowCreate
             ? FindOrCreateNode(newStart, newEnd, mainArray)
             : FindBestExistingNode(newStart, newEnd);
@@ -225,7 +225,7 @@ sealed class RecursionTracker : IVisualizationTracker
         _cachedNarrative = null; // 次のステップのために消去
     }
 
-    // ─── ノード検索 / 作成 ──────────────────────────────────────────────────
+    // ノード検索 / 作成
 
     /// <summary>
     /// [start..end) のノードを探す。存在しなければ最小包含ノードの子として作成する。
@@ -373,7 +373,7 @@ sealed class RecursionTracker : IVisualizationTracker
             .FirstOrDefault();
     }
 
-    // ─── ノード状態更新 ─────────────────────────────────────────────────────
+    // ノード状態更新
 
     private void UpdateNodeState(int nodeId, RecursionNodeState newState)
     {
@@ -396,7 +396,7 @@ sealed class RecursionTracker : IVisualizationTracker
         }
     }
 
-    // ─── ナラティブ生成 ─────────────────────────────────────────────────────
+    // ナラティブ生成
 
     /// <summary>現在の操作とノード状態から説明テキストを生成する。</summary>
     private void GenerateNarrative(RecursionNode node, RecursionNode? prevNode, SortOperation op)
@@ -470,7 +470,7 @@ sealed class RecursionTracker : IVisualizationTracker
         return null;
     }
 
-    // ─── スナップショット再構築 ──────────────────────────────────────────────
+    // スナップショット再構築
 
     private void RebuildSnapshot()
     {

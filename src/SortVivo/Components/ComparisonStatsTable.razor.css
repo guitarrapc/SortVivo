@@ -1,4 +1,4 @@
-/* ─── ComparisonStatsTable — カードリスト + バーチャート モーダル ──────── */
+/* ComparisonStatsTable — カードリスト + バーチャート モーダル */
 
 /* モーダルオーバーレイ */
 .cst-overlay {
@@ -279,7 +279,7 @@
     font-weight: 600;
 }
 
-/* ─── スマホ: フルスクリーン表示 ─────────────────────────────────────── */
+/* スマホ: フルスクリーン表示 */
 @media (max-width: 767px) {
     .cst-overlay {
         padding: 0;

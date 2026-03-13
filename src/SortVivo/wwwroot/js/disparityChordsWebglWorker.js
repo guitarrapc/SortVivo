@@ -4,7 +4,7 @@
 // WebGL2 利用不可の場合は Canvas 2D にフォールバック。
 // メッセージインタフェースは disparityChordsRenderWorker.js と完全互換。
 
-// 共有状態 ────────────────────────────────────────────────────────────────
+// 共有状態
 let offscreen = null;
 let gl = null;   // WebGL2RenderingContext
 let ctx = null;   // Canvas2DRenderingContext（フォールバック時）
@@ -43,7 +43,7 @@ const colors = {
   sorted: '#10B981',
 };
 
-// LUT ─────────────────────────────────────────────────────────────────────
+// LUT
 
 function hslToRgb(h, s, l) {
   s /= 100; l /= 100;
@@ -116,7 +116,7 @@ const _raf = typeof requestAnimationFrame !== 'undefined'
   ? cb => requestAnimationFrame(cb)
   : cb => setTimeout(cb, 1000 / 60);
 
-// メッセージハンドラ ────────────────────────────────────────────────────────
+// メッセージハンドラ
 self.onmessage = function (e) {
   const msg = e.data;
   switch (msg.type) {
@@ -191,7 +191,7 @@ self.onmessage = function (e) {
   }
 };
 
-// WebGL2 初期化 ────────────────────────────────────────────────────────────
+// WebGL2 初期化
 function initWebGL(canvas) {
   try {
     gl = canvas.getContext('webgl2', {
@@ -308,7 +308,7 @@ function uploadAndDraw(count, mode) {
   gl.drawArrays(mode, 0, count);
 }
 
-// スケジューリング ─────────────────────────────────────────────────────────
+// スケジューリング
 function scheduleDraw() {
   isDirty = true;
   if (!isLoopRunning) startLoop();
@@ -336,7 +336,7 @@ function draw() {
   else drawCanvas2D();
 }
 
-// WebGL2 描画 ──────────────────────────────────────────────────────────────
+// WebGL2 描画
 function drawWebGL() {
   const { compareIndices, swapIndices, readIndices, writeIndices,
     isSortCompleted, showCompletionHighlight } = renderParams;
@@ -374,7 +374,7 @@ function drawWebGL() {
   const sortedIdx = new Int32Array(n);
   for (let i = 0; i < n; i++) sortedIdx[i] = Math.round((array[i] / maxValue) * (n - 1));
 
-  // ソート完了ハイライト ─────────────────────────────────────────────────
+  // ソート完了ハイライト
   if (showCompletionHighlight) {
     ensureVBOCapacity(n * STRIDE);
     const [sr, sg, sb] = RGBA.sorted;
@@ -398,7 +398,7 @@ function drawWebGL() {
     [swapIndices, RGBA.swap],
   ];
 
-  // 弦を描画（gl.LINES）────────────────────────────────────────────────
+  // 弦を描画（gl.LINES）
   // 最大 n 本 × 2頂点
   ensureVBOCapacity(n * 2 * STRIDE);
 
@@ -439,7 +439,7 @@ function drawWebGL() {
 
   if (numChordVerts > 0) uploadAndDraw(numChordVerts, gl.LINES);
 
-  // ドットを描画（gl.POINTS）────────────────────────────────────────────
+  // ドットを描画（gl.POINTS）
   // 通常ドット + 正位置ドット
   ensureVBOCapacity(n * STRIDE);
   let numDots = 0;
@@ -489,7 +489,7 @@ function drawWebGL() {
   gl.bindVertexArray(null);
 }
 
-// Canvas 2D 描画（WebGL2 フォールバック） ──────────────────────────────────
+// Canvas 2D 描画（WebGL2 フォールバック）
 // disparityChordsRenderWorker.js の draw() と同一ロジック
 function drawCanvas2D() {
   if (!offscreen || !ctx || !arrays.main || !renderParams) return;
@@ -613,7 +613,7 @@ function drawCanvas2D() {
   ctx.fill();
 }
 
-// クリーンアップ ────────────────────────────────────────────────────────────
+// クリーンアップ
 function cleanup() {
   if (useWebGL && gl) {
     if (vao) gl.deleteVertexArray(vao);

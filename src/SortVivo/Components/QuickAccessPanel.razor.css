@@ -67,10 +67,10 @@
     transition: background 0.15s;
 }
 
-.qap__help-link:hover {
-    background: var(--color-accent);
-    color: #fff;
-}
+    .qap__help-link:hover {
+        background: var(--color-accent);
+        color: #fff;
+    }
 
 .qap__fps {
     font-size: 0.8rem;
@@ -180,10 +180,10 @@
     transition: background 0.15s;
 }
 
-.algorithm-description-card__toggle:hover {
-    background: rgba(142, 192, 124, 0.25);
-    border-color: var(--color-tutorial-accent);
-}
+    .algorithm-description-card__toggle:hover {
+        background: rgba(142, 192, 124, 0.25);
+        border-color: var(--color-tutorial-accent);
+    }
 
 /* 折りたたみ時にボディを隠す */
 .algorithm-description-card__body--hidden {

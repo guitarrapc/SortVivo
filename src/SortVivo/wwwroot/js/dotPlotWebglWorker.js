@@ -4,7 +4,7 @@
 // WebGL2 利用不可の場合は Canvas 2D にフォールバック。
 // メッセージインタフェースは dotPlotRenderWorker.js と完全互換。
 
-// 共有状態 ─────────────────────────────────────────────
+// 共有状態
 let offscreen = null;
 let gl = null;    // WebGL2RenderingContext (WebGL2 使用時)
 let ctx = null;   // Canvas2DRenderingContext (フォールバック時)
@@ -99,7 +99,7 @@ const _raf = typeof requestAnimationFrame !== 'undefined'
   ? cb => requestAnimationFrame(cb)
   : cb => setTimeout(cb, 1000 / 60);
 
-// メッセージハンドラ ────────────────────────────────────
+// メッセージハンドラ
 self.onmessage = function (e) {
   const msg = e.data;
   switch (msg.type) {
@@ -181,7 +181,7 @@ self.onmessage = function (e) {
   }
 };
 
-// WebGL 初期化 ──────────────────────────────────────────
+// WebGL 初期化
 function initWebGL(canvas) {
   try {
     gl = canvas.getContext('webgl2', {
@@ -290,7 +290,7 @@ function compileShader(type, src) {
   return shader;
 }
 
-// スケジューリング ──────────────────────────────────────
+// スケジューリング
 function scheduleDraw() {
   isDirty = true;
   if (!isLoopRunning) startLoop();
@@ -318,7 +318,7 @@ function draw() {
   else drawCanvas2D();
 }
 
-// GPU バッファ容量確保 ──────────────────────────────────
+// GPU バッファ容量確保
 function ensurePointCapacity(count) {
   const needed = count * POINT_STRIDE;
   if (needed <= pointVBOCap) return;
@@ -330,7 +330,7 @@ function ensurePointCapacity(count) {
   gl.bufferData(gl.ARRAY_BUFFER, newCap * Float32Array.BYTES_PER_ELEMENT, gl.DYNAMIC_DRAW);
 }
 
-// WebGL 描画 ────────────────────────────────────────────
+// WebGL 描画
 function drawWebGL() {
   const {
     compareIndices, swapIndices, readIndices, writeIndices,
@@ -441,7 +441,7 @@ function drawWebGL() {
   gl.bindVertexArray(null);
 }
 
-// Canvas 2D フォールバック描画 ──────────────────────────
+// Canvas 2D フォールバック描画
 function drawCanvas2D() {
   if (!ctx || !arrays.main || !renderParams) return;
 
@@ -566,7 +566,7 @@ function drawCanvas2D() {
   }
 }
 
-// クリーンアップ ─────────────────────────────────────────
+// クリーンアップ
 function cleanup() {
   if (useWebGL && gl) {
     if (vao) { gl.deleteVertexArray(vao); vao = null; }

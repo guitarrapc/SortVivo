@@ -247,7 +247,7 @@ window.disparityChordsCanvasRenderer = {
     this.rafId = requestAnimationFrame(tick);
   },
 
-  // ─── Canvas 2D LUT ヘルパー ─────────────────────────────────────────────────
+  // Canvas 2D LUT ヘルパー
 
   _buildTrigLUT: function (n) {
     if (this._lutLength === n) return;

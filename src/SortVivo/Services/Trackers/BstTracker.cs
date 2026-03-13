@@ -176,7 +176,7 @@ sealed class BstTracker : IVisualizationTracker
 
     public void PostStep() { }
 
-    // ─── BST helpers ──────────────────────────────────────────────────────────
+    // BST helpers
 
     /// <summary>
     /// 非再帰の中順走査で BST の全ノードを訪問順に列挙する。
@@ -196,7 +196,7 @@ sealed class BstTracker : IVisualizationTracker
         return [.. result];
     }
 
-    // ─── AVL helpers ──────────────────────────────────────────────────────────
+    // AVL helpers
 
     private void AvlUpdateHeight(int i)
     {

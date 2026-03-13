@@ -24,7 +24,7 @@
                 </filter>
             </defs>
 
-            @*─ Edges (drawn first, behind nodes)─ *@
+            @* Edges (drawn first, behind nodes) *@
             @for (int i = 0; i < HeapBoundary; i++)
             {
                 var (px, py) = GetNodePosition(i, depth, viewW, viewH, nodeR);
@@ -50,7 +50,7 @@
                 }
             }
 
-            @*─ Nodes─ *@
+            @* Nodes *@
             @for (int i = 0; i < HeapBoundary; i++)
             {
                 var idx = i;
@@ -79,7 +79,7 @@
             }
         </svg>
 
-        @*─ Sorted region indicator─ *@
+        @* Sorted region indicator *@
         @if (HeapBoundary < Values.Length)
         {
             <div class="heap-sorted-region">

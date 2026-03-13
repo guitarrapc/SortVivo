@@ -235,7 +235,7 @@ function draw() {
 
 
   if (imageBitmap && imageNumCols > 0) {
-    // 画像列モード ──────────────────────────────────────────────────
+    // 画像列モード
     const imgW = imageBitmap.width;
     const imgH = imageBitmap.height;
     const srcColW = imgW / imageNumCols;
@@ -291,7 +291,7 @@ function draw() {
       }
     }
   } else {
-    // 画像なし: グラデーション縦バーで表示 ──────────────────────────
+    // 画像なし: グラデーション縦バーで表示
     let maxValue = 0;
     for (let i = 0; i < n; i++) {
       if (array[i] > maxValue) maxValue = array[i];

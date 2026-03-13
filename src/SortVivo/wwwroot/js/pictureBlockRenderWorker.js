@@ -261,7 +261,7 @@ function draw() {
   for (let i = 1; i < n; i++) { if (array[i] < minVal) minVal = array[i]; }
 
   if (imageBitmap && imageNumBlocks > 0) {
-    // 画像ブロックモード ────────────────────────────────────────────
+    // 画像ブロックモード
     const imgW = imageBitmap.width;
     const imgH = imageBitmap.height;
     const { cols: srcCols, rows: srcRows } = calcGrid(imageNumBlocks);
@@ -334,7 +334,7 @@ function draw() {
       }
     }
   } else {
-    // 画像なし: 色付きブロックで表示 ──────────────────────────────
+    // 画像なし: 色付きブロックで表示
     let maxValue = 0;
     for (let i = 0; i < n; i++) {
       if (array[i] > maxValue) maxValue = array[i];

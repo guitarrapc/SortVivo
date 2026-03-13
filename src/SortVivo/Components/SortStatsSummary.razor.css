@@ -36,36 +36,36 @@
     transition: background-color 0.15s ease;
 }
 
-.stat-mini:hover {
-    background: rgba(127, 168, 111, 0.12);
-}
+    .stat-mini:hover {
+        background: rgba(127, 168, 111, 0.12);
+    }
 
-.stat-mini .label {
-    font-size: 0.7rem;
-    font-weight: 400;
-    color: var(--text-secondary, #9ca3af);
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    text-align: center;
-    order: 2; /* 下に配置 */
-}
+    .stat-mini .label {
+        font-size: 0.7rem;
+        font-weight: 400;
+        color: var(--text-secondary, #9ca3af);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        text-align: center;
+        order: 2; /* 下に配置 */
+    }
 
-.stat-mini .value {
-    font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
-    font-size: 1rem;
-    font-weight: 700;
-    color: #a0d68d; /* より鮮やかで読みやすい緑 */
-    text-align: center;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-    width: 100%;
-    order: 1; /* 上に配置 */
-}
+    .stat-mini .value {
+        font-family: 'Consolas', 'Monaco', 'Courier New', monospace;
+        font-size: 1rem;
+        font-weight: 700;
+        color: #a0d68d; /* より鮮やかで読みやすい緑 */
+        text-align: center;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        width: 100%;
+        order: 1; /* 上に配置 */
+    }
 
 /* 実行時間の内部要素 - ::deep で動的生成された要素にもスタイル適用 */
 .stat-execution-time ::deep .time-number {
@@ -96,13 +96,13 @@
     min-height: 48px;
 }
 
-.sort-stats-summary--small .stat-mini .label {
-    font-size: 0.6rem;
-}
+    .sort-stats-summary--small .stat-mini .label {
+        font-size: 0.6rem;
+    }
 
-.sort-stats-summary--small .stat-mini .value {
-    font-size: 0.85rem;
-}
+    .sort-stats-summary--small .stat-mini .value {
+        font-size: 0.85rem;
+    }
 
 /* Medium: 中間表示（比較2〜3枚 PC） */
 .sort-stats-summary--medium .stat-mini {
@@ -111,13 +111,13 @@
     min-height: 52px;
 }
 
-.sort-stats-summary--medium .stat-mini .label {
-    font-size: 0.65rem;
-}
+    .sort-stats-summary--medium .stat-mini .label {
+        font-size: 0.65rem;
+    }
 
-.sort-stats-summary--medium .stat-mini .value {
-    font-size: 0.9rem;
-}
+    .sort-stats-summary--medium .stat-mini .value {
+        font-size: 0.9rem;
+    }
 
 /* Full: フル表示（単一モード PC） */
 .sort-stats-summary--full .sss__compact {
@@ -130,13 +130,13 @@
     min-height: 60px;
 }
 
-.sort-stats-summary--full .stat-mini .label {
-    font-size: 0.72rem;
-}
+    .sort-stats-summary--full .stat-mini .label {
+        font-size: 0.72rem;
+    }
 
-.sort-stats-summary--full .stat-mini .value {
-    font-size: 1.1rem;
-}
+    .sort-stats-summary--full .stat-mini .value {
+        font-size: 1.1rem;
+    }
 
 /* レスポンシブ調整 */
 
@@ -162,13 +162,13 @@
         min-height: 50px;
     }
 
-    .stat-mini .value {
-        font-size: 0.9rem;
-    }
+        .stat-mini .value {
+            font-size: 0.9rem;
+        }
 
-    .stat-mini .label {
-        font-size: 0.65rem;
-    }
+        .stat-mini .label {
+            font-size: 0.65rem;
+        }
 }
 
 /* スマホ（〜767px） */
@@ -193,12 +193,12 @@
         min-height: 36px;
     }
 
-    .stat-mini .label {
-        font-size: 0.52rem;
-        letter-spacing: 0.02em;
-    }
+        .stat-mini .label {
+            font-size: 0.52rem;
+            letter-spacing: 0.02em;
+        }
 
-    .stat-mini .value {
-        font-size: 0.65rem;
-    }
+        .stat-mini .value {
+            font-size: 0.65rem;
+        }
 }

@@ -1,4 +1,4 @@
-/* ─── SortCardGrid と カルーセル ───────────────────────────────────────── */
+/* SortCardGrid と カルーセル  */
 
 .sort-card-grid-wrapper {
     display: flex;
@@ -20,7 +20,7 @@
     position: relative;
 }
 
-/* ─── ドラッグ＆ドロップ スタイル ──────────────────────────────────────── */
+/* ドラッグ＆ドロップ スタイル */
 
 /* ドラッグ中: sibling カードの移動アニメーション（JS側でgrid要素にクラス付与） */
 .sort-card-grid--dragging > ::deep .sort-card:not(.sort-card--dragging) {
@@ -68,16 +68,16 @@
     transform: scale(1.3);
 }
 
-/* ─── PC ──────────────────────────────────────────────────────────────── */
+/* PC */
 
-/* ─── タブレット/モバイル ─────────────────────────────────────────────── */
+/* タブレット/モバイル */
 @media (max-width: 1279px) {
     .sort-card-grid {
         grid-template-columns: repeat(2, 1fr) !important;
     }
 }
 
-/* ─── スマホ ──────────────────────────────────────────────────────────── */
+/* スマホ */
 @media (max-width: 767px) {
     .sort-card-grid-wrapper {
         height: 100%;
@@ -146,7 +146,7 @@
         color: var(--color-accent, #4a9eff);
     }
 
-    /* ─── 編集モード: カルーセル→縦リスト ─── */
+    /* 編集モード: カルーセル→縦リスト */
     .sort-card-grid-wrapper--edit-mode .sort-card-grid {
         flex-direction: column !important;
         overflow-x: hidden !important;
@@ -157,14 +157,14 @@
         padding: 8px !important;
     }
 
-    .sort-card-grid-wrapper--edit-mode .sort-card-grid > ::deep * {
-        flex: 0 0 200px !important;
-        width: 100% !important;
-        max-width: 100% !important;
-        scroll-snap-align: none !important;
-        margin: 0 !important;
-        height: 200px !important;
-    }
+        .sort-card-grid-wrapper--edit-mode .sort-card-grid > ::deep * {
+            flex: 0 0 200px !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            scroll-snap-align: none !important;
+            margin: 0 !important;
+            height: 200px !important;
+        }
 
     /* 編集モード中: ドットインジケーターを非表示 */
     .sort-card-grid-wrapper--edit-mode .carousel-dots {

@@ -1,4 +1,4 @@
-/* ─── PlayControlBar ──────────────────────────────────────────────────── */
+/* PlayControlBar */
 
 .play-control-bar {
     display: flex;
@@ -191,8 +191,14 @@
     }
 
 @keyframes record-pulse {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.6; }
+
+    0%, 100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.6;
+    }
 }
 
 .record-resolution-select {
@@ -248,7 +254,7 @@
     font-weight: 500;
 }
 
-/* ─── タブレット ──────────────────────────────────────────────────────── */
+/* タブレット */
 @media (min-width: 768px) and (max-width: 1279px) {
     .play-control-btn {
         height: 40px;
@@ -257,7 +263,7 @@
     }
 }
 
-/* ─── スマホ ──────────────────────────────────────────────────────────── */
+/* スマホ */
 @media (max-width: 767px) {
     .play-control-btn {
         height: 40px;

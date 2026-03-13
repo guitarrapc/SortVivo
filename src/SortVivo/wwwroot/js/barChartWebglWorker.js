@@ -3,7 +3,7 @@
 // WebGL2 で GPU 直接レンダリング。WebGL2 利用不可の場合は Canvas 2D にフォールバック。
 // メッセージインタフェースは renderWorker.js と完全互換。
 
-// 共有状態 ─────────────────────────────────────────────
+// 共有状態
 let offscreen = null;
 let gl = null;   // WebGL2RenderingContext (WebGL2 使用時)
 let ctx = null;   // Canvas2DRenderingContext (フォールバック時)
@@ -50,7 +50,7 @@ const colors = {
   sorted: '#10B981',
 };
 
-// HSL カラー LUT ──────────────────────────────────────────────
+// HSL カラー LUT
 
 function hslToRgb(h, s, l) {
   s /= 100; l /= 100;
@@ -103,7 +103,7 @@ const _raf = typeof requestAnimationFrame !== 'undefined'
   ? cb => requestAnimationFrame(cb)
   : cb => setTimeout(cb, 1000 / 60);
 
-// メッセージハンドラ ────────────────────────────────────
+// メッセージハンドラ
 self.onmessage = function (e) {
   const msg = e.data;
   switch (msg.type) {
@@ -185,7 +185,7 @@ self.onmessage = function (e) {
   }
 };
 
-// WebGL 初期化 ──────────────────────────────────────────
+// WebGL 初期化
 function initWebGL(canvas) {
   try {
     gl = canvas.getContext('webgl2', {
@@ -342,7 +342,7 @@ function compileShader(type, src) {
   return shader;
 }
 
-// スケジューリング ──────────────────────────────────────
+// スケジューリング
 function scheduleDraw() {
   isDirty = true;
   if (!isLoopRunning) startLoop();
@@ -364,14 +364,14 @@ function tick() {
   }
 }
 
-// 描画ディスパッチャー ──────────────────────────────────
+// 描画ディスパッチャー
 function draw() {
   if (!renderParams) return;
   if (useWebGL) drawWebGL();
   else drawCanvas2D();
 }
 
-// WebGL 描画 ────────────────────────────────────────────
+// WebGL 描画
 
 /**
  * GPU インスタンスバッファが count 個のインスタンスを収容できるよう拡張する。
@@ -448,7 +448,7 @@ function drawWebGL() {
   gl.uniform1f(uDpr, dpr);
   gl.bindVertexArray(vao);
 
-  // メイン配列 ──────────────────────────────────────
+  // メイン配列
   ensureInstanceCapacity(arrayLength);
 
   if (showCompletionHighlight) {
@@ -488,7 +488,7 @@ function drawWebGL() {
 
   uploadAndDraw(arrayLength, mainOriginY, sectionH, totalBW, barW, gap);
 
-  // バッファー配列 ──────────────────────────────────
+  // バッファー配列
   if (showBuffers) {
     const [br, bg, bb] = COLORS.buffer;
     const sortedIds = [...arrays.buffers.keys()].sort((a, b) => a - b);
@@ -525,7 +525,7 @@ function drawWebGL() {
   gl.bindVertexArray(null);
 }
 
-// Canvas 2D 描画（WebGL2 フォールバック） ───────────────
+// Canvas 2D 描画（WebGL2 フォールバック）
 // renderWorker.js の draw() と同一ロジック
 function drawCanvas2D() {
   if (!offscreen || !ctx || !arrays.main || !renderParams) return;
@@ -679,7 +679,7 @@ function drawCanvas2D() {
   }
 }
 
-// クリーンアップ ────────────────────────────────────────
+// クリーンアップ
 function cleanup() {
   if (useWebGL && gl) {
     if (vao) gl.deleteVertexArray(vao);

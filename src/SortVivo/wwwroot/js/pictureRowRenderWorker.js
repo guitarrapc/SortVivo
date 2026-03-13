@@ -238,7 +238,7 @@ function draw() {
   const writeSet = new Set(writeIndices);
 
   if (imageBitmap && imageNumRows > 0) {
-    // 画像行モード ──────────────────────────────────────────────────
+    // 画像行モード
     const imgW = imageBitmap.width;
     const imgH = imageBitmap.height;
     const srcRowH = imgH / imageNumRows;
@@ -294,7 +294,7 @@ function draw() {
       }
     }
   } else {
-    // 画像なし: グラデーションバーで表示 ────────────────────────────
+    // 画像なし: グラデーションバーで表示
     let maxValue = 0;
     for (let i = 0; i < n; i++) {
       if (array[i] > maxValue) maxValue = array[i];

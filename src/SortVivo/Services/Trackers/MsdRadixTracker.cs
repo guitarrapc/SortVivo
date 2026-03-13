@@ -163,7 +163,7 @@ sealed class MsdRadixTracker : IVisualizationTracker
 
     public void PostStep() { }
 
-    // ─── MSD helpers ──────────────────────────────────────────────────────────
+    // MSD helpers
 
     /// <summary>
     /// MSD ソート用の桁インデックスを計算する（符号ビット反転キーベース）。

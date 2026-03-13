@@ -111,7 +111,7 @@ window.videoRecorder = {
     this._mediaRecorder = recorder;
     recorder.start(100);
 
-    // Compositing loop ──────────────────────────────────────────────
+    // Compositing loop
     // All drawing uses video-pixel coordinates directly (no ctx.scale).
     // This ensures:
     //   - Fonts are rasterized at the exact video pixel size (sharp glyphs)
@@ -134,7 +134,7 @@ window.videoRecorder = {
       ctx.fillStyle = '#0a0a1a';
       ctx.fillRect(0, 0, videoWidth, videoHeight);
 
-      // Sort-card backgrounds, borders, headers ─────────────────────
+      // Sort-card backgrounds, borders, headers
       for (const card of target.querySelectorAll('.sort-card')) {
         const cr = card.getBoundingClientRect();
         const cx = ox(cr), cy = oy(cr), cw = sw(cr), ch = sh(cr);
@@ -166,7 +166,7 @@ window.videoRecorder = {
         }
       }
 
-      // Canvas elements (sort visualization) ────────────────────────
+      // Canvas elements (sort visualization)
       // Use Lanczos-quality resampling for best DPR→video downscale.
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
@@ -184,7 +184,7 @@ window.videoRecorder = {
         }
       }
 
-      // Algorithm name labels ───────────────────────────────────────
+      // Algorithm name labels
       // Font sizes are specified in video pixels for native-resolution rasterization.
       const fontAlgo = `bold ${Math.round(14 * S)}px system-ui, -apple-system, sans-serif`;
       const fontBadge = `${Math.round(11 * S)}px system-ui, -apple-system, sans-serif`;
@@ -233,7 +233,7 @@ window.videoRecorder = {
         }
       }
 
-      // Stats values ────────────────────────────────────────────────
+      // Stats values
       const fontValue = `bold ${Math.round(13 * S)}px Consolas, Monaco, "Courier New", monospace`;
       const fontLabel = `${Math.round(10 * S)}px system-ui, -apple-system, sans-serif`;
       for (const statMini of target.querySelectorAll('.stat-mini')) {

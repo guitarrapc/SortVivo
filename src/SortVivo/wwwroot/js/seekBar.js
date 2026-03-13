@@ -55,7 +55,7 @@ window.seekBarInterop = {
       dotnetHelper.invokeMethodAsync('OnDrag', pct);
     };
 
-    // ─── マウスイベント ──────────────────────────────────────────────────
+    // マウスイベント
     const onMouseDown = (e) => {
       isDragging = true;
       updatePosition(e.clientX, true); // クリック開始時はスナップあり
@@ -73,7 +73,7 @@ window.seekBarInterop = {
       isDragging = false;
     };
 
-    // ─── タッチイベント ──────────────────────────────────────────────────
+    // タッチイベント
     const onTouchStart = (e) => {
       isDragging = true;
       updatePosition(e.touches[0].clientX, true); // タップ開始時はスナップあり

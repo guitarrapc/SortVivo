@@ -3,7 +3,7 @@
 // WebGL2 で GPU 直接レンダリング。WebGL2 利用不可の場合は Canvas 2D にフォールバック。
 // メッセージインタフェースは circularRenderWorker.js と完全互換。
 
-// 共有状態 ─────────────────────────────────────────────
+// 共有状態
 let offscreen = null;
 let gl = null;   // WebGL2RenderingContext (WebGL2 使用時)
 let ctx = null;   // Canvas2DRenderingContext (フォールバック時)
@@ -144,7 +144,7 @@ const _raf = typeof requestAnimationFrame !== 'undefined'
   ? cb => requestAnimationFrame(cb)
   : cb => setTimeout(cb, 1000 / 60);
 
-// メッセージハンドラ ────────────────────────────────────
+// メッセージハンドラ
 self.onmessage = function (e) {
   const msg = e.data;
   switch (msg.type) {
@@ -226,7 +226,7 @@ self.onmessage = function (e) {
   }
 };
 
-// WebGL2 初期化 ──────────────────────────────────────────
+// WebGL2 初期化
 function initWebGL(canvas) {
   try {
     gl = canvas.getContext('webgl2', {
@@ -390,7 +390,7 @@ function compileShader(type, src) {
   return shader;
 }
 
-// スケジューリング ──────────────────────────────────────
+// スケジューリング
 function scheduleDraw() {
   isDirty = true;
   if (!isLoopRunning) startLoop();
@@ -418,7 +418,7 @@ function draw() {
   else drawCanvas2D();
 }
 
-// WebGL2 描画 ────────────────────────────────────────────
+// WebGL2 描画
 
 function ensureInstanceCapacity(count) {
   const needed = count * INST_STRIDE;
@@ -499,7 +499,7 @@ function drawWebGL() {
   gl.uniform1f(uCanvasH, cssH);
   gl.bindVertexArray(vao);
 
-  // メイン配列 ──────────────────────────────────────
+  // メイン配列
   ensureInstanceCapacity(arrayLength);
 
   if (showCompletionHighlight) {
@@ -540,7 +540,7 @@ function drawWebGL() {
 
   uploadAndDrawInstanced(arrayLength, angleStep, lineHalfWidth, centerX, centerY);
 
-  // バッファー配列を同心円リングとして描画 ──────────
+  // バッファー配列を同心円リングとして描画
   if (showBuffers) {
     const sortedBufferIds = [...arrays.buffers.keys()].sort((a, b) => a - b);
     const [br, bg, bb] = RGB.buffer;
@@ -580,7 +580,7 @@ function drawWebGL() {
   gl.bindVertexArray(null);
 }
 
-// Canvas 2D 描画（WebGL2 フォールバック） ───────────────
+// Canvas 2D 描画（WebGL2 フォールバック）
 // circularRenderWorker.js の draw() と同一ロジック
 function drawCanvas2D() {
   if (!offscreen || !ctx || !arrays.main || !renderParams) return;
@@ -743,7 +743,7 @@ function drawCanvas2D() {
   ctx.fill();
 }
 
-// クリーンアップ ────────────────────────────────────────
+// クリーンアップ
 function cleanup() {
   if (useWebGL && gl) {
     if (vao) gl.deleteVertexArray(vao);

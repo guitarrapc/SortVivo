@@ -68,13 +68,13 @@
         </fieldset>
     </div>
 
-    @* ─── メインエリア ────────────────────────────────────────────────────── *@
+    @* メインエリア *@
     <div class="tutorial-main-area">
         @{
             bool noSteps = _selectedAlgorithm == null || _steps.Count == 0;
         }
 
-        @* ─── 再生コントロールバー ──────────────────────────────────────── *@
+        @* 再生コントロールバー *@
         <div class="tutorial-play-control-bar">
             <div class="ctrl-buttons">
                 <button class="ctrl-btn" title="@L["tutorial.firstHome"]" @onclick="GoToFirst" disabled="@(noSteps || _currentStepIndex <= -1)">
@@ -120,7 +120,7 @@
 
 
 
-        @* ─── コンテンツ ──────────────────────────────────────────────────────── *@
+        @* コンテンツ *@
         @if (_isLoading)
         {
             <div class="tutorial-loading">
@@ -137,7 +137,7 @@
         }
         else
         {
-            @* ─── アルゴリズム説明パネル（モバイルで折りたたみ可能） ──────────────── *@
+            @* アルゴリズム説明パネル（モバイルで折りたたみ可能） *@
             <div class="tutorial-description-panel">
                 <div class="tdp-header">
                     <div class="tdp-header__left">
@@ -177,7 +177,7 @@
             }
             else
             {
-                @* ─── ナラティブパネル ────────────────────────────────────────── *@
+                @* ナラティブパネル  *@
                 <div class="tutorial-narrative-panel">
                     @{
                         var currentPhase = GetCurrentPhase();
@@ -201,7 +201,7 @@
                     </div>
                 </div>
 
-                @* ─── 表示切替トグル（ヒープ木・BST・バケット・ネットワーク・パイル対応アルゴリズムのみ） ──────────── *@
+                @* 表示切替トグル（ヒープ木・BST・バケット・ネットワーク・パイル対応アルゴリズムのみ） *@
                 @if (HasAlternateView())
                 {
                     <div class="tutorial-view-toggle">
@@ -260,7 +260,7 @@
                     </div>
                 }
 
-                @* ─── ビジュアライゼーションエリア ──────────────────────────────── *@
+                @* ビジュアライゼーションエリア *@
                 <div class="tutorial-marble-area">
                     @if (_showNetworkView && HasNetworkView())
                     {
@@ -380,11 +380,11 @@
 @code {
     [Parameter] public string? AlgorithmName { get; set; }
 
-    // ─── デフォルトチュートリアル配列 ──────────────────────────────────────
+    // デフォルトチュートリアル配列
     private int[] GetTutorialArrayFor(AlgorithmMetadata algo)
         => algo.TutorialArrayType.ToArray();
 
-    // ─── 状態 ──────────────────────────────────────────────────────────────
+    // 状態
     private AlgorithmMetadata? _selectedAlgorithm;
     private List<TutorialStep> _steps = [];
     private int _currentStepIndex = -1;  // -1 = 開始状態（操作適用前）
@@ -411,14 +411,14 @@
     private bool _showPatienceView = true; // デフォルトはパイル表示（PatiencePiles 対応アルゴリズムのみ）
     private int _windowWidth = 0; // ウィンドウ幅（0 = 未取得1.0）
 
-    // ─── ナビゲーション ────────────────────────────────────────────────────
+    // ナビゲーション
 
     private void NavigateToHome()
     {
         Navigation.NavigateTo(NavigationState.LastIndexUrl ?? "/");
     }
 
-    // ─── ライフサイクル ────────────────────────────────────────────────────
+    // ライフサイクル
 
     protected override async Task OnParametersSetAsync()
     {
@@ -502,7 +502,7 @@
         _ => 1.0
     };
 
-    // ─── アルゴリズム選択 ──────────────────────────────────────────────────
+    // アルゴリズム選択
 
     private void OnAlgorithmChanged(ChangeEventArgs e)
     {
@@ -542,7 +542,7 @@
         }
     }
 
-    // ─── ナビゲーション ────────────────────────────────────────────────────
+    // ナビゲーション
 
     private void GoToFirst()
     {
@@ -579,7 +579,7 @@
         StateHasChanged();
     }
 
-    // ─── 自動再生 ──────────────────────────────────────────────────────────
+    // 自動再生
 
     private void ToggleAutoPlay()
     {
@@ -639,7 +639,7 @@
             _speedIndex = Math.Clamp(val, 0, SpeedSteps.Length - 1);
     }
 
-    // ─── キーボード ────────────────────────────────────────────────────────
+    // キーボード
 
     private async Task OnKeyDown(KeyboardEventArgs e)
     {
@@ -684,7 +684,7 @@
         Navigation.NavigateTo($"/tutorial/{Uri.EscapeDataString(algos[nextIndex].Name)}");
     }
 
-    // ─── 現在ステップのデータ取得 ──────────────────────────────────────────
+    // 現在ステップのデータ取得
 
     private int[] GetCurrentMainArray()
         => _currentStepIndex < 0 ? GetTutorialArrayFor(_selectedAlgorithm!) : _steps[_currentStepIndex].ArraySnapshot;
@@ -952,7 +952,7 @@
         return step.BufferSnapshots.TryGetValue(bufferId, out var arr) ? arr : [];
     }
 
-    // ─── アルゴリズムリスト ────────────────────────────────────────────────
+    // アルゴリズムリスト
 
     private IEnumerable<AlgorithmMetadata> GetTutorialAlgorithms()
         => AlgorithmRegistry.GetAllAlgorithms()
@@ -976,7 +976,7 @@
         => GetTutorialAlgorithms()
             .Where(a => a.Category == category);
 
-    // ─── 説明テキストのフォーマット ────────────────────────────────────────
+    // 説明テキストのフォーマット
 
     private string GetTryThisAlgorithmUrl()
         => _selectedAlgorithm != null

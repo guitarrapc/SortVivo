@@ -1,23 +1,47 @@
-/* ─── SettingsModal ────────────────────────────────────────────────────── */
+/* SettingsModal */
 
 @keyframes backdropFadeIn {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 @keyframes backdropFadeOut {
-    from { opacity: 1; }
-    to   { opacity: 0; }
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
 }
 
 @keyframes modalIn {
-    from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
-    to   { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    from {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
+
+    to {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
 }
 
 @keyframes modalOut {
-    from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-    to   { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+    from {
+        opacity: 1;
+        transform: translate(-50%, -50%) scale(1);
+    }
+
+    to {
+        opacity: 0;
+        transform: translate(-50%, -50%) scale(0.95);
+    }
 }
 
 .settings-backdrop {
@@ -304,7 +328,7 @@
         top: 3px;
         left: 3px;
         transition: transform 0.3s;
-        box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     }
 
 .toggle-switch input[type="checkbox"]:checked + .toggle-slider {
@@ -324,7 +348,7 @@
     color: var(--text-light);
 }
 
-/* ─── WebGL Renderer コントロール ────────────────────────────────────── */
+/* WebGL Renderer コントロール */
 .webgl-control {
     display: flex;
     align-items: center;
@@ -359,8 +383,15 @@
     }
 
 @keyframes hintFadeIn {
-    from { opacity: 0; transform: translateY(-3px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(-3px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 .settings-row--hint {
@@ -370,18 +401,32 @@
     animation: hintFadeIn 0.15s ease forwards;
 }
 
-/* ─── スマホ: フルスクリーンモーダル ──────────────────────────────────── */
+/* スマホ: フルスクリーンモーダル */
 @keyframes modalInMobile {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from {
+        opacity: 0;
+        transform: translateY(8px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 @keyframes modalOutMobile {
-    from { opacity: 1; transform: translateY(0); }
-    to   { opacity: 0; transform: translateY(8px); }
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(8px);
+    }
 }
 
-/* ─── About セクション ──────────────────────────────────────────────── */
+/* About セクション  */
 .about-content {
     padding: 0;
 }

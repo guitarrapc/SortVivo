@@ -22,6 +22,7 @@
         opacity: 0;
         transform: translateY(-4px);
     }
+
     to {
         opacity: 1;
         transform: translateY(0);
@@ -44,14 +45,14 @@
     text-align: left;
 }
 
-.share-option:hover {
-    background: var(--bg-hover);
-}
+    .share-option:hover {
+        background: var(--bg-hover);
+    }
 
-.share-option:focus-visible {
-    outline: 2px solid var(--color-accent);
-    outline-offset: 2px;
-}
+    .share-option:focus-visible {
+        outline: 2px solid var(--color-accent);
+        outline-offset: 2px;
+    }
 
 .share-option__icon {
     font-size: 18px;
@@ -63,10 +64,10 @@
     color: var(--text-primary);
 }
 
-.share-option__icon svg {
-    width: 18px;
-    height: 18px;
-}
+    .share-option__icon svg {
+        width: 18px;
+        height: 18px;
+    }
 
 .share-option:hover .share-option__icon {
     color: var(--color-accent);

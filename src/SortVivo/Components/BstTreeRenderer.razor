@@ -38,7 +38,7 @@
                 </filter>
             </defs>
 
-            @*─ Edges (drawn behind nodes)─ *@
+            @* Edges (drawn behind nodes) *@
             @for (int i = 0; i < n; i++)
             {
                 double px = (ranks[i] + 0.5) * slotW;
@@ -65,7 +65,7 @@
                 }
             }
 
-            @*─ Nodes─ *@
+            @* Nodes *@
             @for (int i = 0; i < n; i++)
             {
                 double nx = (ranks[i] + 0.5) * slotW;
@@ -114,7 +114,7 @@
             }
         </svg>
 
-        @*─ Phase badge─ *@
+        @* Phase badge *@
         <div class="bst-phase-badge @(Bst.IsTraversalPhase ? "bst-phase-badge--traversal" : "bst-phase-badge--build")">
             @if (Bst.IsTraversalPhase)
             {

@@ -95,9 +95,9 @@
     gap: 10px;
 }
 
-.seek-stats-row ::deep .seek-bar {
-    flex: 1;
-}
+    .seek-stats-row ::deep .seek-bar {
+        flex: 1;
+    }
 
 .stats-icon-btn svg {
     width: 28px;
@@ -127,6 +127,7 @@
     0%, 100% {
         box-shadow: 0 0 5px rgba(200, 170, 110, 0.35);
     }
+
     50% {
         box-shadow: 0 0 12px rgba(200, 170, 110, 0.65), 0 0 4px rgba(200, 170, 110, 0.4);
     }

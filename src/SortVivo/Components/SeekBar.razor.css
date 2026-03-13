@@ -1,4 +1,4 @@
-/* ─── SeekBar ─────────────────────────────────────────────────────────── */
+/* SeekBar */
 
 .seek-bar {
     display: flex;
@@ -31,7 +31,7 @@
     background-color: var(--color-accent);
     border-radius: 50%;
     cursor: grab;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
     touch-action: none;
 }
 
@@ -47,7 +47,8 @@
 }
 
 .time-display--full {
-    white-space: pre; /* PadLeft のスペースを保持して幅を固定 */
+    white-space: pre;
+    /* PadLeft のスペースを保持して幅を固定 */
 }
 
 .time-display--compact {
@@ -56,7 +57,7 @@
     text-align: right;
 }
 
-/* ─── スマホ ──────────────────────────────────────────────────────────── */
+/* スマホ */
 @media (max-width: 767px) {
     .seek-bar {
         padding: 6px 8px;
@@ -71,7 +72,7 @@
     }
 }
 
-/* ─── 完了マーカー ────────────────────────────────────────────────────── */
+/* 完了マーカー */
 
 .seek-marker {
     position: absolute;

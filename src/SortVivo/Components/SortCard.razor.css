@@ -1,4 +1,4 @@
-/* ─── SortCard ────────────────────────────────────────────────────────── */
+/* SortCard  */
 
 .sort-card {
     display: flex;
@@ -41,13 +41,13 @@
     transition: color 0.15s;
 }
 
-.sort-card__drag-handle:hover {
-    color: #999;
-}
+    .sort-card__drag-handle:hover {
+        color: #999;
+    }
 
-.sort-card__drag-handle:active {
-    cursor: grabbing;
-}
+    .sort-card__drag-handle:active {
+        cursor: grabbing;
+    }
 
 .sort-card__algorithm-name {
     flex: 1;

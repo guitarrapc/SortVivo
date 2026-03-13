@@ -229,7 +229,7 @@ function draw() {
     return;
   }
 
-  // ─── 弦の描画（通常）───────────────────────────────────────────────────────
+  // 弦の描画（通常）
 
   // 1. 通常弦（HSL グラデーション）
   //    同じ strokeStyle を持つ弦はまとめて描画できないため個別に beginPath
@@ -275,7 +275,7 @@ function draw() {
     ctx.stroke();
   }
 
-  // ─── 現在位置ドット（弦の端点を強調）───────────────────────────────────────
+  // 現在位置ドット（弦の端点を強調）
   // 1. 通常ドット（HSL グラデーション、不透明）
   for (let i = 0; i < n; i++) {
     if (compareSet.has(i) || swapSet.has(i) || readSet.has(i) || writeSet.has(i)) continue;
@@ -302,7 +302,7 @@ function draw() {
     ctx.fill();
   }
 
-  // ─── 正位置ドット（緑: 弦なし = ソート済み要素）────────────────────────────
+  // 正位置ドット（緑: 弦なし = ソート済み要素）
   ctx.fillStyle = colors.sorted;
   ctx.beginPath();
   for (let i = 0; i < n; i++) {

@@ -279,11 +279,6 @@
         await SelectedPatternNameChanged.InvokeAsync(newValue);
     }
 
-    private async Task HandlePatternChange(string newValue)
-    {
-        await SelectedPatternNameChanged.InvokeAsync(newValue);
-    }
-
     // VisualizationMode 変更
     private async Task HandleVisualizationModeChange(string rawValue)
     {

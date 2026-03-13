@@ -132,7 +132,7 @@ sealed class LsdRadixTracker : IVisualizationTracker
         }
     }
 
-    // ─── LSD helpers ──────────────────────────────────────────────────────────
+    // LSD helpers
 
     /// <summary>
     /// LSD ソート用の桁インデックスを計算する。

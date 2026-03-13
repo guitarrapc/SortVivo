@@ -118,7 +118,7 @@ public static class TutorialStepBuilder
         return steps;
     }
 
-    // ─── Tracker factory ─────────────────────────────────────────
+    // Tracker factory
 
     /// <summary>
     /// TutorialVisualizationHint に対応する IVisualizationTracker を生成する。
@@ -142,7 +142,7 @@ public static class TutorialStepBuilder
             _ => NullTracker.Instance,
         };
 
-    // ─── Insertion group detection ──────────────────────────────────────────
+    // Insertion group detection
 
     /// <summary>
     /// Detects an insertion group pattern starting at <paramref name="startIdx"/>:
@@ -228,7 +228,7 @@ public static class TutorialStepBuilder
         };
     }
 
-    // ─── Buffer initialization ──────────────────────────────────────────────
+    // Buffer initialization
 
     private static Dictionary<int, int[]> InitializeBufferArrays(int mainArrayLength, List<SortOperation> operations)
     {
@@ -263,7 +263,7 @@ public static class TutorialStepBuilder
             kv => new int[Math.Max(kv.Value, mainArrayLength)]);
     }
 
-    // ─── Phase text assembly ────────────────────────────────────────────────
+    // Phase text assembly
 
     /// <summary>
     /// SortPhase 種別と数値パラメータからチュートリアル表示用のフェーズテキストを組み立てる。
@@ -332,7 +332,7 @@ public static class TutorialStepBuilder
             _ => string.Empty,
         };
 
-    // ─── Step info generation ──────────────────────────────────────────────
+    // Step info generation
 
     private static (int[] highlights, Dictionary<int, int[]> bufferHighlights, OperationType type, int? compareResult, int? writeSourceIndex, int? writePreviousValue, string narrative)
         GenerateStepInfo(SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
@@ -471,7 +471,7 @@ public static class TutorialStepBuilder
         return (highlights, bufHighlights, OperationType.RangeCopy, null, null, null, narrative);
     }
 
-    // ─── Apply operation ─────────────────────────────────────────────────
+    // Apply operation
 
     private static void ApplyOperation(SortOperation op, int[] mainArray, Dictionary<int, int[]> bufferArrays)
     {
@@ -530,7 +530,7 @@ public static class TutorialStepBuilder
         }
     }
 
-    // ─── Helpers ─────────────────────────────────────────────────────────
+    // Helpers
 
     private static int[] GetArray(int bufferId, int[] mainArray, Dictionary<int, int[]> bufferArrays)
         => bufferId == 0 ? mainArray : bufferArrays.GetValueOrDefault(bufferId, mainArray);

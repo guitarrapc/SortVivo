@@ -29,11 +29,11 @@
         position: relative;
     }
 
-/* フッター（全幅） */
-.tutorial-page ::deep .site-footer {
-    grid-column: 1 / -1;
-    margin-top: 0;
-}
+    /* フッター（全幅） */
+    .tutorial-page ::deep .site-footer {
+        grid-column: 1 / -1;
+        margin-top: 0;
+    }
 
 
 /* 閉じるボタン（Settingsモーダルと同じスタイル） */
@@ -68,7 +68,7 @@
     font-size: 2.25rem;
     font-weight: 700;
     white-space: nowrap;
-    background: linear-gradient(#c8aa6e,#785a28);
+    background: linear-gradient(#c8aa6e, #785a28);
     background-clip: text;
     -webkit-text-fill-color: transparent;
 }
@@ -138,7 +138,7 @@
     }
 
 
-/* ─── メインエリア（visualization-area 相当） ────────────────── */
+/* メインエリア（visualization-area 相当） */
 .tutorial-main-area {
     grid-column: 2;
     grid-row: 2;
@@ -153,7 +153,7 @@
     position: relative;
 }
 
-/* ─── 再生コントロールバー（PlayControlBar 相当） ────────────────────── */
+/* 再生コントロールバー（PlayControlBar 相当） */
 .tutorial-play-control-bar {
     display: flex;
     align-items: center;
@@ -255,7 +255,7 @@
 
 
 
-/* ─── ローディング・空状態 ─────────────────────────────────────────────── */
+/* ローディング・空状態 */
 .tutorial-loading {
     display: flex;
     align-items: center;
@@ -307,7 +307,7 @@
     max-width: 480px;
 }
 
-/* ─── アルゴリズム説明パネル ───────────────────────────────────────────── */
+/* アルゴリズム説明パネル */
 .tutorial-description-panel {
     background: linear-gradient(135deg, var(--color-tutorial-bg-start) 0%, var(--color-tutorial-bg-end) 100%);
     border: 1px solid rgba(142, 192, 124, 0.3);
@@ -419,7 +419,7 @@
     display: none;
 }
 
-/* ─── ナラティブパネル ─────────────────────────────────────────────────── */
+/* ナラティブパネル */
 .tutorial-narrative-panel {
     background: var(--bg-panel);
     border: 1px solid var(--border-color);
@@ -469,7 +469,7 @@
     flex: 1;
 }
 
-/* ─── 表示切替トグル ───────────────────────────────────────────────────── */
+/* 表示切替トグル */
 .tutorial-view-toggle {
     display: flex;
     gap: 2px;
@@ -513,7 +513,7 @@
     border-color: rgba(142, 192, 124, 0.3);
 }
 
-/* ─── マーブルエリア ───────────────────────────────────────────────────── */
+/* マーブルエリア */
 .tutorial-marble-area {
     background: var(--bg-panel);
     border: 1px solid var(--border-color);
@@ -528,7 +528,7 @@
     min-height: 150px;
 }
 
-/* ─── HeapTreeRenderer スコープ外から指定するスタイル ──────────────────── */
+/* HeapTreeRenderer スコープ外から指定するスタイル */
 ::deep .heap-tree-container {
     display: flex;
     flex-direction: column;
@@ -560,9 +560,18 @@
 }
 
 @keyframes heap-node-pop {
-    0% { transform-origin: center; r: 21; }
-    50% { r: 25; }
-    100% { r: 21; }
+    0% {
+        transform-origin: center;
+        r: 21;
+    }
+
+    50% {
+        r: 25;
+    }
+
+    100% {
+        r: 21;
+    }
 }
 
 ::deep .heap-tree-empty {
@@ -611,7 +620,7 @@
     opacity: 0.7;
 }
 
-/* ─── BstTreeRenderer スコープ外から指定するスタイル ────────────────────── */
+/* BstTreeRenderer スコープ外から指定するスタイル */
 ::deep .bst-tree-container {
     display: flex;
     flex-direction: column;
@@ -643,9 +652,19 @@
 }
 
 @keyframes bst-node-pop {
-    0%   { transform-box: fill-box; transform-origin: center; transform: scale(1); }
-    50%  { transform: scale(1.3); }
-    100% { transform: scale(1); }
+    0% {
+        transform-box: fill-box;
+        transform-origin: center;
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.3);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 ::deep .bst-tree-empty {
@@ -676,7 +695,7 @@
     border: 1px solid rgba(249, 115, 22, 0.3);
 }
 
-/* ─── RecursionTreeRenderer ─────────────────────────────────────────── */
+/* RecursionTreeRenderer  */
 ::deep .recursion-tree-container {
     display: flex;
     flex-direction: column;
@@ -709,9 +728,19 @@
 }
 
 @keyframes recursion-node-pop {
-    0%   { transform-box: fill-box; transform-origin: center; transform: scale(1); }
-    50%  { transform: scale(1.05); }
-    100% { transform: scale(1); }
+    0% {
+        transform-box: fill-box;
+        transform-origin: center;
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
 ::deep .recursion-tree-empty {
@@ -721,7 +750,7 @@
     text-align: center;
 }
 
-/* ─── MarbleRenderer スコープ外から指定するスタイル ───────────────────── */
+/* MarbleRenderer スコープ外から指定するスタイル */
 ::deep .marble-row-container {
     display: flex;
     flex-direction: column;
@@ -810,15 +839,15 @@
     box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
-::deep .marble-role-tooltip::after {
-    content: '';
-    position: absolute;
-    top: 100%;
-    left: 50%;
-    transform: translateX(-50%);
-    border: 5px solid transparent;
-    border-top-color: rgba(0, 0, 0, 0.95);
-}
+    ::deep .marble-role-tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: rgba(0, 0, 0, 0.95);
+    }
 
 ::deep .marble-role-badge-wrapper:hover .marble-role-tooltip {
     opacity: 1;
@@ -845,8 +874,13 @@
 }
 
 @keyframes arrow-fade-in {
-    from { opacity: 0; }
-    to   { opacity: 1; }
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
 ::deep .marble-row {
@@ -876,8 +910,13 @@
 }
 
 @keyframes marble-slide {
-    from { transform: translateX(calc(var(--slide-offset) * var(--marble-slot-width))); }
-    to   { transform: translateX(0); }
+    from {
+        transform: translateX(calc(var(--slide-offset) * var(--marble-slot-width)));
+    }
+
+    to {
+        transform: translateX(0);
+    }
 }
 
 ::deep .marble {
@@ -896,7 +935,7 @@
     border: 3px solid transparent;
 }
 
-/* ─── 操作タイプ別アウトライン（リング） ──────────────────────────────── */
+/* 操作タイプ別アウトライン（リング） */
 ::deep .marble-outline-compare {
     border-color: #A855F7;
     box-shadow: 0 0 0 4px rgba(168, 85, 247, 0.7), 0 0 12px rgba(168, 85, 247, 0.4), inset 0 1px 2px rgba(255, 255, 255, 0.2);
@@ -933,7 +972,7 @@
     animation: marble-pop 0.3s ease;
 }
 
-/* ─── DistributionBucketRenderer スコープ外から指定するスタイル ──────────── */
+/* DistributionBucketRenderer スコープ外から指定するスタイル */
 ::deep .dist-bucket-view {
     display: flex;
     flex-direction: column;
@@ -1043,7 +1082,7 @@
     font-weight: 600;
 }
 
-/* ─── Counting sort ヒストグラム表示 ────────────────────────────────── */
+/* Counting sort ヒストグラム表示 */
 ::deep .dist-histogram {
     display: flex;
     gap: 4px;
@@ -1147,7 +1186,7 @@
     padding: 0.15rem 0.45rem;
 }
 
-/* ─── NetworkDiagramRenderer スコープ外から指定するスタイル ──────────────── */
+/* NetworkDiagramRenderer スコープ外から指定するスタイル */
 ::deep .network-diagram-container {
     display: flex;
     flex-direction: column;
@@ -1208,11 +1247,29 @@
 }
 
 @keyframes marble-write-pop {
-    0%   { transform: scale(1);    box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
-    25%  { transform: scale(1.35); box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.8), 0 0 24px rgba(249, 115, 22, 0.6); }
-    60%  { transform: scale(1.08); box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.6); }
-    80%  { transform: scale(1.22); }
-    100% { transform: scale(1.2);  box-shadow: 0 0 0 5px rgba(249, 115, 22, 0.75), 0 0 18px rgba(249, 115, 22, 0.5); }
+    0% {
+        transform: scale(1);
+        box-shadow: 0 2px 6px rgba(0, 0, 0, 0.4);
+    }
+
+    25% {
+        transform: scale(1.35);
+        box-shadow: 0 0 0 6px rgba(249, 115, 22, 0.8), 0 0 24px rgba(249, 115, 22, 0.6);
+    }
+
+    60% {
+        transform: scale(1.08);
+        box-shadow: 0 0 0 4px rgba(249, 115, 22, 0.6);
+    }
+
+    80% {
+        transform: scale(1.22);
+    }
+
+    100% {
+        transform: scale(1.2);
+        box-shadow: 0 0 0 5px rgba(249, 115, 22, 0.75), 0 0 18px rgba(249, 115, 22, 0.5);
+    }
 }
 
 ::deep .marble-index {
@@ -1221,7 +1278,7 @@
     font-family: monospace;
 }
 
-/* ─── Shell sort gap 部分列カラードット ────────────────────────────────── */
+/* Shell sort gap 部分列カラードット */
 ::deep .marble-gap-dot {
     width: 8px;
     height: 8px;
@@ -1233,8 +1290,15 @@
 }
 
 @keyframes gap-dot-fade-in {
-    from { opacity: 0; transform: scale(0.5); }
-    to   { opacity: 0.9; transform: scale(1); }
+    from {
+        opacity: 0;
+        transform: scale(0.5);
+    }
+
+    to {
+        opacity: 0.9;
+        transform: scale(1);
+    }
 }
 
 /* PC: サイドバー幅を考慮してタイトルを右側エリアの中央に配置 */
@@ -1273,8 +1337,9 @@
     }
 }
 
-/* ─── タブレット (768px〜1279px) ────────────────────────────────────────── */
+/* タブレット (768px〜1279px)  */
 @media (min-width: 768px) and (max-width: 1279px) {
+
     /* ページ全体をスクロール可能にする */
     .tutorial-page {
         height: auto;
@@ -1445,8 +1510,9 @@
     }
 }
 
-/* ─── スマホ (~767px) ──────────────────────────────────────────────────── */
+/* スマホ (~767px) */
 @media (max-width: 767px) {
+
     /* ページ全体をスクロール可能にする */
     .tutorial-page {
         height: auto;
