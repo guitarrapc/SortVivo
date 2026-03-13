@@ -6,7 +6,8 @@ namespace SortVivo.Services;
 /// <summary>
 /// Patience Sort パイル表示用トラッカー。
 /// ディールフェーズでは Compare 操作から現在配置中の要素を追跡し、
-/// マージフェーズでは IndexRead からパイルトップの抽出を追跡する。
+/// マージフェーズでは IndexWrite(aux) のタイミングでパイルポップと
+/// Extracting 表示を同期させる。
 ///
 /// PatienceSort のパイル構築は SortContext 操作を出さないため、
 /// コンストラクタで同一アルゴリズムをオフラインシミュレーションして
@@ -30,6 +31,11 @@ sealed class PatiencePilesTracker : IVisualizationTracker
     // ディールフェーズ追跡
     private int _currentDealElement = -1; // 現在 Compare 中の要素インデックス (i)
     private int _lastPlacedElement = -1;  // 最後にスタックに積んだ要素インデックス
+
+    // マージフェーズ追跡
+    // IndexRead で読んだ topIdx を保持し、直後の IndexWrite(aux) で消費する。
+    // こうすることでパイルポップ・Extracting ラベル・バッファ書き込みを 1 ステップに同期する。
+    private int _pendingTopIdx = -1;
 
     // スナップショット用
     private int _activePile = -1;
@@ -80,6 +86,7 @@ sealed class PatiencePilesTracker : IVisualizationTracker
             // 未配置の末尾要素を全て積む
             FlushUnplaced(_n - 1);
             _currentPhase = SortPhase.PatienceSortMerge;
+            _pendingTopIdx = -1;
             _activePile = -1;
             _activeValue = -1;
         }
@@ -109,8 +116,20 @@ sealed class PatiencePilesTracker : IVisualizationTracker
             && op.Type == OperationType.IndexRead
             && op.BufferId1 == 0)
         {
-            // s.Read(topIdx): パイルトップを抽出
-            int topIdx = op.Index1;
+            // s.Read(topIdx): 次に抽出するパイルトップを記憶するだけ。
+            // パイルポップと _activeValue 更新は直後の IndexWrite(aux) で行う。
+            _pendingTopIdx = op.Index1;
+        }
+        else if (_currentPhase == SortPhase.PatienceSortMerge
+            && op.Type == OperationType.IndexWrite
+            && op.BufferId1 == 1   // aux バッファへの書き込み
+            && op.Value.HasValue
+            && _pendingTopIdx >= 0)
+        {
+            // merge.Write(i, value): パイルポップ・Extracting ラベル・バッファ書き込みを同期。
+            // このステップで TutorialStep が生成されたとき、3つ全てが揃って見える。
+            int topIdx = _pendingTopIdx;
+            _pendingTopIdx = -1;
             int targetPile = _elementPileAssignment[topIdx];
             if ((uint)targetPile < (uint)_pileLiveStacks.Count
                 && _pileLiveStacks[targetPile].Count > 0
@@ -118,8 +137,8 @@ sealed class PatiencePilesTracker : IVisualizationTracker
             {
                 _pileLiveStacks[targetPile].Pop();
                 _activePile = targetPile;
-                _activeValue = _initialArray[topIdx];
             }
+            _activeValue = op.Value.Value;
         }
     }
 
