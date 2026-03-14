@@ -41,7 +41,7 @@ namespace SortAlgorithm.Algorithms;
 /// <item><description>Comparisons : 0 (No comparison operations between keys)</description></item>
 /// <item><description>Time        : O(n + k) where k is the range of keys</description></item>
 /// <item><description>Memory      : O(n + k)</description></item>
-/// <item><description>Note        : キーの範囲が大きいとメモリ使用量が膨大になります。最大範囲は{MaxCountArraySize}です。</description></item>
+/// <item><description>Note        : A large key range leads to excessive memory usage. The maximum range is {MaxCountArraySize}.</description></item>
 /// </list>
 /// <para><strong>Reference:</strong></para>
 /// <para>Wiki: https://en.wikipedia.org/wiki/Counting_sort</para>

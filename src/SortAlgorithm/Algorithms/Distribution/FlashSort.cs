@@ -6,66 +6,43 @@ using System.Runtime.CompilerServices;
 namespace SortAlgorithm.Algorithms;
 
 /// <summary>
-/// FlashSort distribution sorting algorithm.
+/// 整数キーを使用したフラッシュソートのジェネリック版。値が均等に分布している場合に最適に動作します。
+/// 値域を m 個のクラスに分割し、各要素をクラスに振り分けた後、置換サイクルでインプレースに並べ替えます。
+/// 各クラス内を挿入ソートで仕上げることでソートが完了します。
 /// <br/>
-/// Classifies each element into one of m buckets via linear interpolation, permutes all elements
-/// into their correct bucket region in O(n) using an in-place cycle technique, then applies
-/// insertion sort locally within each bucket.
+/// Flash sort (generic, integer key), a distribution-based sort that performs optimally when values are uniformly distributed.
+/// Divides the value range into m classes, distributes elements into classes, then rearranges them in-place using permutation cycles.
+/// A final insertion sort pass within each class completes the sort.
 /// </summary>
 /// <remarks>
-/// <para><strong>Theoretical Conditions for Correct FlashSort:</strong></para>
+/// <para><strong>Theoretical Conditions for Correct Flash Sort (Generic, Range-based):</strong></para>
 /// <list type="number">
-/// <item><description><strong>Linear Classification:</strong> Each element is mapped to class k by
-/// k = ⌊(m−1) × (key − minKey) / range⌋ using exact 128-bit arithmetic to avoid overflow.
-/// The min element always maps to class 0; the max element always maps to class m−1.</description></item>
-/// <item><description><strong>Max-to-Front Swap:</strong> Before the permutation phase the maximum
-/// element is moved to index 0. This seeds class m−1 at the front and guarantees the cycle
-/// starts with a correctly classified element, avoiding an unbounded outer-loop scan at the start.</description></item>
-/// <item><description><strong>Permutation Phase (Cycle Technique):</strong> Each iteration picks up
-/// the element at position j (flash), places it at the last unfilled slot of its class
-/// (count[kClass]−1), picks up the displaced element, and repeats until the cycle closes
-/// (j == count[kClass] after decrement). count[k] is decremented on each placement so it
-/// always points to the next empty slot for class k.</description></item>
-/// <item><description><strong>Advance Loop:</strong> After a cycle closes, j may point to a position
-/// already filled. The outer loop advances j (and recomputes kClass) until it finds a position
-/// that still belongs to an unfilled part of its class (j &lt; count[kClass]). A bounds guard
-/// (j &lt; n) prevents out-of-range access if all remaining elements are already placed.</description></item>
-/// <item><description><strong>Local Insertion Sort:</strong> After permutation every element lies
-/// within its correct class region [boundary[k−1], boundary[k]). Insertion sort is applied
-/// independently to each region using absolute span indices, so no cross-region movement
-/// occurs and statistics are tracked accurately.</description></item>
-/// <item><description><strong>Duplicate Handling:</strong> All duplicates map to the same class and
-/// are permuted within that class's region. The final insertion sort orders them correctly.
-/// The early-exit (minKey == maxKey) handles the all-equal case without entering the
-/// permutation loop.</description></item>
+/// <item><description><strong>Key Extraction:</strong> Each element must have a deterministic unsigned 64-bit key derived from its binary representation.
+/// Signed integers are converted to unsigned by bit-casting; the key is stable.</description></item>
+/// <item><description><strong>Range Partitioning:</strong> The key range [minKey, maxKey] is divided into m equal classes.
+/// Class index k = ⌊(key - minKey) × m / (range + 1)⌋.</description></item>
+/// <item><description><strong>Class Count Heuristic:</strong> This implementation uses m = max(2, ⌊0.43 × n⌋) classes.
+/// The 0.43n heuristic is empirically optimal for roughly uniform random data.</description></item>
+/// <item><description><strong>Permutation Phase:</strong> Elements are placed into their correct class region using in-place permutation cycles.
+/// The maximum element is first moved to index 0 to anchor the cycle correctly.</description></item>
+/// <item><description><strong>Per-Class Sorting:</strong> Each class region is sorted using Insertion Sort (stable, O(m²) for m elements).
+/// This ensures stability within each class.</description></item>
+/// <item><description><strong>Uniform Distribution Assumption:</strong> Optimal performance (O(n)) requires uniform key distribution.
+/// Worst case O(n²) occurs when all elements fall into a single class.</description></item>
 /// </list>
 /// <para><strong>Performance Characteristics:</strong></para>
 /// <list type="bullet">
-/// <item><description>Family      : Distribution (Non-comparison based)</description></item>
+/// <item><description>Family      : Distribution</description></item>
 /// <item><description>Stable      : No (permutation phase does not preserve relative order)</description></item>
-/// <item><description>In-place    : Nearly (O(m) auxiliary space for bucket counters)</description></item>
-/// <item><description>Best case   : Θ(n) - Uniform distribution, permutation completes in O(n) moves</description></item>
-/// <item><description>Average case: Θ(n + m) - Linear with n for uniform random data (m ≈ 0.43 n)</description></item>
-/// <item><description>Worst case  : Θ(n²) - Highly skewed distribution concentrates elements in one bucket,
-/// forcing the local insertion sort to handle O(n) elements</description></item>
-/// <item><description>Comparisons : O(n log(n/m)) average (only in per-bucket insertion sort)</description></item>
-/// <item><description>Swaps       : 0 explicit swaps beyond the initial max-to-front swap; permutation
-/// uses read/write pairs rather than swap operations</description></item>
-/// </list>
-/// <para><strong>Supported Types:</strong></para>
-/// <list type="bullet">
-/// <item><description><strong>Supported:</strong> byte, sbyte, short, ushort, int, uint, long, ulong, nint, nuint (up to 64-bit)</description></item>
-/// <item><description><strong>Not Supported:</strong> Int128, UInt128 (&gt;64-bit types)</description></item>
-/// </list>
-/// <para><strong>Why 128-bit Types Are Not Supported:</strong></para>
-/// <list type="bullet">
-/// <item><description><strong>Key Storage Limitation:</strong> This implementation uses <c>ulong</c> (64-bit) to store
-/// unsigned keys. Supporting 128-bit would require <c>UInt128</c> keys for both storage and arithmetic.</description></item>
-/// <item><description><strong>Practical Rarity:</strong> Sorting 128-bit integers is uncommon.
-/// Comparison-based sorts remain practical for such cases.</description></item>
+/// <item><description>In-place    : Yes (O(m) auxiliary space for class boundaries only)</description></item>
+/// <item><description>Best case   : Ω(n) - Uniform distribution, one pass over the array</description></item>
+/// <item><description>Average case: Θ(n) - Assumes uniform distribution, permutation phase is O(n)</description></item>
+/// <item><description>Worst case  : O(n²) - All elements in one class, degenerates to Insertion Sort</description></item>
+/// <item><description>Comparisons : O(n log(n/m)) on average - Each class sorted independently by Insertion Sort</description></item>
+/// <item><description>Memory      : O(m) - Two integer arrays of size m for counts and boundaries</description></item>
+/// <item><description>Note        : クラス数は 0.43n (最小 2) に自動調整されます。キーの分布が偏るとパフォーマンスが低下します。128ビット整数型には対応していません。</description></item>
 /// </list>
 /// <para><strong>Reference:</strong></para>
-/// <para>Neubert, K.-D. (1998). The Flashsort1 Algorithm. Dr. Dobb's Journal.</para>
 /// <para>Wiki: https://en.wikipedia.org/wiki/Flashsort</para>
 /// </remarks>
 public static class FlashSort

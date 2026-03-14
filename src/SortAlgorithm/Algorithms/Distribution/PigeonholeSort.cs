@@ -47,7 +47,7 @@ namespace SortAlgorithm.Algorithms;
 /// <item><description>IndexReads  : 3n - n reads for key extraction, n reads for copying to temp, n reads for writing back</description></item>
 /// <item><description>IndexWrites : 2n - n writes to temp, n writes back to original array</description></item>
 /// <item><description>Memory      : O(n + k) - Temporary arrays for elements, keys, next[] links, and hole head/tail indices</description></item>
-/// <item><description>Note        : キーの範囲が大きいとメモリ使用量が膨大になります。最大範囲は{MaxHoleArraySize}です。</description></item>
+/// <item><description>Note        : A large key range leads to excessive memory usage. The maximum range is {MaxHoleArraySize}.</description></item>
 /// </list>
 /// <para><strong>Reference:</strong></para>
 /// <para>Wiki: https://en.wikipedia.org/wiki/Pigeonhole_sort</para>

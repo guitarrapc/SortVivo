@@ -42,7 +42,7 @@ namespace SortAlgorithm.Algorithms;
 /// <item><description>Worst case  : O(n²) - All elements in one bucket, degenerates to Insertion Sort</description></item>
 /// <item><description>Comparisons : O(n log(n/k)) on average - Each bucket sorted independently</description></item>
 /// <item><description>Memory      : O(n + k) - k bucket lists plus n elements total</description></item>
-/// <item><description>Note        : バケット数は√n (最小{MinBucketCount}、最大{MaxBucketCount}) に自動調整されます。キーの分布が偏るとパフォーマンスが低下します。</description></item>
+/// <item><description>Note        : Bucket count is automatically adjusted to √n (minimum {MinBucketCount}, maximum {MaxBucketCount}). Skewed key distribution degrades performance.</description></item>
 /// </list>
 /// <para><strong>Reference:</strong></para>
 /// <para>Wiki: https://en.wikipedia.org/wiki/Bucket_sort</para>
