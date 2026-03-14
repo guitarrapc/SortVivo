@@ -1,4 +1,4 @@
-﻿using System.Buffers;
+using System.Buffers;
 using SortAlgorithm.Contexts;
 using System.Runtime.CompilerServices;
 
@@ -78,7 +78,7 @@ public static class BalancedBinaryTreeSort
     // 3. Only the initial Read and final Write operations on the original data array
     //    represent the algorithm's core data access and are tracked via SortSpan
     // 4. Alternative design (storing only span indices in nodes) would require span[index] lookup on every
-    //    comparison, increasing indirection and often reducing performance noticeably. (up to 3x slower than class-based approach in benchmark)
+    //    comparison, increasing indirection and often reducing performance noticeably. (up to 3x slower than class-based approach in local benchmarks for this project)
 
     /// <summary>
     /// Sorts the elements in the specified span in ascending order using the default comparer.
