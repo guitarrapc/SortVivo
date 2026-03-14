@@ -364,7 +364,7 @@
                                             CompareResult="@GetCurrentCompareResult()"
                                             MaxValue="@_maxValue"
                                             StepIndex="@_currentStepIndex"
-                                            Label="@L["tutorial.buffer", bufferId]"
+                                            Label="@GetBufferLabel(bufferId)"
                                             IsBuffer="true" />
                         }
                     }
@@ -943,6 +943,19 @@
     {
         if (_currentStepIndex < 0) return [];
         return _steps[_currentStepIndex].BufferSnapshots.Keys.OrderBy(k => k);
+    }
+
+    private string GetBufferLabel(int bufferId)
+    {
+        if (_selectedAlgorithm?.AlgorithmId == "strandSort")
+            return bufferId switch
+            {
+                1 => "Remaining",
+                2 => "Strand",
+                3 => "Result",
+                _ => L["tutorial.buffer", bufferId],
+            };
+        return L["tutorial.buffer", bufferId];
     }
 
     private int[] GetCurrentBufferArray(int bufferId)

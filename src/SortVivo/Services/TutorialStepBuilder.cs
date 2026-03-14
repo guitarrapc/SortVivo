@@ -307,6 +307,8 @@ public static class TutorialStepBuilder
             SortAlgorithm.Contexts.SortPhase.DropMergeDetect => "Detecting LNS (Longest Nondecreasing Subsequence)",
             SortAlgorithm.Contexts.SortPhase.DropMergeSort => $"Sorting {p1} dropped element(s)",
             SortAlgorithm.Contexts.SortPhase.DropMergeMerge => $"Merging LNS with {p1} dropped element(s) into [{0}..{p2 - 1}]",
+            SortAlgorithm.Contexts.SortPhase.StrandSortExtract => $"Pass {p1} extract: scanning {p2} remaining element(s)",
+            SortAlgorithm.Contexts.SortPhase.StrandSortMerge => $"Pass {p1} merge: strand({p2}) + result({p3})",
             SortAlgorithm.Contexts.SortPhase.BitonicLevel => $"Level k={p1}: building bitonic sequence of size {p1} (count={p2})",
             SortAlgorithm.Contexts.SortPhase.BitonicStage => $"Stage j={p1}: compare-swap at distance {p1} within level {p2}",
             SortAlgorithm.Contexts.SortPhase.BogoShuffle => $"Shuffle attempt #{p1}",
