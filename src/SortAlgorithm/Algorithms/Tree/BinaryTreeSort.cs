@@ -122,8 +122,7 @@ public static class BinaryTreeSort
     /// Iterative insertion. Instead of using recursion, it loops to find the child nodes.
     /// Returns the root index (unchanged unless the tree was empty).
     /// </summary>
-    private static int InsertIterative<T, TComparer, TContext>(
-        Span<Node<T>> arena, int rootIndex, ref int nodeCount, T value, TComparer comparer, TContext context)
+    private static int InsertIterative<T, TComparer, TContext>(Span<Node<T>> arena, int rootIndex, ref int nodeCount, T value, TComparer comparer, TContext context)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
@@ -167,8 +166,7 @@ public static class BinaryTreeSort
     /// Iterative in-order traversal (left → root → right) using an explicit stack.
     /// Writes sorted elements back into the original span via <paramref name="s"/>.
     /// </summary>
-    private static void Inorder<T, TComparer, TContext>(
-        SortSpan<T, TComparer, TContext> s, Span<Node<T>> arena, int rootIndex, ref int writeIndex)
+    private static void Inorder<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, Span<Node<T>> arena, int rootIndex, ref int writeIndex)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
