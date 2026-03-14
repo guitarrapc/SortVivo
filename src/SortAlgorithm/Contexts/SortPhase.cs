@@ -24,6 +24,8 @@
 ///   <item><term>HybridToHeapSort</term><description>left (inclusive) / right (inclusive)</description></item>
 ///   <item><term>PDQPartialInsertionSort</term><description>begin (inclusive) / end-1 (inclusive)</description></item>
 ///   <item><term>PDQPatternShuffle</term><description>begin (inclusive) / end-1 (inclusive) / badAllowed remaining</description></item>
+///   <item><term>OddEvenMergeSortPass</term><description>p (merge group size, power of 2) / count</description></item>
+///   <item><term>OddEvenMergeSortStage</term><description>k (comparison distance within merge) / p (current merge group size) / count</description></item>
 /// </list>
 /// </remarks>
 public enum SortPhase
@@ -256,6 +258,18 @@ public enum SortPhase
     /// param1=j (comparison distance), param2=k (current level), param3=count
     /// </summary>
     BitonicStage,
+
+    /// <summary>
+    /// Batcher Odd-Even Merge Sort merge pass: merging blocks of size p.
+    /// param1=p (merge group size, power of 2), param2=count
+    /// </summary>
+    OddEvenMergeSortPass,
+
+    /// <summary>
+    /// Batcher Odd-Even Merge Sort stage: comparison-swap pass at distance k within merge group p.
+    /// param1=k (comparison distance), param2=p (current merge group size), param3=count
+    /// </summary>
+    OddEvenMergeSortStage,
 
     // Joke family
 

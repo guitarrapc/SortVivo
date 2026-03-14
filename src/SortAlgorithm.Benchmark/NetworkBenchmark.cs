@@ -10,12 +10,14 @@ public class NetworkBenchmark
     [Params(DataPattern.Random, DataPattern.Sorted, DataPattern.Reversed, DataPattern.AntiQuicksort)]
     public DataPattern Pattern { get; set; }
 
+    private int[] _batcheroddevenmergeArray = default!;
     private int[] _bionicArray = default!;
     private int[] _bionicRecursiveArray = default!;
 
     [IterationSetup]
     public void Setup()
     {
+        _batcheroddevenmergeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _bionicArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _bionicRecursiveArray = BenchmarkData.GenerateIntArray(Size, Pattern);
     }
@@ -30,5 +32,11 @@ public class NetworkBenchmark
     public void BitonicRecursiveSort()
     {
         SortAlgorithm.Algorithms.BitonicSortNonOptimized.Sort(_bionicRecursiveArray.AsSpan());
+    }
+
+    [Benchmark]
+    public void BatcherOddEvenMergeSort()
+    {
+        SortAlgorithm.Algorithms.BatcherOddEvenMergeSort.Sort(_bionicRecursiveArray.AsSpan());
     }
 }

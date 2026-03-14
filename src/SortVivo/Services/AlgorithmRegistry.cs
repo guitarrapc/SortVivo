@@ -1,4 +1,4 @@
-﻿using SortVivo.Models;
+using SortVivo.Models;
 using SortAlgorithm.Contexts;
 using SortAlgorithm.Algorithms;
 
@@ -215,6 +215,9 @@ public class AlgorithmRegistry
             tutorialVisualizationHint: TutorialVisualizationHint.SortingNetwork);
         Add("Bitonic sort (Recursive)", "NETWORK", "O(log²n)", MAX_SIZE_NLOGN15, 1024, (arr, ctx) => BitonicSortNonOptimized.Sort(arr, ctx),
             gitHubSourceUrl: Src("Network", "BitonicSort"),
+            tutorialVisualizationHint: TutorialVisualizationHint.SortingNetwork);
+        Add("Batcher odd-even merge sort", "NETWORK", "O(n log²n)", MAX_SIZE_NLOGN15, 2048, (arr, ctx) => BatcherOddEvenMergeSort.Sort(arr, ctx),
+            gitHubSourceUrl: Src("Network", "BatcherOddEvenMergeSort"),
             tutorialVisualizationHint: TutorialVisualizationHint.SortingNetwork);
 
         // Tree Sorts - O(n log n) - 推奨1024
