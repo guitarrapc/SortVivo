@@ -79,6 +79,8 @@ public class AlgorithmRegistry
             gitHubSourceUrl: Src("Insertion", "ShellSort"),
             tutorialVisualizationHint: TutorialVisualizationHint.ShellGap,
             tutorialArrayType: TutorialArrayType.ShellSort);
+        Add("Merge insertion sort", "INSERTION", "O(n log n)", MAX_SIZE_N2, 256, (arr, ctx) => MergeInsertionSort.Sort(arr, ctx),
+            gitHubSourceUrl: Src("Insertion", "MergeInsertionSort"));
 
         // Merge Sorts
         Add("Merge sort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => MergeSort.Sort(arr, ctx),

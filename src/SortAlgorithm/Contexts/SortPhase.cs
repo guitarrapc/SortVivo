@@ -136,6 +136,30 @@ public enum SortPhase
     PairInsertionPass,
 
     /// <summary>
+    /// Merge Insertion Sort (Ford-Johnson): pairing elements and comparing each pair.
+    /// param1=0, param2=pairs-1 (number of pairs)
+    /// </summary>
+    MergeInsertionPairing,
+
+    /// <summary>
+    /// Merge Insertion Sort (Ford-Johnson): sorting the larger elements from each pair.
+    /// param1=0, param2=pairs-1
+    /// </summary>
+    MergeInsertionSortLarger,
+
+    /// <summary>
+    /// Merge Insertion Sort (Ford-Johnson): inserting pended elements using Jacobsthal sequence.
+    /// param1=0, param2=pendCount-1
+    /// </summary>
+    MergeInsertionInsertPend,
+
+    /// <summary>
+    /// Merge Insertion Sort (Ford-Johnson): rearranging the original array based on sorted indices.
+    /// param1=0, param2=n-1
+    /// </summary>
+    MergeInsertionRearrange,
+
+    /// <summary>
     /// Library Sort phase marker.
     /// param1=phase (1=initial sort, 2=insert remaining, 3=extract)
     /// </summary>
