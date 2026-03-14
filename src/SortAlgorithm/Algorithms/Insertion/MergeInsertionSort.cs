@@ -132,7 +132,7 @@ public static class MergeInsertionSort
                 indices[i] = i;
             }
 
-            // Build the sorted index order using Ford-Johnson directly on the original span
+            // Build the sorted index order using Ford-Johnson over the original data
             FordJohnson(s, indices, sorted, chainSpan);
 
             // Write back in sorted order (reads from temp buffer, writes to main buffer)
@@ -162,6 +162,7 @@ public static class MergeInsertionSort
         where TContext : ISortContext
     {
         var n = indices.Length;
+        var visualize = typeof(TContext) != typeof(NullContext) && isTopLevel;
 
         // Base case: single element
         if (n <= 1)
@@ -169,8 +170,7 @@ public static class MergeInsertionSort
             if (n == 1)
             {
                 outChain[0] = indices[0];
-                if (typeof(TContext) != typeof(NullContext) && isTopLevel)
-                    chain.Write(0, s.Read(indices[0]));
+                ChainWrite(s, chain, 0, indices[0], visualize);
             }
             return;
         }
@@ -188,11 +188,8 @@ public static class MergeInsertionSort
                 outChain[0] = indices[1];
                 outChain[1] = indices[0];
             }
-            if (typeof(TContext) != typeof(NullContext) && isTopLevel)
-            {
-                chain.Write(0, s.Read(outChain[0]));
-                chain.Write(1, s.Read(outChain[1]));
-            }
+            ChainWrite(s, chain, 0, outChain[0], visualize);
+            ChainWrite(s, chain, 1, outChain[1], visualize);
             return;
         }
 
@@ -249,11 +246,8 @@ public static class MergeInsertionSort
 
             // Write the initial chain state to the chain buffer for visualization
             // (b1 at position 0, followed by all sorted-larger elements)
-            if (typeof(TContext) != typeof(NullContext) && isTopLevel)
-            {
-                for (var i = 0; i < chainLen; i++)
-                    chain.Write(i, s.Read(outChain[i]));
-            }
+            for (var i = 0; i < chainLen; i++)
+                ChainWrite(s, chain, i, outChain[i], visualize);
 
             // Pend list: remaining smaller elements paired with their partner (larger element),
             // plus the straggler (no partner) if n is odd.
@@ -314,6 +308,7 @@ public static class MergeInsertionSort
         // can be restricted to[0, upperBound).
 
         var pendCount = pendValues.Length;
+        var visualize = typeof(TContext) != typeof(NullContext) && isTopLevel;
 
         // Generate Jacobsthal insertion order
         int[]? rentedOrder = null;
@@ -343,12 +338,10 @@ public static class MergeInsertionSort
                 for (var k = chainLen; k > pos; k--)
                 {
                     mainChain[k] = mainChain[k - 1];
-                    if (typeof(TContext) != typeof(NullContext) && isTopLevel)
-                        chain.Write(k, chain.Read(k - 1));
+                    ChainShift(chain, k, k - 1, visualize);
                 }
                 mainChain[pos] = valueIdx;
-                if (typeof(TContext) != typeof(NullContext) && isTopLevel)
-                    chain.Write(pos, s.Read(valueIdx));
+                ChainWrite(s, chain, pos, valueIdx, visualize);
                 chainLen++;
             }
         }
@@ -357,6 +350,33 @@ public static class MergeInsertionSort
             if (rentedOrder != null)
                 ArrayPool<int>.Shared.Return(rentedOrder);
         }
+    }
+
+    /// <summary>
+    /// Writes <c>s[valueIdx]</c> into <c>chain[pos]</c> when <paramref name="visualize"/> is <c>true</c>.
+    /// JIT eliminates this call entirely on the <see cref="NullContext"/> fast path.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ChainWrite<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, SortSpan<T, TComparer, TContext> chain, int pos, int valueIdx, bool visualize)
+        where TComparer : IComparer<T>
+        where TContext : ISortContext
+    {
+        if (visualize)
+            chain.Write(pos, s.Read(valueIdx));
+    }
+
+    /// <summary>
+    /// Copies <c>chain[from]</c> to <c>chain[to]</c> when <paramref name="visualize"/> is <c>true</c>.
+    /// Used during the shift-right phase of binary insertion into the chain buffer.
+    /// JIT eliminates this call entirely on the <see cref="NullContext"/> fast path.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static void ChainShift<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> chain, int to, int from, bool visualize)
+        where TComparer : IComparer<T>
+        where TContext : ISortContext
+    {
+        if (visualize)
+            chain.Write(to, chain.Read(from));
     }
 
     /// <summary>
