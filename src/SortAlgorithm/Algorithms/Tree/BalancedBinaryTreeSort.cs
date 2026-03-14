@@ -113,11 +113,10 @@ public static class BalancedBinaryTreeSort
 
         // Allocate path stack for iterative insertion
         // AVL tree theoretical height: h ≤ 1.44 * log₂(n+2) - 0.328
-        // During construction, use conservative estimate to handle temporary imbalance
-        // Use: max(n, 2 * log₂(n+1) + 8) for small n, logarithmic for large n
+        // Add +2 margin to cover any rounding and the -0.328 offset
         var avlMaxHeight = span.Length <= 16
             ? span.Length
-            : Math.Max((int)(2.0 * Math.Log2(span.Length + 1)) + 8, 32);
+            : (int)Math.Ceiling(1.44 * Math.Log2(span.Length + 2)) + 2;
 
         // Use ArrayPool for arena allocation
         // Note: Cannot use stackalloc with Node<T> when T might be a reference type
