@@ -152,4 +152,116 @@ public class MergeInsertionSortTests
 
         await Assert.That(array).IsEquivalentTo(new[] { 1, 2, 3, 4, 5 }, CollectionOrdering.Matching);
     }
+
+    [Test]
+    [MethodDataSource(typeof(MockSortedData), nameof(MockSortedData.Generate))]
+    public async Task StatisticsSortedTest(IInputSample<int> inputSample)
+    {
+        if (inputSample.Samples.Length > 1024)
+            return;
+
+        var stats = new StatisticsContext();
+        var array = inputSample.Samples.ToArray();
+        MergeInsertionSort.Sort(array.AsSpan(), stats);
+
+        // MergeInsertionSort reads all n elements upfront and writes all n elements at the end
+        await Assert.That((ulong)array.Length).IsEqualTo((ulong)inputSample.Samples.Length);
+        await Assert.That(stats.IndexReadCount).IsGreaterThan(0UL);
+        await Assert.That(stats.IndexWriteCount).IsGreaterThan(0UL);
+        await Assert.That(stats.SwapCount).IsEqualTo(0UL); // MergeInsertionSort doesn't use swaps
+    }
+
+    [Test]
+    [Arguments(10)]
+    [Arguments(20)]
+    [Arguments(50)]
+    [Arguments(100)]
+    public async Task TheoreticalValuesSortedTest(int n)
+    {
+        var stats = new StatisticsContext();
+        var sorted = Enumerable.Range(0, n).ToArray();
+        MergeInsertionSort.Sort(sorted.AsSpan(), stats);
+
+        // Ford-Johnson comparison count is near-optimal for all inputs:
+        // approximately n⌈log₂ n⌉ - 2^⌈log₂ n⌉ + 1, close to ⌈log₂(n!)⌉
+        ulong minCompares = (ulong)(n - 1);
+        ulong maxCompares = (ulong)(3 * n * Math.Max(1, Math.Log(n, 2)));
+
+        await Assert.That(stats.CompareCount).IsBetween(minCompares, maxCompares);
+
+        // MergeInsertionSort always reads exactly n elements and writes exactly n elements
+        await Assert.That(stats.IndexReadCount).IsEqualTo((ulong)n);
+        await Assert.That(stats.IndexWriteCount).IsEqualTo((ulong)n);
+        await Assert.That(stats.SwapCount).IsEqualTo(0UL);
+    }
+
+    [Test]
+    [Arguments(10)]
+    [Arguments(20)]
+    [Arguments(50)]
+    [Arguments(100)]
+    public async Task TheoreticalValuesReversedTest(int n)
+    {
+        var stats = new StatisticsContext();
+        var reversed = Enumerable.Range(0, n).Reverse().ToArray();
+        MergeInsertionSort.Sort(reversed.AsSpan(), stats);
+
+        // Ford-Johnson comparison count is input-independent (same near-optimal count for reversed data)
+        // Writes are O(n²) in worst case due to binary insertion shifts, but read/write count via span is exactly n
+        ulong minCompares = (ulong)(n - 1);
+        ulong maxCompares = (ulong)(n * n);
+
+        await Assert.That(stats.CompareCount).IsBetween(minCompares, maxCompares);
+
+        await Assert.That(stats.IndexReadCount).IsEqualTo((ulong)n);
+        await Assert.That(stats.IndexWriteCount).IsEqualTo((ulong)n);
+        await Assert.That(stats.SwapCount).IsEqualTo(0UL);
+    }
+
+    [Test]
+    [Arguments(10)]
+    [Arguments(20)]
+    [Arguments(50)]
+    [Arguments(100)]
+    public async Task TheoreticalValuesRandomTest(int n)
+    {
+        var stats = new StatisticsContext();
+        var random = Enumerable.Range(0, n).OrderBy(_ => Guid.NewGuid()).ToArray();
+        MergeInsertionSort.Sort(random.AsSpan(), stats);
+
+        // Ford-Johnson maintains near-optimal comparison count regardless of input order
+        ulong minCompares = (ulong)(n - 1);
+        ulong maxCompares = (ulong)(n * n);
+
+        await Assert.That(stats.CompareCount).IsBetween(minCompares, maxCompares);
+
+        await Assert.That(stats.IndexReadCount).IsEqualTo((ulong)n);
+        await Assert.That(stats.IndexWriteCount).IsEqualTo((ulong)n);
+        await Assert.That(stats.SwapCount).IsEqualTo(0UL);
+    }
+
+    [Test]
+    [Arguments(5)]
+    [Arguments(10)]
+    [Arguments(20)]
+    [Arguments(50)]
+    public async Task TheoreticalValuesSameElementsTest(int n)
+    {
+        var stats = new StatisticsContext();
+        var sameValues = Enumerable.Repeat(42, n).ToArray();
+        MergeInsertionSort.Sort(sameValues.AsSpan(), stats);
+
+        // Ford-Johnson compares equal elements identically to distinct elements
+        ulong minCompares = (ulong)(n - 1);
+        ulong maxCompares = (ulong)(n * Math.Max(1, (int)Math.Log(n, 2)) * 3);
+
+        await Assert.That(stats.CompareCount).IsBetween(minCompares, maxCompares);
+
+        // Verify all values remain correct
+        foreach (var item in sameValues) await Assert.That(item).IsEqualTo(42);
+
+        await Assert.That(stats.IndexReadCount).IsEqualTo((ulong)n);
+        await Assert.That(stats.IndexWriteCount).IsEqualTo((ulong)n);
+        await Assert.That(stats.SwapCount).IsEqualTo(0UL);
+    }
 }

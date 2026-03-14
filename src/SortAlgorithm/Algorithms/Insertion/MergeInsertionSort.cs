@@ -1,5 +1,6 @@
-using SortAlgorithm.Contexts;
+﻿using SortAlgorithm.Contexts;
 using System.Buffers;
+using System.Diagnostics;
 using System.Runtime.CompilerServices;
 
 namespace SortAlgorithm.Algorithms;
@@ -129,7 +130,7 @@ public static class MergeInsertionSort
             }
 
             // Build the sorted index order using Ford-Johnson on the values
-            FordJohnsonImpl(s, values, indices, sorted);
+            FordJohnson(s, values, indices, sorted);
 
             // Write back in sorted order
             s.Context.OnPhase(SortPhase.MergeInsertionRearrange, 0, n - 1);
@@ -151,16 +152,16 @@ public static class MergeInsertionSort
     /// </summary>
     /// <param name="indices">Input indices to sort (read-only).</param>
     /// <param name="outChain">Pre-allocated output buffer that receives the sorted chain. Must have at least <c>indices.Length</c> elements.</param>
-    private static void FordJohnsonImpl<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, ReadOnlySpan<T> values, ReadOnlySpan<int> indices, Span<int> outChain)
+    private static void FordJohnson<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, ReadOnlySpan<T> values, ReadOnlySpan<int> indices, Span<int> outChain)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
         var n = indices.Length;
 
         // Base case: single element
-        if (n == 1)
+        if (n <= 1)
         {
-            outChain[0] = indices[0];
+            if (n == 1) outChain[0] = indices[0];
             return;
         }
 
@@ -219,13 +220,15 @@ public static class MergeInsertionSort
 
             // Step 2: Recursively sort the larger elements
             s.Context.OnPhase(SortPhase.MergeInsertionSortLarger, 0, pairs - 1);
-            FordJohnsonImpl(s, values, larger, sortedLarger);
+            FordJohnson(s, values, larger, sortedLarger);
 
             // Step 3: Build main chain directly in outChain
             // Main chain starts with b1 (smallest's partner), then all sorted larger elements
             // b1 < a1 <= a2 <= ... <= an, so b1 is known to be smaller than a1
             // Partner lookup via IndexOf on the parallel larger/smaller arrays
-            outChain[0] = smaller[larger.IndexOf(sortedLarger[0])];
+            var p = larger.IndexOf(sortedLarger[0]);
+            Debug.Assert(p >= 0);
+            outChain[0] = smaller[p];
             sortedLarger.CopyTo(outChain.Slice(1));
             var chainLen = 1 + pairs;
 
@@ -240,7 +243,9 @@ public static class MergeInsertionSort
             for (var i = 1; i < pairs; i++)
             {
                 var origIdx = outChain[1 + i];
-                pendValues[pendCount] = smaller[larger.IndexOf(origIdx)];
+                var p2 = larger.IndexOf(origIdx);
+                Debug.Assert(p2 >= 0);
+                pendValues[pendCount] = smaller[p2];
                 pendPartners[pendCount] = origIdx;
                 pendCount++;
             }
@@ -273,14 +278,18 @@ public static class MergeInsertionSort
     /// Insert pended elements into the main chain using Jacobsthal sequence order
     /// and binary insertion.
     /// For each pend item with a partner, the upper bound is the partner's current position
-    /// in the main chain (exclusive). This is correct because values[pend] &lt;= values[partner]
-    /// is guaranteed by the pairing step, so pend must be inserted before its partner.
     /// Uses manual element shift on <see cref="Span{T}"/> instead of <c>List.Insert</c> to avoid allocation.
     /// </summary>
     private static void InsertPendElements<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, ReadOnlySpan<T> values, Span<int> mainChain, ref int chainLen, ReadOnlySpan<int> pendValues, ReadOnlySpan<int> pendPartners)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
+        // For each pend item with a partner, the upper bound is the partner's current
+        // position in the main chain(exclusive).The pairing step guarantees
+        // values[pend] <= values[partner], so the insertion point must lie before
+        // or at the partner's current position. Therefore the binary search range
+        // can be restricted to[0, upperBound).
+
         var pendCount = pendValues.Length;
 
         // Generate Jacobsthal insertion order
