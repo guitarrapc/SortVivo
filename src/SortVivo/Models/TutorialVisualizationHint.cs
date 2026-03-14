@@ -75,4 +75,12 @@ public enum TutorialVisualizationHint
     /// マージフェーズではパイルのトップが min-heap で抽出される様子を描画する。
     /// </summary>
     PatiencePiles,
+
+    /// <summary>
+    /// FlashSort クラス分配ヒストグラム表示。
+    /// 線形補間で割り当てられた m クラスのカウントヒストグラムを描画し、
+    /// 置換フェーズ中は書き込み先インデックスが属するクラスをハイライトする。
+    /// in-place 置換のためバケットリストは使用しない。
+    /// </summary>
+    FlashSortClasses,
 }

@@ -162,12 +162,13 @@ public static class FlashSort
             // Save boundaries before permutation modifies count[]
             count.CopyTo(boundary);
 
+            context.OnPhase(SortPhase.DistributionWrite);
+
             // Move the maximum element to index 0 so the permutation cycle starts cleanly
             // at class m-1 whose region ends at boundary[m-1]-1 = n-1
             s.Swap(maxIdx, 0);
 
             // Pass 4: permutation phase — place every element in its correct class region
-            context.OnPhase(SortPhase.DistributionWrite);
 
             var move = 0;
             var j = 0;

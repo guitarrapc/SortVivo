@@ -735,7 +735,8 @@
         => _selectedAlgorithm?.TutorialVisualizationHint is
             TutorialVisualizationHint.ValueBucket or
             TutorialVisualizationHint.DigitBucketLsd or
-            TutorialVisualizationHint.DigitBucketMsd;
+            TutorialVisualizationHint.DigitBucketMsd or
+            TutorialVisualizationHint.FlashSortClasses;
 
     private bool HasNetworkView()
         => _selectedAlgorithm?.TutorialVisualizationHint is
@@ -859,6 +860,21 @@
         }
 
         // ValueBucket (Pigeonhole / Counting / Bucket)
+        if (_selectedAlgorithm.TutorialVisualizationHint == TutorialVisualizationHint.FlashSortClasses)
+        {
+            // クラス数はアルゴリズム実行前は不明。BucketCount=0 で "Waiting…" を表示する。
+            return new DistributionSnapshot
+            {
+                BucketCount = 0,
+                BucketLabels = [],
+                Buckets = [],
+                Phase = DistributionPhase.Count,
+                ActiveBucketIndex = -1,
+                ActiveElementInBucket = -1,
+                UseHistogram = true,
+            };
+        }
+
         var minVal = arr.Min();
         var maxVal = arr.Max();
         var bucketCount = maxVal > minVal ? maxVal - minVal + 1 : 1;

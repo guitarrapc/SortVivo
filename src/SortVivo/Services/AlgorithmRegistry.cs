@@ -188,6 +188,10 @@ public class AlgorithmRegistry
         Add("Bucket sort", "DISTRIBUTION", "O(n)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => BucketSortInteger.Sort(arr, ctx),
             gitHubSourceUrl: Src("Distribution", "BucketSort"),
             tutorialVisualizationHint: TutorialVisualizationHint.ValueBucket);
+        Add("Flash sort", "DISTRIBUTION", "O(n+m)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => FlashSort.Sort(arr, ctx),
+            gitHubSourceUrl: Src("Distribution", "FlashSort"),
+            tutorialArrayType: TutorialArrayType.MultiRun,
+            tutorialVisualizationHint: TutorialVisualizationHint.FlashSortClasses);
         Add("LSD Radix sort (b=4)", "DISTRIBUTION", "O(nk)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => RadixLSD4Sort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Distribution", "RadixLSD4Sort"),
             tutorialVisualizationHint: TutorialVisualizationHint.DigitBucketLsd,
@@ -210,8 +214,6 @@ public class AlgorithmRegistry
             tutorialLsdRadix: 10);
         Add("American flag sort", "DISTRIBUTION", "O(nk)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => AmericanFlagSort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Distribution", "AmericanFlagSort"));
-        Add("Flash sort", "DISTRIBUTION", "O(n+m)", MAX_SIZE_NLOGN, 4096, (arr, ctx) => FlashSort.Sort(arr, ctx),
-            gitHubSourceUrl: Src("Distribution", "FlashSort"));
 
         // Network Sorts
         Add("Bitonic sort", "NETWORK", "O(log²n)", MAX_SIZE_N2, 2048, (arr, ctx) => BitonicSort.Sort(arr, ctx),

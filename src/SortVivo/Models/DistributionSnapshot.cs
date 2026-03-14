@@ -63,6 +63,12 @@ public record DistributionSnapshot
     /// -1 = MSD 以外のアルゴリズム。
     /// </summary>
     public int DigitIndex { get; init; } = -1;
+
+    /// <summary>
+    /// true のとき、Phase に関わらず Counts != null であればヒストグラム表示を使用する。
+    /// FlashSort など in-place 分配でバケットリストが存在しないアルゴリズム向け。
+    /// </summary>
+    public bool UseHistogram { get; init; }
 }
 
 /// <summary>

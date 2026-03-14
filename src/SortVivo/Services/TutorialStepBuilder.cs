@@ -49,7 +49,11 @@ public static class TutorialStepBuilder
             // Phase / RoleAssign はステップを生成せず内部状態を更新して次へ進む
             if (op.Type == OperationType.Phase)
             {
-                currentPhase = BuildPhaseText(op.PhaseKind, op.Index1, op.Index2, op.Length);
+                var phaseText = BuildPhaseText(op.PhaseKind, op.Index1, op.Index2, op.Length);
+                // 空文字のフェーズテキストは currentPhase を上書きしない
+                // (FlashSortClassBoundary 等、表示テキストを持たない内部通知フェーズ向け)
+                if (!string.IsNullOrEmpty(phaseText))
+                    currentPhase = phaseText;
                 tracker.ProcessPhase(op.PhaseKind, op.Index1, op.Index2, op.Length);
                 opIdx++;
                 continue;
@@ -133,6 +137,7 @@ public static class TutorialStepBuilder
             TutorialVisualizationHint.BstTree => new BstTracker(initialArray.Length, avl: false),
             TutorialVisualizationHint.AvlTree => new BstTracker(initialArray.Length, avl: true),
             TutorialVisualizationHint.ValueBucket => new DistributionTracker(initialArray),
+            TutorialVisualizationHint.FlashSortClasses => new FlashSortTracker(initialArray),
             TutorialVisualizationHint.DigitBucketLsd => new LsdRadixTracker(initialArray, lsdRadix),
             TutorialVisualizationHint.DigitBucketMsd => new MsdRadixTracker(initialArray, lsdRadix),
             TutorialVisualizationHint.SortingNetwork => new NetworkTracker(initialArray.Length),

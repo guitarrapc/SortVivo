@@ -31,7 +31,7 @@
     {
         <div class="dist-empty">Waiting for sort to begin…</div>
     }
-    else if (Snapshot.Phase == DistributionPhase.Count && Snapshot.Counts != null)
+    else if ((Snapshot.UseHistogram || Snapshot.Phase == DistributionPhase.Count) && Snapshot.Counts != null)
     {
         @* Counting sort: Count フェーズはヒストグラム表示 *@
         <div class="dist-histogram">
