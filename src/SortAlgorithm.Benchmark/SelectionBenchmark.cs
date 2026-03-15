@@ -7,7 +7,7 @@ public class SelectionBenchmark
     [Params(256, 1024)]
     public int Size { get; set; }
 
-    [Params(DataPattern.Random, DataPattern.Sorted, DataPattern.Reversed, DataPattern.AntiQuicksort)]
+    [Params(DataPattern.Random, DataPattern.Sorted, DataPattern.Reversed, DataPattern.AlmostSorted, DataPattern.PipeOrgan, DataPattern.AntiQuicksort)]
     public DataPattern Pattern { get; set; }
 
     private int[] _selectionArray = default!;

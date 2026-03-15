@@ -2164,15 +2164,35 @@ public static class ArrayPatterns
     /// </summary>
     public static int[] GenerateQuickSortAdversary(int size)
     {
-        var array = Enumerable.Range(1, size).ToArray();
+        if (size <= 0)
+            return Array.Empty<int>();
 
-        // Swap elements to create worst case for median-of-3 quicksort
-        for (int j = size - size % 2 - 2, i = j - 1; i >= 0; i -= 2, j--)
+        var result = new int[size];
+        int pos = 0;
+
+        // First half: odd numbers, interleaving low/high
+        int lowOdd = 1;
+        int highOdd = (size % 2 == 0) ? size - 1 : size;
+
+        while (pos < size / 2)
         {
-            (array[i], array[j]) = (array[j], array[i]);
+            result[pos++] = lowOdd;
+            lowOdd += 2;
+
+            if (pos < size / 2)
+            {
+                result[pos++] = highOdd;
+                highOdd -= 2;
+            }
         }
 
-        return array;
+        // Second half: all even numbers ascending
+        for (int even = 2; pos < size; even += 2)
+        {
+            result[pos++] = even;
+        }
+
+        return result;
     }
 
     /// <summary>
@@ -2831,6 +2851,28 @@ public static class ArrayPatterns
             var index1 = random.Next(size);
             var index2 = random.Next(size);
             (array[index1], array[index2]) = (array[index2], array[index1]);
+        }
+
+        return array;
+    }
+
+    /// <summary>
+    /// ほぼソート済み配列（5%のペアをランダムスワップ）を生成 
+    /// <br/>
+    /// Generate almost sorted array (randomly swap 5% of pairs)
+    /// </summary>
+    public static IntKey[] GenerateAlmostSortedIntKey(int size, Random random)
+    {
+        var array = Enumerable.Range(1, size)
+            .Select(x => new IntKey(x))
+            .ToArray();
+        var swapCount = Math.Max(1, size / 20);
+
+        for (var i = 0; i < swapCount; i++)
+        {
+            var idx1 = random.Next(size);
+            var idx2 = random.Next(size);
+            (array[idx1], array[idx2]) = (array[idx2], array[idx1]);
         }
 
         return array;

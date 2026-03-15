@@ -10,6 +10,8 @@ public enum DataPattern
     Random,
     Sorted,
     Reversed,
+    AlmostSorted,
+    PipeOrgan,
     AntiQuicksort,
 }
 
@@ -23,6 +25,8 @@ public static class BenchmarkData
             DataPattern.Random => ArrayPatterns.GenerateRandom(size, random),
             DataPattern.Sorted => ArrayPatterns.GenerateSorted(size),
             DataPattern.Reversed => ArrayPatterns.GenerateReversed(size),
+            DataPattern.AlmostSorted => ArrayPatterns.GenerateAlmostSorted(size, random),
+            DataPattern.PipeOrgan => ArrayPatterns.GeneratePipeOrgan(size),
             DataPattern.AntiQuicksort => ArrayPatterns.GenerateQuickSortAdversary(size),
             _ => throw new ArgumentException($"Unknown pattern: {pattern}")
         };
@@ -36,6 +40,8 @@ public static class BenchmarkData
             DataPattern.Random => ArrayPatterns.GenerateRandomIntKey(size, random),
             DataPattern.Sorted => ArrayPatterns.GenerateSortedIntKey(size),
             DataPattern.Reversed => ArrayPatterns.GenerateReversedIntKey(size),
+            DataPattern.AlmostSorted => ArrayPatterns.GenerateAlmostSortedIntKey(size, random),
+            DataPattern.PipeOrgan => ArrayPatterns.GeneratePipeOrganIntKey(size),
             DataPattern.AntiQuicksort => ArrayPatterns.GenerateQuickSortAdversaryIntKey(size),
             _ => throw new ArgumentException($"Unknown pattern: {pattern}")
         };
@@ -50,6 +56,8 @@ public static class BenchmarkData
             DataPattern.Random => ArrayPatterns.GenerateRandom(size, random).Select(i => $"String_{i:D6}").ToArray(),
             DataPattern.Sorted => ArrayPatterns.GenerateSorted(size).Select(i => $"String_{i:D6}").ToArray(),
             DataPattern.Reversed => ArrayPatterns.GenerateReversed(size).Select(i => $"String_{i:D6}").ToArray(),
+            DataPattern.AlmostSorted => ArrayPatterns.GenerateAlmostSorted(size, random).Select(i => $"String_{i:D6}").ToArray(),
+            DataPattern.PipeOrgan => ArrayPatterns.GeneratePipeOrgan(size).Select(i => $"String_{i:D6}").ToArray(),
             DataPattern.AntiQuicksort => ArrayPatterns.GenerateQuickSortAdversary(size).Select(i => $"String_{i:D6}").ToArray(),
             _ => throw new ArgumentException($"Unknown pattern: {pattern}")
         };
