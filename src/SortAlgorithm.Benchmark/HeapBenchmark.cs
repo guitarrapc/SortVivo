@@ -7,7 +7,7 @@ public class HeapBenchmark
     [Params(256, 1024, 8192)]
     public int Size { get; set; }
 
-    [Params(DataPattern.Random, DataPattern.SingleElementMoved, DataPattern.Sorted, DataPattern.Reversed, DataPattern.PipeOrgan, DataPattern.AntiQuicksort)]
+    [Params(DataPattern.Random, DataPattern.SingleElementMoved, DataPattern.Sorted, DataPattern.Reversed, DataPattern.PipeOrgan)]
     public DataPattern Pattern { get; set; }
 
     private int[] _heapArray = default!;

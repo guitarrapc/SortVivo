@@ -7,7 +7,7 @@ public class TreeBenchmark
     [Params(256, 1024)]
     public int Size { get; set; }
 
-    [Params(DataPattern.Random, DataPattern.Sorted, DataPattern.Reversed, DataPattern.AntiQuicksort)]
+    [Params(DataPattern.Random, DataPattern.SingleElementMoved, DataPattern.Sorted, DataPattern.Reversed, DataPattern.PipeOrgan)]
     public DataPattern Pattern { get; set; }
 
     private int[] _balancedbinarytreeArray = default!;

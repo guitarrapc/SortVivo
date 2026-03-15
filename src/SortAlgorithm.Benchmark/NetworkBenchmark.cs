@@ -7,7 +7,7 @@ public class NetworkBenchmark
     [Params(256, 1024, 4096)]
     public int Size { get; set; }
 
-    [Params(DataPattern.Random, DataPattern.SingleElementMoved, DataPattern.Sorted, DataPattern.Reversed, DataPattern.PipeOrgan, DataPattern.AntiQuicksort)]
+    [Params(DataPattern.Random, DataPattern.SingleElementMoved, DataPattern.Sorted, DataPattern.Reversed, DataPattern.PipeOrgan)]
     public DataPattern Pattern { get; set; }
 
     private int[] _batcheroddevenmergeArray = default!;
