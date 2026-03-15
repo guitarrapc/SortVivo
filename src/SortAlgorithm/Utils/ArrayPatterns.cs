@@ -2981,16 +2981,34 @@ public static class ArrayPatterns
     /// </summary>
     public static IntKey[] GenerateQuickSortAdversaryIntKey(int size)
     {
-        var array = Enumerable.Range(1, size)
-            .Select(x => new IntKey(x))
-            .ToArray();
+        if (size <= 0)
+            return Array.Empty<IntKey>();
 
-        // Swap elements to create worst case for median-of-3 quicksort
-        for (int j = size - size % 2 - 2, i = j - 1; i >= 0; i -= 2, j--)
+        var result = new IntKey[size];
+        int pos = 0;
+
+        // First half: odd numbers, interleaving low/high
+        int lowOdd = 1;
+        int highOdd = (size % 2 == 0) ? size - 1 : size;
+
+        while (pos < size / 2)
         {
-            (array[i], array[j]) = (array[j], array[i]);
+            result[pos++] = new IntKey(lowOdd);
+            lowOdd += 2;
+
+            if (pos < size / 2)
+            {
+                result[pos++] = new IntKey(highOdd);
+                highOdd -= 2;
+            }
         }
 
-        return array;
+        // Second half: all even numbers ascending
+        for (int even = 2; pos < size; even += 2)
+        {
+            result[pos++] = new IntKey(even);
+        }
+
+        return result;
     }
 }
