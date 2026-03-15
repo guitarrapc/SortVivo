@@ -70,7 +70,7 @@ sealed class PatiencePilesTracker : IVisualizationTracker
         }
     }
 
-    public void ProcessPhase(SortPhase phase, int p1, int p2, int p3)
+    public void ProcessPhase(SortPhase phase, int p1, int p2, int p3, int[]? mainArray = null)
     {
         if (phase == SortPhase.PatienceSortDeal)
         {

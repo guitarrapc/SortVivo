@@ -41,10 +41,12 @@
 
         // CalculateTreeLayout で記録した走査深さで viewH を正確に計算する
         var maxDepth = _nodeDepths.Count > 0 ? _nodeDepths.Values.Max() : Snapshot.Nodes.Max(n => n.Depth);
-        var viewH = Math.Max(200, (maxDepth + 1) * 180 + 100);
 
-        var nodeHeight = 110;
-        var levelGap = 180;
+        // DNF ポインタ（lt/i/gt）がある場合はノード高さを拡張する
+        var hasDnfPointers = Snapshot.Nodes.Any(n => n.Lt.HasValue || n.I.HasValue || n.Gt.HasValue);
+        _levelHeight = hasDnfPointers ? 200 : 180;
+        var nodeHeight = hasDnfPointers ? 130 : 110;
+        var viewH = Math.Max(200, (maxDepth + 1) * (int)_levelHeight + 100);
         var marbleSize = (int)Math.Round(28 * HorizScale);
         var marbleSpacing = Math.Max(marbleSize * 2 + 4, (int)Math.Round(60 * HorizScale));
         var marbleFont = (int)Math.Round(20.0 * HorizScale);
@@ -116,7 +118,7 @@
                 var rangeText = $"[{node.Start}..{node.End})";
                 var rangeY = ny - nodeHeight/2 + 18;
                 var pivotText = node.PivotValue.HasValue ? $"pivot={node.PivotValue}" : "";
-                var pivotY = ny + nodeHeight/2 - 14;
+                var pivotY = ny + nodeHeight / 2 - 14;
                 var checkX = nx + nodeWidth/2 - 8;
                 var checkY = ny - nodeHeight/2 + 15;
 
@@ -160,6 +162,33 @@
 
                             <circle cx="@mx" cy="@marbleY" r="@marbleSize" fill="@marbleColor" stroke="@(isPivot ? "#FBBF24" : "rgba(255,255,255,0.2)")" stroke-width="@(isPivot ? "2.5" : "1.5")" />
                             @(new MarkupString($"<text x=\"{mx:F2}\" y=\"{my:F2}\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"white\" font-size=\"{marbleFont}\" font-weight=\"700\">{value}</text>"))
+                        }
+
+                        @* DNF ポインタラベル（lt/i/gt）: QuickSort 3-way のみ *@
+                        @if (node.Lt.HasValue || node.I.HasValue || node.Gt.HasValue)
+                        {
+                            var ptrBaseY = marbleY + marbleSize + 9;
+                            @for (int pi = 0; pi < node.Values.Length; pi++)
+                            {
+                                var absIdx = node.Start + pi;
+                                var pmx = marbleStartX + pi * marbleSpacing;
+                                // 同一マーブルに複数ラベルが重なる場合は縦にスタックする
+                                var ptrRow = 0;
+                                if (node.Lt.HasValue && absIdx == node.Lt.Value)
+                                {
+                                    @(new MarkupString($"<text x=\"{pmx:F2}\" y=\"{ptrBaseY + ptrRow * 10:F2}\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"#06B6D4\" font-size=\"9\" font-weight=\"700\">lt</text>"))
+                                    ptrRow++;
+                                }
+                                if (node.I.HasValue && absIdx == node.I.Value)
+                                {
+                                    @(new MarkupString($"<text x=\"{pmx:F2}\" y=\"{ptrBaseY + ptrRow * 10:F2}\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"#FBBF24\" font-size=\"9\" font-weight=\"700\">i</text>"))
+                                    ptrRow++;
+                                }
+                                if (node.Gt.HasValue && absIdx == node.Gt.Value)
+                                {
+                                    @(new MarkupString($"<text x=\"{pmx:F2}\" y=\"{ptrBaseY + ptrRow * 10:F2}\" text-anchor=\"middle\" dominant-baseline=\"central\" fill=\"#F97316\" font-size=\"9\" font-weight=\"700\">gt</text>"))
+                                }
+                            }
                         }
                     }
 
@@ -216,6 +245,8 @@
     private readonly Dictionary<int, double> _nodeXPositions = new();
     private readonly Dictionary<int, double> _subtreeWidthCache = new();
     private readonly Dictionary<int, int> _nodeDepths = new();
+    // DNF ポインタ表示時に levelHeight / nodeHeight を拡張するフラグ（レンダリング前に設定）
+    private double _levelHeight = 180;
 
     /// <summary>
     /// ノードの実際の描画幅を計算する（要素数に応じた動的幅）。
@@ -229,11 +260,10 @@
     /// </summary>
     private (double x, double y) GetNodePosition(RecursionNode node, int maxDepth, double viewW)
     {
-        const double levelHeight = 180;
         // _nodeDepths は CalculateTreeLayout の走査で記録した実際の深さ。
         // node.Depth は ReattachChildren の伝播漏れで誤った値になる場合があるため使用しない。
         int depth = _nodeDepths.GetValueOrDefault(node.Id, node.Depth);
-        double y = 60 + depth * levelHeight;
+        double y = 60 + depth * _levelHeight;
 
         double x = _nodeXPositions.GetValueOrDefault(node.Id, viewW / 2);
         return (x, y);

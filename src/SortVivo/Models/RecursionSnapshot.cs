@@ -36,6 +36,15 @@ public record RecursionNode
     /// <summary>ピボット値（Quicksort のみ、他は null）</summary>
     public int? PivotValue { get; init; }
 
+    /// <summary>DNF ポインタ: lt 境界 – [left, lt-1] &lt; pivot (QuickSort 3-way のみ)</summary>
+    public int? Lt { get; init; }
+
+    /// <summary>DNF ポインタ: i – 現在のスキャン位置、[lt, i-1] == pivot (QuickSort 3-way のみ)</summary>
+    public int? I { get; init; }
+
+    /// <summary>DNF ポインタ: gt 境界 – [gt+1, right] &gt; pivot (QuickSort 3-way のみ)</summary>
+    public int? Gt { get; init; }
+
     /// <summary>ノード内の配列スナップショット</summary>
     public int[] Values { get; init; } = [];
 

@@ -10,8 +10,11 @@ namespace SortVivo.Services;
 /// <list type="bullet">
 ///   <item>Merge sort: <c>RangeCopy(srcBuf=0, dstBuf=1, src=S, len=L)</c> → ノード [S..S+L*2) をアクティブ化<br/>
 ///     L = leftLength = mid - left + 1 なので、等分割なら S+L*2 = right+1 が成立する。</item>
-///   <item>Quicksort: <c>Swap(buf=0, i≠j)</c> → [min(i,j)..max(i,j)+1) を包含する最小ノードをアクティブ化</item>
-///   <item><c>Compare(i,j) buf(0,0)</c> (i≥0, j≥0) → ノード候補の確認に使用</item>
+///   <item>Quicksort: <c>ProcessPhase(QuickSortPartition, left, right, pivotIdx)</c> → ノード [left..right+1) を作成・アクティブ化し、<br/>
+///     PivotValue を設定する。DNF 3-way (pivotIdx==left) では lt/i/gt ポインタ追跡も開始する。</item>
+///   <item>パーティション中の Swap/Compare(i,value) は <c>TryHandlePartitionOp</c> が先行してインターセプトし、<br/>
+///     lt/i/gt を更新する（スプリアス子ノードの生成を防ぐ）。</item>
+///   <item><c>Compare(i,j) buf(0,0)</c> (i≥0, j≥0) → 既存ノード検索のみ（Merge Sort early-exit check 用）</item>
 /// </list>
 /// </summary>
 sealed class RecursionTracker : IVisualizationTracker
@@ -29,6 +32,16 @@ sealed class RecursionTracker : IVisualizationTracker
 
     // Decorate() 用キャッシュ
     private RecursionSnapshot? _cachedSnapshot;
+
+    // QuickSort パーティション追跡状態
+    // ProcessPhase(QuickSortPartition) でセットされ、TryHandlePartitionOp() が使用する。
+    private int _activePartitionLeft = -1;
+    private int _activePartitionRight = -1;
+    private int _activePartitionNodeId = -1;
+    private bool _trackDnfPointers;   // true = 3-way DNF (pivotIdx == left)
+    private int _partitionLt = -1;
+    private int _partitionI = -1;
+    private int _partitionGt = -1;
 
     internal RecursionTracker(int arrayLength)
     {
@@ -50,6 +63,11 @@ sealed class RecursionTracker : IVisualizationTracker
 
     public void Process(SortOperation op, int[] mainArray, Dictionary<int, int[]> buffers)
     {
+        // QuickSort パーティション中の操作はここで先行インターセプトする。
+        // スプリアスな子ノード生成を防ぎ、lt/i/gt ポインタを更新する。
+        if (_activePartitionNodeId >= 0 && op.BufferId1 == 0 && TryHandlePartitionOp(op))
+            return;
+
         int newStart = -1, newEnd = -1;
         bool allowCreate = true;
 
@@ -147,11 +165,18 @@ sealed class RecursionTracker : IVisualizationTracker
     }
 
     /// <summary>
-    /// Phase シグナルを受け取り、InsertionSort / HeapSort のリーフノードを作成・アクティブ化する。
-    /// ハイブリッドソートが InsertionSort/HeapSort に委譲する際に呼ばれる。
+    /// Phase シグナルを受け取り内部状態を更新する。
+    /// QuickSortPartition: フルレンジのパーティションノードを作成・アクティブ化し PivotValue と lt/i/gt を設定する。
+    /// HybridToInsertionSort / HeapSort: リーフノードを作成・アクティブ化する。
     /// </summary>
-    public void ProcessPhase(SortAlgorithm.Contexts.SortPhase phase, int p1, int p2, int p3)
+    public void ProcessPhase(SortAlgorithm.Contexts.SortPhase phase, int p1, int p2, int p3, int[]? mainArray = null)
     {
+        if (phase == SortAlgorithm.Contexts.SortPhase.QuickSortPartition)
+        {
+            ProcessQuickSortPartition(p1, p2, p3, mainArray);
+            return;
+        }
+
         RecursionNodeState leafState;
         string narrative;
 
@@ -182,6 +207,9 @@ sealed class RecursionTracker : IVisualizationTracker
         int start = p1;
         int end = p2 + 1; // inclusive right → exclusive end
 
+        // リーフへ移行したらパーティション追跡を終了する
+        _activePartitionNodeId = -1;
+
         // 前のアクティブが Leaf なら完了させる（パーティションノードはそのまま保持）
         var prevNode = _activeNodeId >= 0 ? FindNodeById(_activeNodeId) : null;
         if (prevNode != null && prevNode.State is RecursionNodeState.InsertionSortLeaf or RecursionNodeState.HeapSortLeaf)
@@ -194,6 +222,157 @@ sealed class RecursionTracker : IVisualizationTracker
         _activeNodeId = node.Id;
         _cachedNarrative = narrative;
         RebuildSnapshot();
+    }
+
+    /// <summary>
+    /// QuickSortPartition フェーズを処理する。
+    /// フルレンジ [left..right+1) のノードを作成・アクティブ化し、
+    /// PivotValue を設定する。pivotIdx == left の場合は DNF ポインタ追跡も開始する。
+    /// </summary>
+    private void ProcessQuickSortPartition(int left, int right, int pivotIdx, int[]? mainArray)
+    {
+        if (mainArray == null || pivotIdx < 0 || pivotIdx >= mainArray.Length) return;
+
+        int pivotVal = mainArray[pivotIdx];
+
+        // フルレンジのパーティションノードを取得または作成する
+        var partNode = FindOrCreateNode(left, right + 1, mainArray);
+        if (partNode == null) return;
+
+        // PivotValue をセット
+        var nodeIdx = _nodes.FindIndex(n => n.Id == partNode.Id);
+        if (nodeIdx >= 0)
+            _nodes[nodeIdx] = _nodes[nodeIdx] with { PivotValue = pivotVal };
+
+        // 前ノードとの状態遷移（Process() の Swap ケースと同じロジック）
+        var prevNode = _activeNodeId >= 0 ? FindNodeById(_activeNodeId) : null;
+        if (partNode.Id != _activeNodeId)
+        {
+            if (prevNode != null && prevNode.State is RecursionNodeState.Active or RecursionNodeState.Merging
+                                                       or RecursionNodeState.InsertionSortLeaf or RecursionNodeState.HeapSortLeaf)
+            {
+                if (partNode.Depth <= prevNode.Depth)
+                {
+                    MarkSubtreeCompleted(prevNode.Id);
+                    UpdateNodeState(partNode.Id, partNode.Depth < prevNode.Depth
+                        ? RecursionNodeState.Merging
+                        : RecursionNodeState.Active);
+                }
+                else
+                {
+                    UpdateNodeState(partNode.Id, RecursionNodeState.Active);
+                }
+            }
+            else
+            {
+                UpdateNodeState(partNode.Id, RecursionNodeState.Active);
+            }
+            _activeNodeId = partNode.Id;
+        }
+
+        // パーティション追跡状態を初期化する
+        _activePartitionLeft = left;
+        _activePartitionRight = right;
+        _activePartitionNodeId = partNode.Id;
+        _trackDnfPointers = (pivotIdx == left); // 3-way DNF: pivot を left に移動済み
+
+        if (_trackDnfPointers)
+        {
+            // QuickSort3way: lt=left, i=left+1, gt=right
+            _partitionLt = left;
+            _partitionI = left + 1;
+            _partitionGt = right;
+            UpdateNodePointers(partNode.Id, _partitionLt, _partitionI, _partitionGt);
+        }
+
+        _cachedNarrative = $"Partitioning [{left}..{right}] around pivot {pivotVal} ({right - left + 1} elements)";
+        _lastOpType = OperationType.Phase;
+        _lastOpStart = left;
+        _lastOpEnd = right + 1;
+        RebuildSnapshot();
+    }
+
+    /// <summary>
+    /// アクティブなパーティション範囲内の Swap / 値比較 Compare を先行処理する。
+    /// スプリアスな子ノード生成を防ぎ、DNF ポインタ（lt/i/gt）を更新する。
+    /// 処理済みなら true を返し、呼び出し元は残りの処理をスキップする。
+    /// </summary>
+    private bool TryHandlePartitionOp(SortOperation op)
+    {
+        if (op.Type == OperationType.Swap && op.Index1 != op.Index2)
+        {
+            int a = Math.Min(op.Index1, op.Index2);
+            int b = Math.Max(op.Index1, op.Index2);
+            if (a >= _activePartitionLeft && b <= _activePartitionRight)
+            {
+                if (_trackDnfPointers)
+                {
+                    // Swap(i, gt): gt を縮める
+                    if (b == _partitionGt)
+                        _partitionGt--;
+                    // Swap(lt, i): lt と i を進める
+                    else if (a == _partitionLt)
+                    {
+                        _partitionLt++;
+                        _partitionI = b + 1;
+                    }
+                    // 上記以外（median-of-3 準備など）: ポインタは変えない
+                    UpdateNodePointers(_activePartitionNodeId, _partitionLt, _partitionI, _partitionGt);
+                }
+                _activeNodeId = _activePartitionNodeId;
+                var pNode = FindNodeById(_activePartitionNodeId);
+                if (pNode != null)
+                    GeneratePartitionNarrative(pNode, op);
+                RebuildSnapshot();
+                return true;
+            }
+        }
+        else if (op.Type == OperationType.Compare && op.Index2 < 0)
+        {
+            // 値比較: s.Compare(i, pivotValue) → Index2 = -1
+            if (op.Index1 >= _activePartitionLeft && op.Index1 <= _activePartitionRight)
+            {
+                if (_trackDnfPointers)
+                {
+                    _partitionI = op.Index1;
+                    UpdateNodePointers(_activePartitionNodeId, _partitionLt, _partitionI, _partitionGt);
+                }
+                _activeNodeId = _activePartitionNodeId;
+                var pNode = FindNodeById(_activePartitionNodeId);
+                if (pNode != null)
+                    GeneratePartitionNarrative(pNode, op);
+                RebuildSnapshot();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /// <summary>パーティション操作中のナラティブを生成する。</summary>
+    private void GeneratePartitionNarrative(RecursionNode node, SortOperation op)
+    {
+        string range = $"[{node.Start}..{node.End - 1}]";
+        string pivotPart = node.PivotValue.HasValue ? $" around pivot {node.PivotValue}" : "";
+        if (_trackDnfPointers)
+        {
+            string pointers = $"lt={_partitionLt} i={_partitionI} gt={_partitionGt}";
+            if (op.Type == OperationType.Compare)
+                _cachedNarrative = $"Compare s[{op.Index1}] vs pivot {node.PivotValue} | {pointers}";
+            else
+                _cachedNarrative = $"Partitioning {range}{pivotPart} | {pointers}";
+        }
+        else
+        {
+            _cachedNarrative = $"Partitioning {range}{pivotPart}";
+        }
+    }
+
+    /// <summary>ノードの DNF ポインタ（lt / i / gt）を更新する。</summary>
+    private void UpdateNodePointers(int nodeId, int lt, int i, int gt)
+    {
+        var idx = _nodes.FindIndex(n => n.Id == nodeId);
+        if (idx >= 0)
+            _nodes[idx] = _nodes[idx] with { Lt = lt, I = i, Gt = gt };
     }
 
     public TutorialStep Decorate(TutorialStep step)
@@ -423,10 +602,10 @@ sealed class RecursionTracker : IVisualizationTracker
                 break;
 
             case RecursionNodeState.Active when _lastOpType == OperationType.Swap:
-                // Quicksort: パーティション中
-                var pivotCandidate = FindPivotCandidate(node, op);
+                // Quicksort: パーティション中 (TryHandlePartitionOp を経由しない Swap の場合)
+                var pivotCandidate = node.PivotValue ?? FindPivotCandidate(node, op);
                 if (pivotCandidate.HasValue)
-                    _cachedNarrative = $"Partitioning range {rangeDesc} around pivot {pivotCandidate} ({size} elements)";
+                    _cachedNarrative = $"Partitioning [{node.Start}..{node.End - 1}] around pivot {pivotCandidate} ({size} elements)";
                 else
                     _cachedNarrative = $"Partitioning range {rangeDesc} ({size} elements)";
                 break;

@@ -54,7 +54,7 @@ public static class TutorialStepBuilder
                 // (FlashSortClassBoundary 等、表示テキストを持たない内部通知フェーズ向け)
                 if (!string.IsNullOrEmpty(phaseText))
                     currentPhase = phaseText;
-                tracker.ProcessPhase(op.PhaseKind, op.Index1, op.Index2, op.Length);
+                tracker.ProcessPhase(op.PhaseKind, op.Index1, op.Index2, op.Length, mainArray);
                 opIdx++;
                 continue;
             }
