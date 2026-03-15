@@ -78,7 +78,7 @@ public static class BogoSort
         if (span.Length <= 1) return;
 
         var s = new SortSpan<T, TComparer, TContext>(span, context, comparer, BUFFER_MAIN);
-        var rngState = seed;
+        var rngState = seed == 0 ? XORSHIFT_SEED : seed;
 
         var attempt = 0;
         while (!IsSorted(s))

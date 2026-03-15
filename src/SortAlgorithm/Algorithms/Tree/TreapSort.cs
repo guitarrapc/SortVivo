@@ -96,7 +96,7 @@ public static class TreapSort
             var s = new SortSpan<T, TComparer, TContext>(span, context, comparer, BUFFER_MAIN);
             var rootIndex = NULL_INDEX;
             var nodeCount = 0;
-            var rngState = seed;
+            var rngState = seed == 0 ? XORSHIFT_SEED : seed;
 
             // Insert each element into the treap; after each insertion the node is rotated up to restore heap property
             for (var i = 0; i < s.Length; i++)
@@ -120,7 +120,7 @@ public static class TreapSort
 
     /// <summary>
     /// Inserts the element at <paramref name="itemIndex"/> into the treap via standard BST insertion,
-    /// assigns a random priority, then rotates the node upward until the max-heap property is restored.
+    /// assigns a pseudo-random priority, then rotates the node upward until the max-heap property is restored.
     /// Returns the (possibly new) root index.
     /// </summary>
     private static int Insert<T, TComparer, TContext>(
@@ -363,7 +363,7 @@ public static class TreapSort
     /// Struct-based to eliminate GC pressure (allocated via ArrayPool).
     /// Left, Right, and Parent are indices into the arena array (-1 represents null).
     /// Value caches the T instance directly to avoid span[index] indirection on every comparison.
-    /// Priority is a random integer used to maintain max-heap order via rotations.
+    /// Priority is a pseudo-random integer used to maintain max-heap order via rotations.
     /// Parent pointer enables bottom-up heap-up without a separate path stack.
     /// The node's identity is its position in the arena array, so no separate Id field is needed.
     /// </remarks>
