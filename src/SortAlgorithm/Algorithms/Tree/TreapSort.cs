@@ -51,6 +51,21 @@ public static class TreapSort
     private const int BUFFER_MAIN = 0;       // Main input array
     private const int BUFFER_TREE = -1;      // Tree nodes (virtual buffer, negative to exclude from main statistics)
     private const int NULL_INDEX = -1;       // Represents null reference in arena
+    private const uint XORSHIFT_SEED = 0x9E3779B9u; // Golden ratio derived; deterministic seed for reproducible priority generation
+
+    /// <summary>
+    /// Generates the next pseudo-random priority using xorshift32.
+    /// Deterministic: same seed always produces the same sequence, ensuring reproducible
+    /// tree shapes for consistent visualization, statistics, and benchmarks.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int NextPriority(ref uint state)
+    {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        return (int)state;
+    }
 
     // Note: Arena (Node array) operations are not tracked via SortSpan because:
     // 1. Nodes are internal implementation details (tree structure metadata)
@@ -82,7 +97,7 @@ public static class TreapSort
     /// Sorts the elements in the specified span using the provided comparer and sort context.
     /// This is the full-control version with explicit TComparer and TContext type parameters.
     /// </summary>
-    public static void Sort<T, TComparer, TContext>(Span<T> span, TComparer comparer, TContext context)
+    public static void Sort<T, TComparer, TContext>(Span<T> span, TComparer comparer, TContext context, uint seed = XORSHIFT_SEED)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
@@ -95,14 +110,14 @@ public static class TreapSort
             var s = new SortSpan<T, TComparer, TContext>(span, context, comparer, BUFFER_MAIN);
             var rootIndex = NULL_INDEX;
             var nodeCount = 0;
-            var rng = Random.Shared;
+            var rngState = seed;
 
             // Insert each element into the treap; after each insertion the node is rotated up to restore heap property
             for (var i = 0; i < s.Length; i++)
             {
                 context.OnPhase(SortPhase.TreeSortInsert, i, s.Length - 1);
                 context.OnRole(i, BUFFER_MAIN, RoleType.Inserting);
-                rootIndex = Insert(arenaSpan, rootIndex, ref nodeCount, i, s, rng);
+                rootIndex = Insert(arenaSpan, rootIndex, ref nodeCount, i, s, ref rngState);
                 context.OnRole(i, BUFFER_MAIN, RoleType.None);
             }
 
@@ -124,12 +139,12 @@ public static class TreapSort
     /// </summary>
     private static int Insert<T, TComparer, TContext>(
         Span<Node<T>> arena, int rootIndex, ref int nodeCount, int itemIndex,
-        SortSpan<T, TComparer, TContext> s, Random rng)
+        SortSpan<T, TComparer, TContext> s, ref uint rngState)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
         var value = s.Read(itemIndex);
-        var priority = rng.Next();
+        var priority = NextPriority(ref rngState);
 
         // Empty tree: create root directly
         if (rootIndex == NULL_INDEX)
