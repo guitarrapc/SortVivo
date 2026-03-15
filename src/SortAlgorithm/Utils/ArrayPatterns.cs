@@ -2834,6 +2834,44 @@ public static class ArrayPatterns
     }
 
     /// <summary>
+    /// 単一要素移動（ソート済みから1つの要素だけをランダム位置に移動）
+    /// <br/>
+    /// Generate single element moved (move one element from sorted array to random position)
+    /// </summary>
+    public static IntKey[] GenerateSingleElementMovedIntKey(int size, Random random)
+    {
+        var array = Enumerable.Range(1, size)
+            .Select(x => new IntKey(x))
+            .ToArray();
+
+        if (size < 2) return array;
+
+        // Pick a random element to move
+        var sourceIndex = random.Next(size);
+        var destIndex = random.Next(size);
+
+        if (sourceIndex == destIndex) return array;
+
+        // Move element using rotation
+        var element = array[sourceIndex];
+
+        if (destIndex < sourceIndex)
+        {
+            // Shift elements right
+            Array.Copy(array, destIndex, array, destIndex + 1, sourceIndex - destIndex);
+            array[destIndex] = element;
+        }
+        else
+        {
+            // Shift elements left
+            Array.Copy(array, sourceIndex + 1, array, sourceIndex, destIndex - sourceIndex);
+            array[destIndex] = element;
+        }
+
+        return array;
+    }
+
+    /// <summary>
     /// ほぼソート済み配列を生成（IntKey版・要素の10%をランダムに入れ替え）
     /// <br/>
     /// Generate nearly sorted array (IntKey version - randomly swap 10% of elements)
