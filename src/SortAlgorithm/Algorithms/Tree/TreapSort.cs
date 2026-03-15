@@ -53,20 +53,6 @@ public static class TreapSort
     private const int NULL_INDEX = -1;       // Represents null reference in arena
     private const uint XORSHIFT_SEED = 0x9E3779B9u; // Golden ratio derived; deterministic seed for reproducible priority generation
 
-    /// <summary>
-    /// Generates the next pseudo-random priority using xorshift32.
-    /// Deterministic: same seed always produces the same sequence, ensuring reproducible
-    /// tree shapes for consistent visualization, statistics, and benchmarks.
-    /// </summary>
-    [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static int NextPriority(ref uint state)
-    {
-        state ^= state << 13;
-        state ^= state >> 17;
-        state ^= state << 5;
-        return (int)state;
-    }
-
     // Note: Arena (Node array) operations are not tracked via SortSpan because:
     // 1. Nodes are internal implementation details (tree structure metadata)
     // 2. Nodes cache values (T) directly for performance (avoiding indirection on every comparison)
@@ -354,6 +340,20 @@ public static class TreapSort
         var cmp = comparer.Compare(value, arena[nodeIndex].Value);
         context.OnCompare(itemIndex, nodeIndex, cmp, BUFFER_MAIN, BUFFER_TREE);
         return cmp;
+    }
+
+    /// <summary>
+    /// Generates the next pseudo-random priority using xorshift32.
+    /// Deterministic: same seed always produces the same sequence, ensuring reproducible
+    /// tree shapes for consistent visualization, statistics, and benchmarks.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static int NextPriority(ref uint state)
+    {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        return (int)state;
     }
 
     /// <summary>

@@ -38,6 +38,7 @@ public static class BogoSort
 {
     // Buffer identifiers for visualization
     private const int BUFFER_MAIN = 0;       // Main input array
+    private const uint XORSHIFT_SEED = 0x9E3779B9u; // Golden ratio derived; deterministic seed for reproducible shuffle sequence
 
     /// <summary>
     /// Sorts the elements in the specified span in ascending order using the default comparer.
@@ -70,25 +71,26 @@ public static class BogoSort
     /// <param name="span">The span of elements to sort. The elements within this span will be reordered in place.</param>
     /// <param name="comparer">The comparer to use for element comparisons.</param>
     /// <param name="context">The sort context that defines the sorting strategy or options to use during the operation. Cannot be null.</param>
-    public static void Sort<T, TComparer, TContext>(Span<T> span, TComparer comparer, TContext context)
+    public static void Sort<T, TComparer, TContext>(Span<T> span, TComparer comparer, TContext context, uint seed = XORSHIFT_SEED)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
         if (span.Length <= 1) return;
 
         var s = new SortSpan<T, TComparer, TContext>(span, context, comparer, BUFFER_MAIN);
+        var rngState = seed;
 
         var attempt = 0;
         while (!IsSorted(s))
         {
             attempt++;
             context.OnPhase(SortPhase.BogoShuffle, attempt);
-            Shuffle(s);
+            Shuffle(s, ref rngState);
         }
     }
 
     [MethodImpl(MethodImplOptions.AggressiveInlining)]
-    private static void Shuffle<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s)
+    private static void Shuffle<T, TComparer, TContext>(SortSpan<T, TComparer, TContext> s, ref uint rngState)
         where TComparer : IComparer<T>
         where TContext : ISortContext
     {
@@ -96,7 +98,8 @@ public static class BogoSort
         var length = s.Length;
         for (var i = length - 1; i > 0; i--)
         {
-            s.Swap(i, Random.Shared.Next(0, i + 1));
+            var j = (int)(NextRandom(ref rngState) % (uint)(i + 1));
+            s.Swap(i, j);
         }
     }
 
@@ -114,5 +117,19 @@ public static class BogoSort
             }
         }
         return true;
+    }
+
+    /// <summary>
+    /// Generates the next pseudo-random value using xorshift32.
+    /// Deterministic: same seed always produces the same sequence, ensuring reproducible
+    /// shuffle attempts for consistent visualization, statistics, and benchmarks.
+    /// </summary>
+    [MethodImpl(MethodImplOptions.AggressiveInlining)]
+    private static uint NextRandom(ref uint state)
+    {
+        state ^= state << 13;
+        state ^= state >> 17;
+        state ^= state << 5;
+        return state;
     }
 }
