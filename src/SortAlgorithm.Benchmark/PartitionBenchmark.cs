@@ -10,33 +10,33 @@ public class PartitionBenchmark
     [Params(DataPattern.Random, DataPattern.Sorted, DataPattern.Reversed, DataPattern.AntiQuicksort)]
     public DataPattern Pattern { get; set; }
 
-    private int[] _blockQuickArray = default!;
+    private int[] _quickArray = default!;
+    private int[] _quick3wayArray = default!;
+    private int[] _quickMedian3Array = default!;
+    private int[] _quickMedian9Array = default!;
+    private int[] _quickDualPivotArray = default!;
+    private int[] _stableQuickArray = default!;
     private int[] _introArray = default!;
     private int[] _introDotnetArray = default!;
     private int[] _pdqArray = default!;
-    private int[] _quickArray = default!;
-    private int[] _quick3wayArray = default!;
-    private int[] _quickDualPivotArray = default!;
-    private int[] _quickMedian3Array = default!;
-    private int[] _quickMedian9Array = default!;
-    private int[] _stableQuickArray = default!;
     private int[] _stdArray = default!;
+    private int[] _blockQuickArray = default!;
     private int[] _dotnetArray = default!;
 
     [IterationSetup]
     public void Setup()
     {
-        _blockQuickArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _quickArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _quick3wayArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _quickMedian3Array = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _quickMedian9Array = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _quickDualPivotArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _stableQuickArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _introArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _introDotnetArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _pdqArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _quickArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _quick3wayArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _quickDualPivotArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _quickMedian3Array = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _quickMedian9Array = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _stableQuickArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _stdArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _blockQuickArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _dotnetArray = BenchmarkData.GenerateIntArray(Size, Pattern);
     }
 
@@ -53,12 +53,6 @@ public class PartitionBenchmark
     }
 
     [Benchmark]
-    public void QuickSortDualPivot()
-    {
-        SortAlgorithm.Algorithms.QuickSortDualPivot.Sort(_quickDualPivotArray.AsSpan());
-    }
-
-    [Benchmark]
     public void QuickSortMedian3()
     {
         SortAlgorithm.Algorithms.QuickSortMedian3.Sort(_quickMedian3Array.AsSpan());
@@ -68,6 +62,12 @@ public class PartitionBenchmark
     public void QuickSortMedian9()
     {
         SortAlgorithm.Algorithms.QuickSortMedian9.Sort(_quickMedian9Array.AsSpan());
+    }
+
+    [Benchmark]
+    public void QuickSortDualPivot()
+    {
+        SortAlgorithm.Algorithms.QuickSortDualPivot.Sort(_quickDualPivotArray.AsSpan());
     }
 
     [Benchmark]

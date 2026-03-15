@@ -10,24 +10,24 @@ public class SelectionBenchmark
     [Params(DataPattern.Random, DataPattern.Sorted, DataPattern.Reversed, DataPattern.AntiQuicksort)]
     public DataPattern Pattern { get; set; }
 
-    private int[] _cycleArray = default!;
-    private int[] _doubleSelectionArray = default!;
-    private int[] _pancakeArray = default!;
     private int[] _selectionArray = default!;
+    private int[] _doubleSelectionArray = default!;
+    private int[] _cycleArray = default!;
+    private int[] _pancakeArray = default!;
 
     [IterationSetup]
     public void Setup()
     {
-        _cycleArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _doubleSelectionArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _pancakeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _selectionArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _doubleSelectionArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _cycleArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _pancakeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
     }
 
-    [Benchmark]
-    public void CycleSort()
+    [Benchmark(Baseline = true)]
+    public void SelectionSort()
     {
-        SortAlgorithm.Algorithms.CycleSort.Sort(_cycleArray.AsSpan());
+        SortAlgorithm.Algorithms.SelectionSort.Sort(_selectionArray.AsSpan());
     }
 
     [Benchmark]
@@ -37,14 +37,14 @@ public class SelectionBenchmark
     }
 
     [Benchmark]
+    public void CycleSort()
+    {
+        SortAlgorithm.Algorithms.CycleSort.Sort(_cycleArray.AsSpan());
+    }
+
+    [Benchmark]
     public void PancakeSort()
     {
         SortAlgorithm.Algorithms.PancakeSort.Sort(_pancakeArray.AsSpan());
-    }
-
-    [Benchmark(Baseline = true)]
-    public void SelectionSort()
-    {
-        SortAlgorithm.Algorithms.SelectionSort.Sort(_selectionArray.AsSpan());
     }
 }

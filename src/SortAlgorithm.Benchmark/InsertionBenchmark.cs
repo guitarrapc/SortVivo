@@ -10,9 +10,10 @@ public class InsertionBenchmark
     [Params(DataPattern.Random, DataPattern.Sorted, DataPattern.Reversed, DataPattern.AntiQuicksort)]
     public DataPattern Pattern { get; set; }
 
-    private int[] _binaryinsertArray = default!;
     private int[] _insertionArray = default!;
     private int[] _pairinsertiontreeArray = default!;
+    private int[] _binaryinsertArray = default!;
+    private int[] _gnomeArray = default!;
     private int[] _libraryArray = default!;
     private int[] _mergeinsertionArray = default!;
     private int[] _shellArrayCiura2001 = default!;
@@ -24,9 +25,10 @@ public class InsertionBenchmark
     [IterationSetup]
     public void Setup()
     {
-        _binaryinsertArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _insertionArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _pairinsertiontreeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _binaryinsertArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _gnomeArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _libraryArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _mergeinsertionArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _shellArrayCiura2001 = BenchmarkData.GenerateIntArray(Size, Pattern);
@@ -34,12 +36,6 @@ public class InsertionBenchmark
         _shellArrayLee2021 = BenchmarkData.GenerateIntArray(Size, Pattern);
         _shellArraySedgewick1986 = BenchmarkData.GenerateIntArray(Size, Pattern);
         _shellArrayTokuda1992 = BenchmarkData.GenerateIntArray(Size, Pattern);
-    }
-
-    [Benchmark]
-    public void BinaryInsertSort()
-    {
-        SortAlgorithm.Algorithms.BinaryInsertionSort.Sort(_binaryinsertArray.AsSpan());
     }
 
     [Benchmark(Baseline = true)]
@@ -52,6 +48,18 @@ public class InsertionBenchmark
     public void PairInsertionSort()
     {
         SortAlgorithm.Algorithms.PairInsertionSort.Sort(_pairinsertiontreeArray.AsSpan());
+    }
+
+    [Benchmark]
+    public void BinaryInsertSort()
+    {
+        SortAlgorithm.Algorithms.BinaryInsertionSort.Sort(_binaryinsertArray.AsSpan());
+    }
+
+    [Benchmark]
+    public void GnomeSort()
+    {
+        SortAlgorithm.Algorithms.GnomeSort.Sort(_gnomeArray.AsSpan());
     }
 
     [Benchmark]

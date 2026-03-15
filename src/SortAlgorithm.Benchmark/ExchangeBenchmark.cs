@@ -12,16 +12,16 @@ public class ExchangeBenchmark
 
     private int[] _bubbleArray = default!;
     private int[] _cocktailShakerArray = default!;
+    private int[] _oddEvenArray = default!;
     private int[] _combArray = default!;
-    private int[] _oddEventArray = default!;
 
     [IterationSetup]
     public void Setup()
     {
         _bubbleArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _cocktailShakerArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _oddEvenArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _combArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _oddEventArray = BenchmarkData.GenerateIntArray(Size, Pattern);
     }
 
     [Benchmark(Baseline = true)]
@@ -37,14 +37,14 @@ public class ExchangeBenchmark
     }
 
     [Benchmark]
-    public void CombSort()
+    public void OddEvenSort()
     {
-        SortAlgorithm.Algorithms.CombSort.Sort(_combArray.AsSpan());
+        SortAlgorithm.Algorithms.OddEvenSort.Sort(_oddEvenArray.AsSpan());
     }
 
     [Benchmark]
-    public void OddEventSort()
+    public void CombSort()
     {
-        SortAlgorithm.Algorithms.OddEvenSort.Sort(_oddEventArray.AsSpan());
+        SortAlgorithm.Algorithms.CombSort.Sort(_combArray.AsSpan());
     }
 }

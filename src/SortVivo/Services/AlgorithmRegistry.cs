@@ -98,9 +98,6 @@ public class AlgorithmRegistry
             gitHubSourceUrl: Src("Merge", "RotateMergeSort"));
         Add("SymMerge sort", "MERGE", "O(n log² n)", MAX_SIZE_NLOGN, 1024, (arr, ctx) => SymMergeSort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Merge", "SymMergeSort"));
-        Add("ShiftSort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => ShiftSort.Sort(arr, ctx),
-            gitHubSourceUrl: Src("Merge", "ShiftSort"),
-            tutorialArrayType: TutorialArrayType.MultiRun);
         Add("Natural merge sort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => NaturalMergeSort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Merge", "NaturalMergeSort"),
             tutorialArrayType: TutorialArrayType.MultiRun);
@@ -109,6 +106,9 @@ public class AlgorithmRegistry
             tutorialArrayType: TutorialArrayType.MultiRun);
         Add("Powersort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => PowerSort.Sort(arr, ctx),
             gitHubSourceUrl: Src("Merge", "PowerSort"),
+            tutorialArrayType: TutorialArrayType.MultiRun);
+        Add("ShiftSort", "MERGE", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => ShiftSort.Sort(arr, ctx),
+            gitHubSourceUrl: Src("Merge", "ShiftSort"),
             tutorialArrayType: TutorialArrayType.MultiRun);
 
         // Heap Sorts - O(n log n) - 推奨2048
@@ -134,6 +134,10 @@ public class AlgorithmRegistry
             gitHubSourceUrl: Src("Partition", "QuickSort"),
             tutorialArrayType: TutorialArrayType.PartitionSort,
             tutorialVisualizationHint: TutorialVisualizationHint.RecursionTree);
+        Add("Quicksort (3-way)", "PARTITION", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => QuickSort3way.Sort(arr, ctx),
+            gitHubSourceUrl: Src("Partition", "QuickSort3way"),
+            tutorialArrayType: TutorialArrayType.PartitionSortHybrid,
+            tutorialVisualizationHint: TutorialVisualizationHint.RecursionTree);
         Add("Quicksort (Median3)", "PARTITION", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => QuickSortMedian3.Sort(arr, ctx),
             gitHubSourceUrl: Src("Partition", "QuickSortMedian3"),
             tutorialArrayType: TutorialArrayType.PartitionSort,
@@ -144,10 +148,6 @@ public class AlgorithmRegistry
             tutorialVisualizationHint: TutorialVisualizationHint.RecursionTree);
         Add("Quicksort (DualPivot)", "PARTITION", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => QuickSortDualPivot.Sort(arr, ctx),
             gitHubSourceUrl: Src("Partition", "QuickSortDualPivot"),
-            tutorialArrayType: TutorialArrayType.PartitionSortHybrid,
-            tutorialVisualizationHint: TutorialVisualizationHint.RecursionTree);
-        Add("Quicksort (3-way)", "PARTITION", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => QuickSort3way.Sort(arr, ctx),
-            gitHubSourceUrl: Src("Partition", "QuickSort3way"),
             tutorialArrayType: TutorialArrayType.PartitionSortHybrid,
             tutorialVisualizationHint: TutorialVisualizationHint.RecursionTree);
         Add("Quicksort (Stable)", "PARTITION", "O(n log n)", MAX_SIZE_NLOGN, 2048, (arr, ctx) => StableQuickSort.Sort(arr, ctx),

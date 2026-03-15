@@ -10,28 +10,22 @@ public class HeapBenchmark
     [Params(DataPattern.Random, DataPattern.Sorted, DataPattern.Reversed, DataPattern.AntiQuicksort)]
     public DataPattern Pattern { get; set; }
 
-    private int[] _bottomupHeapArray = default!;
     private int[] _heapArray = default!;
-    private int[] _smoothArray = default!;
     private int[] _ternaryHeapArray = default!;
+    private int[] _bottomupHeapArray = default!;
     private int[] _weakHeapArray = default!;
+    private int[] _smoothArray = default!;
     private int[] _tournamentArray = default!;
 
     [IterationSetup]
     public void Setup()
     {
-        _bottomupHeapArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _heapArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-        _smoothArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _ternaryHeapArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _bottomupHeapArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _weakHeapArray = BenchmarkData.GenerateIntArray(Size, Pattern);
+        _smoothArray = BenchmarkData.GenerateIntArray(Size, Pattern);
         _tournamentArray = BenchmarkData.GenerateIntArray(Size, Pattern);
-    }
-
-    [Benchmark]
-    public void BottomupHeapSort()
-    {
-        SortAlgorithm.Algorithms.BottomupHeapSort.Sort(_bottomupHeapArray.AsSpan());
     }
 
     [Benchmark(Baseline = true)]
@@ -41,21 +35,27 @@ public class HeapBenchmark
     }
 
     [Benchmark]
-    public void SmoothSort()
-    {
-        SortAlgorithm.Algorithms.SmoothSort.Sort(_smoothArray.AsSpan());
-    }
-
-    [Benchmark]
     public void TernaryHeapSort()
     {
         SortAlgorithm.Algorithms.TernaryHeapSort.Sort(_ternaryHeapArray.AsSpan());
     }
 
     [Benchmark]
+    public void BottomupHeapSort()
+    {
+        SortAlgorithm.Algorithms.BottomupHeapSort.Sort(_bottomupHeapArray.AsSpan());
+    }
+
+    [Benchmark]
     public void WeakHeapSort()
     {
         SortAlgorithm.Algorithms.WeakHeapSort.Sort(_weakHeapArray.AsSpan());
+    }
+
+    [Benchmark]
+    public void SmoothSort()
+    {
+        SortAlgorithm.Algorithms.SmoothSort.Sort(_smoothArray.AsSpan());
     }
 
     [Benchmark]
